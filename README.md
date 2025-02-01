@@ -1,4 +1,4 @@
-# 🏡 TheResidence – Homeowner's Subdivision Management System
+# 🏡 Subvi – Homeowner's Subdivision Management System
 ## 📌 Project Overview
 HarmoniaHomes is a web-based platform designed to streamline community management for homeowners, administrators, and subdivision staff. This system provides a centralized hub for announcements, billing, reservations, security, and community engagement.
 
