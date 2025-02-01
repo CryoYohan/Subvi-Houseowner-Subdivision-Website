@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Encodings.Web;
+using Microsoft.EntityFrameworkCore;
 
 namespace ELNET1_GROUP_PROJECT.Controllers
 {
@@ -21,9 +22,11 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         // 
         // GET: /HelloWorld/Welcome/ 
-        public string Welcome(string name ="Unknown", int numtimes=1)
+        public IActionResult Welcome(string name, int numTimes = 1)
         {
-            return HtmlEncoder.Default.Encode($"Hello {name}! Your age is {numtimes}");
+            ViewData["Message"] = "Hello " + name;
+            ViewData["NumTimes"] = numTimes;
+            return View();
         }
     }
 }
