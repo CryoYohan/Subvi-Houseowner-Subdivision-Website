@@ -21,7 +21,7 @@ Backend: ASP.NET Core (C#)
 Database: SQL Server
 Authentication: Secure login with role-based access
 ## 🎯 Why This Project?
-Managing a subdivision involves various tasks, from handling payments to security, event planning, and community engagement. [Your Project Name] ensures a smooth and organized way to manage everything in one place.
+Managing a subdivision involves various tasks, from handling payments to security, event planning, and community engagement. Subvi ensures a smooth and organized way to manage everything in one place.
 
 ## 🔗 Get Started
 1️⃣ Clone this repository
