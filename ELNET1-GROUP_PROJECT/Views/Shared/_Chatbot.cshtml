@@ -1,0 +1,16 @@
+﻿<div class="chatbot-icon" onclick="toggleChat()">💬</div>
+<div class="chat-container" id="chat-container">
+    <div class="chat-header">
+        AI Chatbot
+        <span onclick="toggleChat()" class="close-btn">&times;</span>
+    </div>
+    <div class="chat-body" id="chat-body">
+        <!-- Chat messages appear here -->
+    </div>
+    <div class="chat-footer">
+        <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+<link rel="stylesheet" href="~/css/site.css">
+<script src="~/js/chatbot.js"></script>
