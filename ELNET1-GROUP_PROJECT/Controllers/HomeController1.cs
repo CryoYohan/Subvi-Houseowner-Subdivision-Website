@@ -1,31 +1,32 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Encodings.Web;
+using Microsoft.EntityFrameworkCore;
 
-namespace MvcMovie.Controllers;
-
-public class HelloWorldController : Controller
+namespace ELNET1_GROUP_PROJECT.Controllers
 {
-    // 
-    // GET: /HelloWorld/
-    public IActionResult Index()
+    public class HelloWorldController : Controller
     {
-        return View();
-    }
-    // 
-    // GET: /HelloWorld/Welcome/ 
-    public string Welcome(string name = "Unknown", int ID = 1)
-    {
-        return HtmlEncoder.Default.Encode($"Hello {name}, ID: {ID}");
-    }
-    //
-    // GET: /admin/
-    [HttpGet]
-    public ContentResult Admin()
-    {
-        return new ContentResult
+        //
+        // GET: /HelloWorld/
+        public IActionResult Index()
         {
-            ContentType = "text/html",
-            Content = "<div>Hello World</div>"
-        };
+            return View();
+        }
+
+        //
+        // GET: /HelloWorld/Test  
+        public  IActionResult Test()
+        {
+            return View();
+        }
+
+        // 
+        // GET: /HelloWorld/Welcome/ 
+        public IActionResult Welcome(string name, int numTimes = 1)
+        {
+            ViewData["Message"] = "Hello " + name;
+            ViewData["NumTimes"] = numTimes;
+            return View();
+        }
     }
 }
