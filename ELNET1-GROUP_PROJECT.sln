@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178 d17.12
+VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ELNET1-GROUP_PROJECT", "ELNET1-GROUP_PROJECT\ELNET1-GROUP_PROJECT.csproj", "{D598455B-DE9E-4BE9-A7A1-A6608A515B4C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Subvi", "ELNET1-GROUP_PROJECT\Subvi.csproj", "{D598455B-DE9E-4BE9-A7A1-A6608A515B4C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
