@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>ELNET1_GROUP_PROJECT</RootNamespace>
+    <RootNamespace>Subvi</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
