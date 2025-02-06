@@ -1,0 +1,25 @@
+{
+  "name": "elnet1-group_project",
+  "version": "1.0.0",
+  "description": "HarmoniaHomes is a web-based platform designed to streamline community management for homeowners, administrators, and subdivision staff. This system provides a centralized hub for announcements, billing, reservations, security, and community engagement.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CryoYohan/ELNET1-GROUP_PROJECT.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CryoYohan/ELNET1-GROUP_PROJECT/issues"
+  },
+  "homepage": "https://github.com/CryoYohan/ELNET1-GROUP_PROJECT#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^4.0.4"
+  }
+}

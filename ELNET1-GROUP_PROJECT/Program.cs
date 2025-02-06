@@ -1,4 +1,12 @@
+using ELNET1_GROUP_PROJECT.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Add SQLite database
+builder.Services.AddDbContext<MyAppDBContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
