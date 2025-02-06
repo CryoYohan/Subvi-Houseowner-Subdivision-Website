@@ -133,4 +133,11 @@ public class AdminController : Controller
         // If validation fails, redisplay the form
         return View(model);
     }
+    public IActionResult Logout()
+    {
+        // Perform any logout logic here (e.g., clearing cookies or session)
+
+        // Redirect to Home/Index after logging out
+        return RedirectToAction("Index", "Home");
+    }
 }
