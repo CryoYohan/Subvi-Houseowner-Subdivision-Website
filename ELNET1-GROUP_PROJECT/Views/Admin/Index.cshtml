@@ -1,7 +1,11 @@
-﻿@{
-    Layout = "_AdminLayout";  // Use _AdminLayout for this view
+﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.User_Account>
+
+
+@{
+    Layout = "_AdminLayout";
     ViewData["Title"] = "Admin";
 }
+
 <div class="col-12 col-md-6 bsb-tpl-bg-lotion">
     <div class="p-3 p-md-4 p-xl-5">
         <div class="row">
@@ -12,44 +16,61 @@
                 </div>
             </div>
         </div>
-        <form action="#!">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: '@TempData["SuccessMessage"]',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            </script>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '@TempData["ErrorMessage"]',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            </script>
+        }
+        <form asp-action="AddUserAccount" method="post">
             <div class="row gy-3 gy-md-4 overflow-hidden">
                 <div class="col-12">
-                    <label for="firstName" class="form-label">First Name <span class="text-danger">*</span></label>
-                    <input type="email" class="form-control" name="firstName" id="firstName" placeholder="First Name" required>
+                    <label for="FirstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="FirstName" id="FirstName" placeholder="First Name" required>
                 </div>
                 <div class="col-12">
-                    <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
-                    <input type="email" class="form-control" name="lastName" id="lastName" placeholder="Last Name" required>
+                    <label for="LastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="LastName" id="LastName" placeholder="Last Name" required>
                 </div>
                 <div class="col-12">
-                    <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="role" id="role" placeholder="Role" required>
+                    <label for="Role" class="form-label">Role <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="Role" id="Role" placeholder="Role" required>
                 </div>
                 <div class="col-12">
-                    <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
-                    <input type="email" class="form-control" name="address" id="address" placeholder="Address" required>
+                    <label for="Address" class="form-label">Address <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="Address" id="Address" placeholder="Address" required>
                 </div>
                 <div class="col-12">
-                    <label for="phonenumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                <input type="tel" class="form-control" name="phonenumber" id="phonenumber" placeholder="Phone Number" required>
-            </div>
-                <div class="col-12">
-                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                    <input type="email" class="form-control" name="email" id="email" placeholder="name@example.com" required>
+                    <label for="PhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                    <input type="tel" class="form-control" name="PhoneNumber" id="PhoneNumber" placeholder="Phone Number" required>
                 </div>
                 <div class="col-12">
-                    <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                    <input type="password" class="form-control" name="password" id="password" value="" required>
+                    <label for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" name="Email" id="Email" placeholder="name@example.com" required>
                 </div>
                 <div class="col-12">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" name="iAgree" id="iAgree" required>
-                        <label class="form-check-label text-secondary" for="iAgree">
-                            I agree to the <a href="#!" class="link-primary text-decoration-none">terms and conditions</a>
-                        </label>
-                    </div>
+                    <label for="Password" class="form-label">Password <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" name="Password" id="Password" placeholder="Password" required>
                 </div>
+                <!-- You can include other fields as necessary -->
                 <div class="col-12">
                     <div class="d-grid">
                         <button class="btn bsb-btn-xl btn-primary" type="submit">Sign up</button>
@@ -57,3 +78,35 @@
                 </div>
             </div>
         </form>
+        <!-- Display User Table -->
+        <h3 class="mt-5">User Accounts</h3>
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Role</th>
+                    <th>Address</th>
+                    <th>Phone Number</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.Id</td>
+                        <td>@user.Firstname</td>
+                        <td>@user.Lastname</td>
+                        <td>@user.Role</td>
+                        <td>@user.Address</td>
+                        <td>@user.PhoneNumber</td>
+                        <td>@user.Email</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+       
+    </div>
+</div>

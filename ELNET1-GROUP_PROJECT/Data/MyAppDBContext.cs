@@ -8,6 +8,15 @@ namespace ELNET1_GROUP_PROJECT.Data
         public MyAppDBContext(DbContextOptions<MyAppDBContext> options) : base(options) { }
 
         public DbSet<User_Account> User_Accounts { get; set; }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Add a unique constraint for Email field
+            modelBuilder.Entity<User_Account>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+        }
         //public DbSet<ELNET1_GROUP_PROJECT.Models.Announcement> Announcement { get; set; }
         //public DbSet<ELNET1_GROUP_PROJECT.Models.Bill> Bill { get; set; }
         //public DbSet<ELNET1_GROUP_PROJECT.Models.Event_Calendar> Event_Calendar { get; set; }

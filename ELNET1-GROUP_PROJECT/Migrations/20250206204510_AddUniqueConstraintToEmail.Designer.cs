@@ -2,6 +2,7 @@
 using ELNET1_GROUP_PROJECT.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Subvi.Migrations
 {
     [DbContext(typeof(MyAppDBContext))]
-    partial class MyAppDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250206204510_AddUniqueConstraintToEmail")]
+    partial class AddUniqueConstraintToEmail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.1");
