@@ -13,7 +13,36 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index()
+        public IActionResult dashboard()
+        {
+            return View();
+        }
+
+        public IActionResult Calendar()
+        {
+            return View();
+        }
+        public IActionResult facilities()
+        {
+            return View();
+        }
+
+        public IActionResult bill()
+        {
+            return View();
+        }
+
+        public IActionResult services()
+        {
+            return View();
+        }
+
+        public IActionResult forums()
+        {
+            return View();
+        }
+
+        public IActionResult feedbacks()
         {
             return View();
         }
