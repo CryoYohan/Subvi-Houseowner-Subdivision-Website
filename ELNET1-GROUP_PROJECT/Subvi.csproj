@@ -13,6 +13,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.1">
@@ -26,5 +27,15 @@
     <Folder Include="Views\Homeowners\" />
     <Folder Include="Views\Staff\" />
   </ItemGroup>
+
+  <ItemGroup>
+  <UpToDateCheckBuilt Include="wwwroot/css/site.css" Set="Css" />
+  <UpToDateCheckBuilt Include="tailwind.config.js" Set="Css" />
+  </ItemGroup>
+
+  <Target Name="Tailwind" BeforeTargets="Build;Run">
+    <Exec Command="npm run build:css" />
+  </Target>
+
 
 </Project>
