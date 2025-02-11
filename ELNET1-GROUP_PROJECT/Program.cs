@@ -3,6 +3,16 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add session services
+builder.Services.AddDistributedMemoryCache(); // Required for session storage
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Set session timeout
+    options.Cookie.HttpOnly = true; // Secure cookie storage
+    options.Cookie.IsEssential = true; // Ensure it's stored even with GDPR compliance
+});
+
+
 // Add SQLite database
 builder.Services.AddDbContext<MyAppDBContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -12,6 +22,7 @@ builder.Services.AddDbContext<MyAppDBContext>(options =>
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -31,6 +42,9 @@ app.UseStaticFiles(new StaticFileOptions
         ctx.Context.Response.Headers.Append("Expires", "0");
     }
 });
+
+// Enable session middleware
+app.UseSession();
 
 app.UseRouting();
 
