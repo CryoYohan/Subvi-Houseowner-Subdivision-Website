@@ -138,6 +138,6 @@ public class AdminController : Controller
         // Perform any logout logic here (e.g., clearing cookies or session)
 
         // Redirect to Home/Index after logging out
-        return RedirectToAction("Index", "Home");
-    }
+        return RedirectToAction("dashboard", "AdminController");
+    } 
 }

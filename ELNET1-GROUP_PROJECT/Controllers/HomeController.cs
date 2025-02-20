@@ -13,6 +13,10 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             _logger = logger;
         }
 
+        public IActionResult landing() { 
+            return View();
+        }
+
         public IActionResult dashboard()
         {
             return View();
