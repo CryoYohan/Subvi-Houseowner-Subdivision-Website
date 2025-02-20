@@ -18,12 +18,11 @@
                 <img src="~/images/subvi-logo.png" class="h-12" alt="Subvi Logo">
             </a>
             <!-- Buttons -->
-            <div class="flex space-x-10">
-                <button href="#" class="text-black-800 text-lg font-semibold nav-item border-b-2 border-blue-800 ">Home</button>
-                <button href="#" class="text-black-800 text-lg font-semibold nav-item ">About Us</button>
-                <button href="#" class="text-black-800 text-lg font-semibold nav-item ">Contacts</button>
-                <button onclick="openLoginModal()" class="text-black-800 text-lg font-semibold nav-item ">Log In</button>
-                <button onclick="openSignupModal()" class="block bg-[#1E3A8A] text-white py-2 px-8 rounded-lg text-center nav-button shadow-md">Sign Up</button>
+            <div class="flex space-x-10" style="margin-right: 80px;">
+                <button href="#" class="text-black-800 text-lg font-semibold nav-item border-b-2 border-blue-800" style="font-family: Tahoma, sans-serif; margin-right: 50px;">Home</button>
+                <button href="#" class="text-black-800 text-lg font-semibold nav-item " style="font-family: Tahoma, sans-serif; margin-right: 50px;">About Us</button>
+                <button href="#" class="text-black-800 text-lg font-semibold nav-item " style="font-family: Tahoma, sans-serif; margin-right: 50px;">Contacts</button>
+                <button onclick="openLoginModal()" class="block bg-[#1E3A8A] text-white py-2 px-8 rounded-lg text-center nav-button shadow-md" style="font-family: Tahoma, sans-serif; margin-right: 50px;">Log In</button>
             </div>
         </nav>
     </header>
@@ -117,27 +116,53 @@
         </div>
     </div>
 
-    <main class="flex flex-col items-left h-screen px-6">
-        <!-- User Profile Display -->
-        <div id="user-profile" class="mt-6 hidden">
-            <img id="user-profile-picture" class="w-16 h-16 rounded-full" src="" alt="Profile Picture">
-            <h3 id="user-name" class="text-xl font-semibold text-blue-800 mt-2"></h3>
-            <p id="user-email" class="text-sm text-gray-600"></p>
-        </div>
-
-        <h1 class="text-5xl mb-2" style="margin-top: 160px; margin-left: 50px; font-size: 70px;">
+    <main class="flex items-center justify-between h-screen px-6">
+    <!-- Left: Text Section -->
+    <div class="flex flex-col">
+        <h1 class="text-5xl mb-2" style="margin-left: 50px; font-size: 70px; font-family: Tahoma, sans-serif;">
             Welcome to
-            <span style="font-weight: bold; display: inline; color: #1E3A8A; ">Subvi</span>
+            <span style="font-weight: bold; display: inline; color: #1E3A8A;">Subvi</span>
             <p style="margin-top: 10px;">Smart Living in a</p>
             <p style="margin-top: 10px;">Thriving Community</p>
         </h1>
 
-        <p id="changing-text" style="font-size: 30px; margin-left: 50px;" class="text-gray-600 max-w-2xl typewriter"></p>
-        <button onclick="openSignupModal()" class="mt-6 px-8 py-3 bg-[#1E3A8A] text-white font-semibold rounded-lg shadow-md hover-animate" style="width: 250px; height: 50px; margin-top: 50px; margin-left: 50px;">Join Us Now!</button>
-    </main>
+        <p id="changing-text" class="text-gray-600 max-w-2xl" style="font-size: 20px; margin-left: 50px; font-family: Tahoma, sans-serif;"></p>
+        
+        <button onclick="openSignupModal()" class="mt-6 px-8 py-3 bg-[#1E3A8A] text-white font-semibold rounded-lg shadow-md hover-animate" style="width: 250px; height: 50px; margin-top: 50px; margin-left: 50px;">
+            Join Us Now!
+        </button>
+    </div>
+
+    <!-- Right: Image Section -->
+    <div class="flex justify-end">
+        <img src="~/images/help.jpg" style="width: 1100px; height: 700px;">
+    </div>
+</main>
+
+<!-- New Section Below Main -->
+<section class="bg-blue-800 text-white py-20 px-10" style="margin-top: -50px;">
+    <div class="container mx-auto text-center">
+        <h2 class="text-4xl font-bold mb-6">Discover More About Subvi</h2>
+        <p class="text-lg max-w-2xl mx-auto">
+            Experience smart living in a thriving community. Our modern house subdivision 
+            offers security, convenience, and an excellent neighborhood.
+        </p>
+        <button class="mt-6 px-6 py-3 bg-white text-blue-800 font-semibold rounded-lg shadow-md hover:bg-gray-200">
+            Learn More
+        </button>
+    </div>
+</section>
+
+
+   
+        
+
     <main class="flex flex-col items-center justify-center h-screen text-center px-6">
         @RenderBody()
     </main>
+
+
+
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/platform.js" async defer></script>
