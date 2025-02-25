@@ -1,5 +1,7 @@
 using ELNET1_GROUP_PROJECT.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using ELNET1_GROUP_PROJECT.Models; // Add this using directive
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,17 +14,14 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true; // Ensure it's stored even with GDPR compliance
 });
 
-
 // Add SQLite database
 builder.Services.AddDbContext<MyAppDBContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
-
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
