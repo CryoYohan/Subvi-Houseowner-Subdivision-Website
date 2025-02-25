@@ -1,4 +1,4 @@
-@{
+﻿@{
     Layout = "~/Views/Shared/_LandingLayout.cshtml";
     ViewData["Title"] = "Subvi";
 }
@@ -18,22 +18,29 @@
         </div>
     </nav>
 </header>
- 
- <div class="flex flex-col items-left justify-center h-screen text-center px-6">
-    <!-- User Profile Display -->
-    <div id="user-profile" class="mt-6 hidden">
-        <img id="user-profile-picture" class="w-16 h-16 rounded-full" src="" alt="Profile Picture">
-        <h3 id="user-name" class="text-xl font-semibold text-blue-800 mt-2"></h3>
-        <p id="user-email" class="text-sm text-gray-600"></p>
+
+<main class="flex items-center justify-between h-screen px-6">
+    <!-- Left: Text Section -->
+    <div class="flex flex-col">
+        <h1 class="text-5xl mb-2" style="margin-left: 50px; font-size: 70px; font-family: Tahoma, sans-serif;">
+            Welcome to
+            <span style="font-weight: bold; display: inline; color: #1E3A8A;">Subvi</span>
+            <p style="margin-top: 10px;">Smart Living in a</p>
+            <p style="margin-top: 10px;">Thriving Community</p>
+        </h1>
+
+        <p id="changing-text" class="text-gray-600 max-w-2xl" style="font-size: 20px; margin-left: 50px; font-family: Tahoma, sans-serif;"></p>
+
+        <button onclick="openSignupModal()" class="mt-6 px-8 py-3 bg-[#1E3A8A] text-white font-semibold rounded-lg shadow-md hover-animate" style="width: 250px; height: 50px; margin-top: 50px; margin-left: 50px;">
+            Join Us Now!
+        </button>
     </div>
 
-    <h1 class="text-5xl font-bold text-blue-800 mb-2 ">
-        Welcome to Subvi
-        Smart Living in a Thriving Community
-    </h1>
-    <p id="changing-text" style="font-size: 34px" class="text-gray-600 max-w-2xl typewriter"></p>
-    <button onclick="openSignupModal()" class="mt-6 px-8 py-3 bg-[#1E3A8A] text-white font-semibold rounded-lg shadow-md hover-animate">Get Started</button>
-</div>
+    <!-- Right: Image Section -->
+    <div class="flex justify-end">
+        <img src="~/images/111.png" style="width: 1100px; height: 700px;">
+    </div>
+</main>
 
 
 
