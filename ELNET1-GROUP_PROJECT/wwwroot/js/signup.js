@@ -36,8 +36,18 @@ document.getElementById("signup-form").addEventListener("submit", async function
     }
 });
 
+function parseJwt(token) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
+}
+
 async function handleGoogleSignIn(response) {
-    const user = jwtDecode(response.credential);
+    const user = parseJwt(response.credential);
 
     const checkUser = await fetch("/api/auth/check-google-user", {
         method: "POST",
@@ -57,7 +67,9 @@ async function handleGoogleSignIn(response) {
     }
 }// Handle Google Sign In
 async function handleGoogleSignIn(response) {
-    const user = jwtDecode(response.credential);
+    console.log(response)
+    const user = parseJwt(response.credential);
+    console.log(user.email)
 
     const checkUser = await fetch("/api/auth/check-google-user", {
         method: "POST",
@@ -73,6 +85,7 @@ async function handleGoogleSignIn(response) {
         displayUserProfile(user);
     } else {
         // User does not exist, show modal to fill first and last name
+        document.getElementById("login-modal").style.display = "none";
         document.getElementById("googleModal").style.display = "block";
         document.getElementById("googleEmail").value = user.email;
     }

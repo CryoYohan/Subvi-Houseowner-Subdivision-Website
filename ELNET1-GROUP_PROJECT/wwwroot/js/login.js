@@ -9,7 +9,6 @@ function closeLoginModal() {
 }
 
 // Handle login submission
-// Handle login submission
 document.getElementById("login-form").addEventListener("submit", async function (event) {
     event.preventDefault();
 
@@ -34,9 +33,19 @@ document.getElementById("login-form").addEventListener("submit", async function 
     }
 });
 
+function parseJwt(token) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
+}
+
 // Handle Google login directly
 async function handleGoogleLogin(response) {
-    const user = jwtDecode(response.credential);
+    const user = parseJwt(response.credential);
 
     const checkUser = await fetch("/api/auth/check-google-user", {
         method: "POST",

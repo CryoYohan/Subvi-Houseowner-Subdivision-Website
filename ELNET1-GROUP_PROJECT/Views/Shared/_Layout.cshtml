@@ -23,6 +23,7 @@
                 <button href="#" class="text-black-800 text-lg font-semibold nav-item " style="font-family: Tahoma, sans-serif; margin-right: 50px;">About Us</button>
                 <button href="#" class="text-black-800 text-lg font-semibold nav-item " style="font-family: Tahoma, sans-serif; margin-right: 50px;">Contacts</button>
                 <button onclick="openLoginModal()" class="block bg-[#1E3A8A] text-white py-2 px-8 rounded-lg text-center nav-button shadow-md" style="font-family: Tahoma, sans-serif; margin-right: 50px;">Log In</button>
+                <button onclick="openSignupModal()" class="block bg-[#1E3A8A] text-white py-2 px-8 rounded-lg text-center nav-button shadow-md" style="font-family: Tahoma, sans-serif; margin-right: 50px;">Sign up</button>
             </div>
         </nav>
     </header>
@@ -116,42 +117,66 @@
         </div>
     </div>
 
+    <!-- Google User Modal -->
+    <div id="googleModal" class="fixed inset-0 hidden bg-gray-800 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <div class="flex justify-end">
+                <button type="button" onclick="closeGoogleModal()" class="text-black-50 text-5xl px-4 py-2 rounded">&times;</button>
+            </div>
+            <h2 class="text-xl font-bold text-center mb-4">Complete Your Profile</h2>
+            <form id="google-signup-form" onsubmit="submitGoogleSignup(event)">
+                <label class="block mb-2">Email</label>
+                <input type="email" id="googleEmail" class="w-full p-2 border rounded mb-3" readonly>
+
+                <label class="block mb-2">First Name</label>
+                <input type="text" id="googleFirstName" class="w-full p-2 border rounded mb-3" required>
+
+                <label class="block mb-2">Last Name</label>
+                <input type="text" id="googleLastName" class="w-full p-2 border rounded mb-3" required>
+
+                <div class="flex justify-between">
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <main class="flex items-center justify-between h-screen px-6">
-    <!-- Left: Text Section -->
-    <div class="flex flex-col">
-        <h1 class="text-5xl mb-2" style="margin-left: 50px; font-size: 70px; font-family: Tahoma, sans-serif;">
-            Welcome to
-            <span style="font-weight: bold; display: inline; color: #1E3A8A;">Subvi</span>
-            <p style="margin-top: 10px;">Smart Living in a</p>
-            <p style="margin-top: 10px;">Thriving Community</p>
-        </h1>
+        <!-- Left: Text Section -->
+        <div class="flex flex-col">
+            <h1 class="text-5xl mb-2" style="margin-left: 50px; font-size: 70px; font-family: Tahoma, sans-serif;">
+                Welcome to
+                <span style="font-weight: bold; display: inline; color: #1E3A8A;">Subvi</span>
+                <p style="margin-top: 10px;">Smart Living in a</p>
+                <p style="margin-top: 10px;">Thriving Community</p>
+            </h1>
 
-        <p id="changing-text" class="text-gray-600 max-w-2xl" style="font-size: 20px; margin-left: 50px; font-family: Tahoma, sans-serif;"></p>
+            <p id="changing-text" class="text-gray-600 max-w-2xl" style="font-size: 20px; margin-left: 50px; font-family: Tahoma, sans-serif;"></p>
         
-        <button onclick="openSignupModal()" class="mt-6 px-8 py-3 bg-[#1E3A8A] text-white font-semibold rounded-lg shadow-md hover-animate" style="width: 250px; height: 50px; margin-top: 50px; margin-left: 50px;">
-            Join Us Now!
-        </button>
-    </div>
+            <button onclick="openSignupModal()" class="mt-6 px-8 py-3 bg-[#1E3A8A] text-white font-semibold rounded-lg shadow-md hover-animate" style="width: 250px; height: 50px; margin-top: 50px; margin-left: 50px;">
+                Join Us Now!
+            </button>
+        </div>
 
-    <!-- Right: Image Section -->
-    <div class="flex justify-end">
-        <img src="~/images/111.png" style="width: 1100px; height: 700px;">
-    </div>
-</main>
+        <!-- Right: Image Section -->
+        <div class="flex justify-end">
+            <img src="~/images/111.png" style="width: 1100px; height: 700px;">
+        </div>
+    </main>
 
-<!-- New Section Below Main -->
-<section class="bg-blue-800 text-white py-20 px-10" style="margin-top: -50px;">
-    <div class="container mx-auto text-center">
-        <h2 class="text-4xl font-bold mb-6">Discover More About Subvi</h2>
-        <p class="text-lg max-w-2xl mx-auto">
-            Experience smart living in a thriving community. Our modern house subdivision 
-            offers security, convenience, and an excellent neighborhood.
-        </p>
-        <button class="mt-6 px-6 py-3 bg-white text-blue-800 font-semibold rounded-lg shadow-md hover:bg-gray-200">
-            Learn More
-        </button>
-    </div>
-</section>
+    <!-- New Section Below Main -->
+    <section class="bg-blue-800 text-white py-20 px-10" style="margin-top: -50px;">
+        <div class="container mx-auto text-center">
+            <h2 class="text-4xl font-bold mb-6">Discover More About Subvi</h2>
+            <p class="text-lg max-w-2xl mx-auto">
+                Experience smart living in a thriving community. Our modern house subdivision 
+                offers security, convenience, and an excellent neighborhood.
+            </p>
+            <button class="mt-6 px-6 py-3 bg-white text-blue-800 font-semibold rounded-lg shadow-md hover:bg-gray-200">
+                Learn More
+            </button>
+        </div>
+    </section>
 
 
    

@@ -20,14 +20,15 @@ namespace ELNET1_GROUP_PROJECT.Controllers
     public class AuthController : ControllerBase
     {
         private readonly MyAppDBContext _context;
-        private readonly IConfiguration _configuration; // ✅ Add this
+        private readonly IConfiguration _configuration; 
 
         public AuthController(MyAppDBContext context, IConfiguration configuration)
         {
             _context = context;
-            _configuration = configuration; // ✅ Assign it
+            _configuration = configuration; 
         }
 
+        // This part for creating account for homeowners
         [HttpPost("signup")]
         public async Task<IActionResult> SignUp([FromBody] User_Account user)
         {
@@ -66,6 +67,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return Ok(new { message = "Google Sign-In successful!" });
         }
 
+        // This is for logging account
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
@@ -78,7 +80,6 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
             var token = GenerateJwtToken(user);
 
-            // ✅ Store token in HTTP-only cookie
             SetJwtCookie(token);
 
             return Ok(new { message = "Login successful!" });
@@ -171,9 +172,9 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         {
             var cookieOptions = new CookieOptions
             {
-                HttpOnly = true, // ✅ Prevents JavaScript access (secure against XSS attacks)
-                Secure = true,   // ✅ Ensure HTTPS is used
-                SameSite = SameSiteMode.Strict, // ✅ Prevents CSRF attacks
+                HttpOnly = true,
+                Secure = true,  
+                SameSite = SameSiteMode.Strict, 
                 Expires = DateTime.UtcNow.AddMinutes(60)
             };
             Response.Cookies.Append("jwt", token, cookieOptions);
