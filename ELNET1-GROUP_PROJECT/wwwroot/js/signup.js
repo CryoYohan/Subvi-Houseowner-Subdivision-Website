@@ -21,6 +21,7 @@ document.getElementById("signup-form").addEventListener("submit", async function
         address: document.getElementById("address").value,
         phoneNumber: document.getElementById("phonum").value
     };
+    console.log(userData)
 
     const response = await fetch("/api/auth/signup", {
         method: "POST",

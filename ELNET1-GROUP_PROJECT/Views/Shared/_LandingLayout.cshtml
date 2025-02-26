@@ -9,84 +9,13 @@
     <link rel="stylesheet" href="~/css/output.css">
     <link rel="stylesheet" href="~/css/landing.css">
 </head>
+
 <body class="font-[Poppins]">
     
     <main>
         @RenderBody()
     </main>
 
-
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
-    <script src="~/js/typingeffect.js"></script>
-    <script src="~/js/signup.js"></script>
-    <script src="~/js/login.js"></script>
-    <script>
-                document.addEventListener("DOMContentLoaded", function () {
-            const signupForm = document.getElementById("signup-form");
-
-            if (!signupForm) {
-                console.error("Signup form not found!");
-                return;
-            }
-
-            signupForm.addEventListener("submit", async function (event) {
-                event.preventDefault(); // Prevent page reload
-
-                // Get form input values
-                const firstName = document.getElementById("firstname")?.value.trim();
-                const lastName = document.getElementById("lastname")?.value.trim();
-                const email = document.getElementById("email")?.value.trim();
-                const address = document.getElementById("address")?.value.trim();
-                const phoneNumber = document.getElementById("phonenumber")?.value.trim();
-                const password = document.getElementById("password")?.value.trim();
-
-                // Validate input fields
-                if (!firstName || !lastName || !email || !address || !phoneNumber || !password) {
-                    alert("Please fill in all fields.");
-                    return;
-                }
-
-                // Prepare user data
-                const userData = {
-                    firstname: firstName,
-                    lastname: lastName,
-                    email: email,
-                    address: address,
-                    phonenumber: phoneNumber,
-                    password: password,
-                };
-
-                try {
-                    const response = await fetch("/auth/register", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(userData),
-                    });
-
-                    let data = null;
-                    const contentType = response.headers.get("content-type");
-
-                    // ✅ Only parse JSON if response is not empty and content type is JSON
-                    if (contentType && contentType.includes("application/json")) {
-                        data = await response.json();
-                    }
-
-                    if (!response.ok) {
-                        throw new Error(data?.message || "Registration failed.");
-                    }
-
-                    alert("✅ Registration successful! Redirecting to login...");
-                    window.location.href = "/login"; // Adjust as needed
-                } catch (error) {
-                    console.error("Signup failed:", error);
-                    alert("❌ Signup failed: " + error.message);
-                }
-            });
-        });
-
-    </script>
-
+    @RenderSection("Scripts", required: false)
 </body>
 </html>
