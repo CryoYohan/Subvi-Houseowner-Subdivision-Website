@@ -78,7 +78,6 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
             var token = GenerateJwtToken(user);
 
-            // ✅ Store token in HTTP-only cookie
             SetJwtCookie(token);
 
             return Ok(new { message = "Login successful!" });
