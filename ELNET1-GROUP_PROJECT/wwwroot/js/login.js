@@ -9,7 +9,6 @@ function closeLoginModal() {
 }
 
 // Handle login submission
-// Handle login submission
 document.getElementById("login-form").addEventListener("submit", async function (event) {
     event.preventDefault();
 
