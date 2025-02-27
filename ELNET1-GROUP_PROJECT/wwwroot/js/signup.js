@@ -19,7 +19,7 @@ document.getElementById("signup-form").addEventListener("submit", async function
         password: document.getElementById("password").value,
         role: "Buyer",
         address: document.getElementById("address").value,
-        phoneNumber: document.getElementById("phonum").value
+        phoneNumber: document.getElementById("phonenumber").value
     };
     console.log(userData)
 
