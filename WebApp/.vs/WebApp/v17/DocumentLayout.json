@@ -1,0 +1,58 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\XX440\\source\\repos\\WebApp\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{E0F1F1C3-379E-4260-B95F-6318E52DC72A}|WebApp\\WebApp.csproj|c:\\users\\xx440\\source\\repos\\webapp\\webapp\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{E0F1F1C3-379E-4260-B95F-6318E52DC72A}|WebApp\\WebApp.csproj|solutionrelative:webapp\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E0F1F1C3-379E-4260-B95F-6318E52DC72A}|WebApp\\WebApp.csproj|c:\\users\\xx440\\source\\repos\\webapp\\webapp\\views\\home\\privacy.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{E0F1F1C3-379E-4260-B95F-6318E52DC72A}|WebApp\\WebApp.csproj|solutionrelative:webapp\\views\\home\\privacy.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Privacy.cshtml",
+              "DocumentMoniker": "C:\\Users\\XX440\\source\\repos\\WebApp\\WebApp\\Views\\Home\\Privacy.cshtml",
+              "RelativeDocumentMoniker": "WebApp\\Views\\Home\\Privacy.cshtml",
+              "ToolTip": "C:\\Users\\XX440\\source\\repos\\WebApp\\WebApp\\Views\\Home\\Privacy.cshtml",
+              "RelativeToolTip": "WebApp\\Views\\Home\\Privacy.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-01-28T01:22:42.772Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "C:\\Users\\XX440\\source\\repos\\WebApp\\WebApp\\Views\\Home\\Index.cshtml",
+              "RelativeDocumentMoniker": "WebApp\\Views\\Home\\Index.cshtml",
+              "ToolTip": "C:\\Users\\XX440\\source\\repos\\WebApp\\WebApp\\Views\\Home\\Index.cshtml",
+              "RelativeToolTip": "WebApp\\Views\\Home\\Index.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-01-28T01:22:40.441Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
