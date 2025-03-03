@@ -2,3 +2,160 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    --bg-color: #f3f4f6;
+    --text-color: #000;
+    --sidebar-text-color: #1e40af;
+    --icon-color: #1e40af;
+    --active-bg: #e5e7eb;
+    --event-list-bg: #BFDBFE;
+    --event-text-color: #1E40AF;
+    --event-text-title-color: #1E3A8A;
+    --reservation-list-bg: #FFF7ED;
+    --reservation-text-color: #7C2D12;
+    --reservation-text-title-color: #C2410C;
+    --selected-date-bg: #93C5FD;
+}
+
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: #ffffff;
+    --sidebar-text-color: #ffffff;
+    --icon-color: #1d4ed8;
+    --active-bg: #3fa2f2;
+    --event-list-bg: #1E3A8A;
+    --event-text-color: #e1f0fc;
+    --event-text-title-color: #c1ddf7;
+    --reservation-list-bg: #7C2D12;
+    --reservation-text-color: #fce3e1;
+    --reservation-text-title-color: #fcd5d2;
+    --selected-date-bg: #3fa2f2;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Sidebar item styles */
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    transition: background-color 0.2s ease;
+}
+
+    .sidebar-item i {
+        color: var(--icon-color);
+        transition: color 0.3s ease;
+    }
+
+    .sidebar-item span {
+        color: var(--sidebar-text-color);
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+
+.active-item {
+    background-color: var(--active-bg) !important;
+}
+
+.bg-white {
+    background-color: var(--card-bg) !important;
+}
+
+.text-blue-800 {
+    color: var(--sidebar-text) !important;
+}
+
+.hover\:bg-gray-100:hover {
+    background-color: var(--hover-bg) !important;
+}
+
+#sidebar {
+    background-color: var(--sidebar-bg);
+}
+
+#theme-icon {
+    transition: transform 0.3s ease;
+}
+
+.userbutton {
+    color: var(--sidebar-text-color); 
+    transition: color 0.3s ease;
+}
+
+    .userbutton:hover {
+        color: #3b82f6; /* Tailwind blue-500 */
+    }
+
+.calendar-event-list-bg {
+    background-color: var(--event-list-bg);
+}
+
+.calendar-event-text-list-color {
+    color: var(--event-text-color);
+}
+
+.calendar-event-text-title-color {
+    color: var(--event-text-title-color);
+}
+
+.calendar-reservation-list-bg {
+    background-color: var(--reservation-list-bg);
+}
+
+.calendar-reservation-text-list-color {
+    color: var(--reservation-text-color);
+}
+
+.calendar-reservation-text-list-color {
+    color: var(--reservation-text-title-color);
+}
+
+.calendar-selected-bg {
+    background-color: var(--selected-date-bg);
+}
+
+#login-modal .modal-content {
+    background-color: #ffffff;
+    color: var(--text-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#signup-modal .modal-content {
+    background-color: #ffffff; 
+    color: var(--text-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#logoutPopup .modal-content {
+    background-color: #ffffff;
+    color: var(--text-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    visibility: hidden;
+}

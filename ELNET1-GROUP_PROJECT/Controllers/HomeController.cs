@@ -1,6 +1,10 @@
 using System.Diagnostics;
-using ELNET1_GROUP_PROJECT.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using ELNET1_GROUP_PROJECT.Models;
 
 namespace ELNET1_GROUP_PROJECT.Controllers
 {
@@ -13,11 +17,50 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             _logger = logger;
         }
 
-        public IActionResult landing() { 
+        private string GetUserRoleFromToken()
+        {
+            var token = HttpContext.Request.Cookies["jwt"];
+            if (string.IsNullOrEmpty(token)) return null;
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            return jwtToken?.Claims.FirstOrDefault(c => c.Type == "Role")?.Value;
+        }
+
+        public IActionResult Landing()
+        {
+            var role = GetUserRoleFromToken();
+            if (!string.IsNullOrEmpty(role))
+            {
+                return RedirectToRoleDashboard(role);
+            }
             return View();
         }
 
         public IActionResult dashboard()
+        {
+            var role = GetUserRoleFromToken();
+            if (role != "Homeowner")
+            {
+                return RedirectToAction("landing"); // Redirect unauthorized users
+            }
+
+            return View(); // Load the `dashboard.cshtml` view
+        }
+
+        private IActionResult RedirectToRoleDashboard(string role)
+        {
+            return role switch
+            {
+                "Admin" => RedirectToAction("Index", "Admin"),
+                "Homeowner" => RedirectToAction("dashboard", "Home"),
+                "Staff" => RedirectToAction("Dashboard", "Staff"),
+                _ => RedirectToAction("landing")
+            };
+        }
+
+        public IActionResult StaffDashboard()
         {
             return View();
         }
@@ -26,27 +69,28 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         {
             return View();
         }
-        public IActionResult facilities()
+
+        public IActionResult Facilities()
         {
             return View();
         }
 
-        public IActionResult bill()
+        public IActionResult Bill()
         {
             return View();
         }
 
-        public IActionResult services()
+        public IActionResult Services()
         {
             return View();
         }
 
-        public IActionResult forums()
+        public IActionResult Forums()
         {
             return View();
         }
 
-        public IActionResult feedbacks()
+        public IActionResult Feedbacks()
         {
             return View();
         }
