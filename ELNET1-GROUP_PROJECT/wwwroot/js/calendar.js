@@ -77,33 +77,37 @@ function renderCalendar() {
             ? `<span class="bg-blue-800 text-white rounded-full w-6 h-6 flex items-center justify-center">${day}</span>`
             : day;
 
-        // Event dot indicator (shows if there are events or reservations)
+        // Event dot indicator it shows if there are events or reservations
         const eventIndicator = document.createElement('span');
         eventIndicator.className = "w-2 h-2 bg-blue-400 rounded-full";
         eventIndicator.style.visibility = (schedule.events.length > 0 || schedule.reservations > 0) ? "visible" : "hidden";
 
-        // Append top section (date & indicator)
+        // Append top section for date & indicator
         const topSection = document.createElement('div');
         topSection.className = "flex justify-between items-start";
         topSection.appendChild(dateSpan);
         topSection.appendChild(eventIndicator);
         dayCell.appendChild(topSection);
 
-        // Display Events
+        // Display Events 
+        const eventsDiv = document.createElement('div');
+        eventsDiv.className = "mt-1 text-left text-sm truncate"; 
         if (schedule.events.length > 0) {
-            const eventsDiv = document.createElement('div');
-            eventsDiv.className = "mt-1 text-left text-sm truncate";
             eventsDiv.innerHTML = schedule.events.map(event => `<div class="text-blue-900"><strong>• ${event}</strong></div>`).join('');
-            dayCell.appendChild(eventsDiv);
+        } else {
+            eventsDiv.innerHTML = "&nbsp;"; 
         }
+        dayCell.appendChild(eventsDiv);
 
         // Display Reservations
+        const reservationsDiv = document.createElement('div');
+        reservationsDiv.className = "mt-1 text-left text-sm truncate text-blue-700";
         if (schedule.reservations > 0) {
-            const reservationsDiv = document.createElement('div');
-            reservationsDiv.className = "mt-1 text-left text-sm truncate text-blue-700";
             reservationsDiv.innerHTML = `<div>📌<strong>Reservations: </strong> ${schedule.reservations} </div>`;
-            dayCell.appendChild(reservationsDiv);
+        } else {
+            reservationsDiv.innerHTML = "&nbsp;"; 
         }
+        dayCell.appendChild(reservationsDiv);
 
         gridContainer.appendChild(dayCell);
     }
@@ -125,52 +129,60 @@ function showSchedule(date) {
     selectedDate = date;
     scheduleList.innerHTML = "";
     const data = scheduleData[date] || { events: [], reservationDateTime: [] };
+    const hasEvents = data.events.length > 0;
+    const hasReservations = data.reservationDateTime.length > 0;
 
     let content = "";
 
-    // 🟦 Events Section
-    if (data.events.length > 0) {
-        content += `
-            <div class="text-center font-bold calendar-event-text-title-color">📅 EVENTS</div>
-            <div class="p-3 calendar-event-list-bg rounded-lg shadow-md">
-                <ul class="mt-1 space-y-1">
-                    ${data.events.map(event => `
-                        <li class="flex calendar-event-text-list-color items-center font-semibold">• ${event}</li>
-                    `).join('')}
-                </ul>
-            </div>`;
-    }
-
-    if (data.events.length > 0 && data.reservationDateTime.length > 0) {
-        content += `<div class="border-t my-3"></div>`;
-    }
-
-    if (data.reservationDateTime.length > 0) {
-        content += `
-            <div class="text-center font-bold calendar-reservation-text-list-color">⏰ RESERVATIONS: ${data.reservationDateTime.length}</div>
-            <div class="p-3 calendar-reservation-list-bg rounded-lg shadow-md">
-                <ul class="mt-1 space-y-1">
-                    ${data.reservationDateTime.map(time => {
-                        const formattedTime = new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true
-                        });
-
-                        return `
-                    <li class="calendar-reservation-text-list-color flex font-semibold items-center">
-                        🕒 ${formattedTime}
-                    </li>`;
-                    }).join('')}
-                </ul>
-            </div>`;
-    }
-
-    // No Events or Reservations
     if (data.events.length === 0 && data.reservationDateTime.length === 0) {
-        content = `<div class="p-3 text-gray-600 bg-gray-100 rounded-lg text-center">No events</div>`;
-    }
+        content = `<div class="p-3 text-gray-600 bg-gray-100 rounded-lg text-center">No Event & Reservation.</div>`;
+    } else {
+        content = `
+            <div class="text-center font-bold calendar-event-text-title-color">📅 EVENTS</div>
 
+            <!-- Events Section -->
+            <div class="p-1 max-h-32 overflow-y-auto custom-scrollbar p-2">
+                <div class="calendar-event-list-bg rounded-lg shadow-md">
+                    ${data.events.length > 0 ? `
+                        <ul class="p-2 space-y-1 ">
+                            ${data.events.map(event => `
+                                <li class="flex calendar-event-text-list-color items-center font-semibold">
+                                    • ${event}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    ` : `<div class="text-gray-600 text-center">No Event</div>`}
+                </div>
+            </div>
+
+            <div class="border-t my-3"></div>
+
+            <div class="text-center font-bold calendar-reservation-text-title-color">
+                ⏰ RESERVATIONS: ${data.reservationDateTime.length || "0"}
+            </div>
+
+            <!-- Reservations Section -->
+            <div class="p-1 max-h-22 overflow-y-auto custom-scrollbar">
+                <div class="calendar-reservation-list-bg rounded-lg shadow-md">
+                    ${data.reservationDateTime.length > 0 ? `
+                        <ul class="p-2 space-y-1">
+                            ${data.reservationDateTime.map(time => {
+                                const formattedTime = new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                });
+                                return `<li class="flex calendar-reservation-text-list-color items-center font-semibold">
+                                   🕒 ${formattedTime}
+                                </li>`;
+                            }).join('')}
+                        </ul>
+                    ` : `<div class="text-gray-600 text-center">No Reservation</div>`}
+                </div>
+            </div>
+        `;
+    }
+    
     scheduleList.innerHTML = content;
     renderCalendar();
 }

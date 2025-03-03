@@ -15,7 +15,7 @@
     
     // Default action values 
     string homeAction = "Landing";
-    string calendarAction = "Calendar";
+    string calendarAction = "calendar";
     string facilitiesAction = "Facilities";
     string billAction = "Bill";
     string servicesAction = "Services";
@@ -25,33 +25,33 @@
     // Assign controllers/actions based on role
     if (role == "Admin")
     {
-        homeController = "Admin"; homeAction = "Index";
-        calendarController = "Admin"; calendarAction = "Calendar";
-        facilitiesController = "Admin"; facilitiesAction = "Facilities";
-        billController = "Admin"; billAction = "BillManagement";
-        servicesController = "Admin"; servicesAction = "ServicesManagement";
-        forumsController = "Admin"; forumsAction = "Forums";
-        feedbacksController = "Admin"; feedbacksAction = "Feedbacks";
+        homeController = "admin"; homeAction = "index";
+        calendarController = "admin"; calendarAction = "calendar";
+        facilitiesController = "admin"; facilitiesAction = "facilities";
+        billController = "admin"; billAction = "billManagement";
+        servicesController = "admin"; servicesAction = "ServicesManagement";
+        forumsController = "admin"; forumsAction = "Forums";
+        feedbacksController = "admin"; feedbacksAction = "Feedbacks";
     }
-    else if (role == "Homeowner")
+    else if (role == "homeowner")
     {
-        homeController = "Home"; homeAction = "dashboard";
-        calendarController = "Home"; calendarAction = "Calendar";
-        facilitiesController = "Home"; facilitiesAction = "Facilities";
-        billController = "Home"; billAction = "Bill";
-        servicesController = "Home"; servicesAction = "Services";
-        forumsController = "Home"; forumsAction = "Forums";
-        feedbacksController = "Home"; feedbacksAction = "Feedbacks";
+        homeController = "home"; homeAction = "dashboard";
+        calendarController = "home"; calendarAction = "calendar";
+        facilitiesController = "home"; facilitiesAction = "Facilities";
+        billController = "home"; billAction = "Bill";
+        servicesController = "home"; servicesAction = "Services";
+        forumsController = "home"; forumsAction = "Forums";
+        feedbacksController = "home"; feedbacksAction = "Feedbacks";
     }
     else if (role == "Staff")
     {
         homeController = "Staff"; homeAction = "Dashboard";
-        calendarController = "Staff"; calendarAction = "Calendar";
-        facilitiesController = "Staff"; facilitiesAction = "Facilities";
-        billController = "Staff"; billAction = "Bill";
-        servicesController = "Staff"; servicesAction = "Services";
-        forumsController = "Staff"; forumsAction = "Forums";
-        feedbacksController = "Staff"; feedbacksAction = "Feedbacks";
+        calendarController = "Staff"; calendarAction = "calendar";
+        facilitiesController = "Staff"; facilitiesAction = "facilities";
+        billController = "Staff"; billAction = "bill";
+        servicesController = "Staff"; servicesAction = "services";
+        forumsController = "Staff"; forumsAction = "forums";
+        feedbacksController = "Staff"; feedbacksAction = "feedbacks";
     }
 }
 
@@ -59,12 +59,12 @@
     @* Sidebar *@
     <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6">
         <ul class="space-y-4">
-            <!-- Home (Dynamic) -->
+            <!-- home (Dynamic) -->
             <li>
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
                    asp-controller="@homeController" asp-action="@homeAction">
                     <i class="fas fa-home text-xl"></i>
-                    <span class="font-semibold">Home</span>
+                    <span class="font-semibold">home</span>
                 </a>
             </li>
 
@@ -125,7 +125,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex flex-1 flex-col bg-gray-100 bg-white p-6 space-y-4">
+    <div class="flex flex-1 flex-col bg-gray-100 bg-white p-2 space-y-4">
 
         <div class="flex space-x-4 bg-white">
             <!-- Schedule List -->

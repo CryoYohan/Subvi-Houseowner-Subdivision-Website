@@ -13,17 +13,42 @@
 </head>
 
 <body class="font-[Poppins]">
+    <header class="px-10 py-5 shadow-md bg-white header">
+        <nav class="flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="block">
+                <img src="~/images/subvi-logo.png" class="h-12" alt="Subvi Logo">
+            </a>
+            <!-- Buttons -->
+            <div class="flex space-x-10">
+                <a href="/home" class="text-blue-800 text-lg font-semibold nav-item" id="nav-home">Home</a>
+                <a href="/about-us" class="text-blue-800 text-lg font-semibold nav-item" id="nav-about">About Us</a>
+                <a href="/contacts" class="text-blue-800 text-lg font-semibold nav-item" id="nav-contacts">Contacts</a>
+                <a><button onclick="openLoginModal()" class="text-blue-800 text-lg font-semibold nav-item">Log In</button></a>
+                <a><button onclick="openSignupModal()" class="block bg-[#1E3A8A] text-white py-2 px-8 rounded-lg text-center nav-button shadow-md">Sign Up</button></a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        @RenderBody()
+    </main>
+
     <div id="loading-screen" class="d-flex justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100 bg-white" style="z-index: 1050; display: none;">
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 
-    <main>
-        @RenderBody()
-    </main>
-
-    @RenderSection("Scripts", required: false)
+    <script src="~/js/typingeffect.js"></script>
+    <script src="~/js/login.js"></script>
+    <script src="~/js/signup.js"></script>
+    <script src="~/js/site.js"></script>
     <script src="~/js/loading-animation.js"></script>
+
+ @*   <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>*@
+    
 </body>
 </html>

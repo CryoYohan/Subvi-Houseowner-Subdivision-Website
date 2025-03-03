@@ -1,33 +1,7 @@
 ﻿@{
     Layout = "~/Views/Shared/_LandingLayout.cshtml";
-    ViewData["Title"] = "Subvi";
+    ViewData["Title"] = "Subvi | Home";
 }
-
-@section Scripts {
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
-    <script src="~/js/typingeffect.js"></script>
-    <script src="~/js/login.js"></script>
-    <script src="~/js/signup.js"></script>
-    <script src="~/js/site.js"></script>
-}
-<header class="px-10 py-5 shadow-md bg-white header">
-    <nav class="flex items-center justify-between">
-        <!-- Logo -->
-        <a href="#" class="block">
-            <img src="~/images/subvi-logo.png" class="h-12" alt="Subvi Logo">
-        </a>
-        <!-- Buttons -->
-        <div class="flex space-x-10">
-            <button href="#" class="text-blue-800 text-lg font-semibold nav-item border-b-2 border-blue-800">Home</button>
-            <button href="#" class="text-blue-800 text-lg font-semibold nav-item">About Us</button>
-            <button href="#" class="text-blue-800 text-lg font-semibold nav-item">Contacts</button>
-            <button onclick="openLoginModal()" class="text-blue-800 text-lg font-semibold nav-item">Log In</button>
-            <button onclick="openSignupModal()" class="block bg-[#1E3A8A] text-white py-2 px-8 rounded-lg text-center nav-button shadow-md">Sign Up</button>
-        </div>
-    </nav>
-</header>
 
 <main class="flex items-center justify-between h-screen px-6">
     <!-- Left: Text Section -->
