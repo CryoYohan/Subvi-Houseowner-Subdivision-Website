@@ -20,6 +20,16 @@ public class AdminController : Controller
         return View(users);  // Pass the users list to the view
     }
 
+    public IActionResult Dashboard()
+    {
+        var role = HttpContext.Request.Cookies["jwt"];
+        if (role != "Admin")
+        {
+            return RedirectToAction("landing");
+        }
+        return View();
+    }
+
     // POST: /Admin/AddUserAccount
     [HttpPost]
     public IActionResult AddUserAccount(User_Account model)
@@ -133,11 +143,13 @@ public class AdminController : Controller
         // If validation fails, redisplay the form
         return View(model);
     }
+
     public IActionResult Logout()
     {
-        // Perform any logout logic here (e.g., clearing cookies or session)
+        // Clear authentication cookies
+        Response.Cookies.Delete("jwt");
 
-        // Redirect to Home/Index after logging out
-        return RedirectToAction("dashboard", "AdminController");
-    } 
+        // Redirect to Home page after logging out
+        return RedirectToAction("Index", "Admin");
+    }
 }

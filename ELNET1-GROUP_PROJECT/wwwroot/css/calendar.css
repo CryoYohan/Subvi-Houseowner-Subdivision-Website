@@ -1,0 +1,34 @@
+﻿.calendar-day {
+    @apply h-22 p-2 border rounded-lg transition-colors;
+    min-width: 140px;
+}
+
+    .calendar-day:hover {
+        @apply bg-blue-50 border-blue-200;
+    }
+
+.today {
+    @apply bg-blue-100 border-blue-300;
+}
+
+.events-container {
+    @apply h-16 overflow-y-auto;
+}
+
+.event-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ensure grid cells maintain equal width */
+.grid-cols-7 {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+/* Better event display */
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
