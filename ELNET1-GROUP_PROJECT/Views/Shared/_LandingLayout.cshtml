@@ -7,14 +7,15 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="~/css/site.css">
     <link rel="stylesheet" href="~/css/output.css">
     <link rel="stylesheet" href="~/css/landing.css">
 </head>
 
 <body class="font-[Poppins]">
-    <header class="px-10 py-5 shadow-md bg-white header">
+    <header class="px-8 py-5 shadow-md bg-white header">
         <nav class="flex items-center justify-between">
             <!-- Logo -->
             <a href="/home" class="block">
@@ -41,6 +42,8 @@
         </div>
     </div>
 
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="~/js/typingeffect.js"></script>
     <script src="~/js/login.js"></script>
     <script src="~/js/signup.js"></script>
@@ -49,8 +52,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script>
         AOS.init({
-            duration: 1000, // Animation duration in milliseconds
-            once: true, // Only animate once
+            duration: 800, // Animation duration in milliseconds
+            once: false, // Only animate once
+            mirror: true
         });
     </script>
 
