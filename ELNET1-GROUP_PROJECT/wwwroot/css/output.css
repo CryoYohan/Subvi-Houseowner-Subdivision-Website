@@ -657,21 +657,22 @@ video {
   margin-bottom: 1.25rem;
 }
 
-<<<<<<< HEAD
+
 .mt-1 {
   margin-top: 0.25rem;
 }
 
 .mt-2 {
-  margin-top: 0.5rem;
-=======
+    margin-top: 0.5rem;
+}
+
 .mb-6 {
   margin-bottom: 1.5rem;
 }
 
 .ml-10 {
   margin-left: 2.5rem;
->>>>>>> 796303d (UPDATE COMPLETE FACILITIES)
+
 }
 
 .mt-3 {
@@ -730,17 +731,18 @@ video {
   height: 1rem;
 }
 
-<<<<<<< HEAD
+
 .h-6 {
   height: 1.5rem;
 }
 
 .h-64 {
-  height: 16rem;
-=======
+    height: 16rem;
+}
+
 .h-48 {
   height: 12rem;
->>>>>>> 796303d (UPDATE COMPLETE FACILITIES)
+
 }
 
 .h-screen {
@@ -829,7 +831,7 @@ video {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-<<<<<<< HEAD
+
 .cursor-pointer {
   cursor: pointer;
 }
@@ -839,11 +841,12 @@ video {
 }
 
 .grid-rows-6 {
-  grid-template-rows: repeat(6, minmax(0, 1fr));
-=======
+    grid-template-rows: repeat(6, minmax(0, 1fr));
+}
+
 .grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
->>>>>>> 796303d (UPDATE COMPLETE FACILITIES)
+
 }
 
 .flex-row {
@@ -874,17 +877,18 @@ video {
   justify-content: space-between;
 }
 
-<<<<<<< HEAD
+
 .gap-2 {
   gap: 0.5rem;
 }
 
 .gap-4 {
-  gap: 1rem;
-=======
+    gap: 1rem;
+}
+
 .gap-5 {
   gap: 1.25rem;
->>>>>>> 796303d (UPDATE COMPLETE FACILITIES)
+
 }
 
 .space-x-10 > :not([hidden]) ~ :not([hidden]) {
