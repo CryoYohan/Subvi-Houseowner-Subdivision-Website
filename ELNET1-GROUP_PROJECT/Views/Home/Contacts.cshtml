@@ -2,73 +2,74 @@
     Layout = "~/Views/Shared/_LandingLayout.cshtml";
     ViewData["Title"] = "Subvi | Contacts";
 }
-<!-- Hero Section -->
-<section class="relative w-full h-[450px] flex items-center justify-center text-white"
+
+<section class="relative w-full h-96 flex items-center justify-center text-white"
          style="background: url('/images/contact-hero.jpg') no-repeat center center; background-size: cover;">
-    <div class="bg-black bg-opacity-60 p-12 rounded-lg text-center w-4/5 max-w-3xl shadow-lg">
-        <h1 class="text-5xl font-extrabold mb-4 animate-fade-up">Get in Touch</h1>
-        <p class="text-lg leading-relaxed animate-fade-up delay-200">
-            Have questions or need assistance? We’re happy to help. Reach out anytime!
+    <div class="bg-black bg-opacity-50 p-10 rounded-lg text-center w-2/3">
+        <h1 class="text-4xl font-bold mb-4" data-aos="fade-up">Get in Touch</h1>
+        <p class="text-lg leading-relaxed" data-aos="fade-up" data-aos-delay="200">
+            Have questions or need assistance? Reach out to us anytime. We're here to help!
         </p>
     </div>
 </section>
 
-<!-- Contact Details -->
-<div class="py-20 px-10 text-center bg-gray-100">
-    <h2 class="text-4xl font-bold mb-10 text-blue-800 animate-fade-up">Contact Details</h2>
+<!-- Contact Information -->
+<section class="py-20 px-10 text-center bg-gray-100">
+    <h2 class="text-3xl font-bold mb-10 text-blue-800" data-aos="fade-up">Contact Details</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
         <!-- Phone -->
-        <div class="bg-white shadow-xl p-8 rounded-lg flex flex-col items-center transition-all hover:scale-105 hover:shadow-2xl animate-fade-right">
-            <img src="/images/phone-icon.png" class="w-14 mb-4">
-            <h3 class="text-2xl font-semibold">Phone</h3>
-            <p class="text-gray-600 mt-2 text-lg">+1 (123) 456-7890</p>
+        <div class="bg-white shadow-lg p-6 rounded-lg flex flex-col items-center" data-aos="fade-right">
+            <img src="/images/phone-icon.png" class="w-16 mb-4">
+            <h3 class="text-xl font-semibold">Phone</h3>
+            <p class="text-gray-600 mt-2">+1 (123) 456-7890</p>
         </div>
         <!-- Email -->
-        <div class="bg-white shadow-xl p-8 rounded-lg flex flex-col items-center transition-all hover:scale-105 hover:shadow-2xl animate-fade-up delay-200">
-            <img src="/images/email-icon.png" class="w-14 mb-4">
-            <h3 class="text-2xl font-semibold">Email</h3>
-            <p class="text-gray-600 mt-2 text-lg">support@subvi.com</p>
+        <div class="bg-white shadow-lg p-6 rounded-lg flex flex-col items-center" data-aos="fade-up" data-aos-delay="200">
+            <img src="/images/email-icon.png" class="w-16 mb-4">
+            <h3 class="text-xl font-semibold">Email</h3>
+            <p class="text-gray-600 mt-2">support@subvi.com</p>
         </div>
         <!-- Address -->
-        <div class="bg-white shadow-xl p-8 rounded-lg flex flex-col items-center transition-all hover:scale-105 hover:shadow-2xl animate-fade-left delay-400">
-            <img src="/images/location-icon.png" class="w-14 mb-4">
-            <h3 class="text-2xl font-semibold">Address</h3>
-            <p class="text-gray-600 mt-2 text-lg">123 Subvi Street, City, Country</p>
+        <div class="bg-white shadow-lg p-6 rounded-lg flex flex-col items-center" data-aos="fade-left" data-aos-delay="400">
+            <img src="/images/location-icon.png" class="w-16 mb-4">
+            <h3 class="text-xl font-semibold">Address</h3>
+            <p class="text-gray-600 mt-2">123 Subvi Street, City, Country</p>
         </div>
     </div>
-</div>
+</section>
 
 <!-- Contact Form -->
-<div class="py-20 px-10 bg-white text-center">
-    <h2 class="text-4xl font-bold text-blue-800 mb-10 animate-fade-up">Send Us a Message</h2>
+<section class="py-20 px-10 bg-white text-center">
+    <h2 class="text-3xl font-bold text-blue-800 mb-10" data-aos="fade-up">Send Us a Message</h2>
 
-    <div class="max-w-2xl mx-auto bg-gray-100 p-10 rounded-lg shadow-xl animate-zoom-in">
+    <div class="max-w-2xl mx-auto bg-gray-100 p-8 rounded-lg shadow-lg" data-aos="zoom-in">
         <form id="contact-form">
-            <div class="mb-5">
-                <label class="block text-gray-700 font-semibold text-lg">Full Name</label>
-                <input type="text" id="name" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-800 transition" required>
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold">Full Name</label>
+                <input type="text" id="name" class="w-full border rounded-lg px-3 py-2" required>
             </div>
-            <div class="mb-5">
-                <label class="block text-gray-700 font-semibold text-lg">Email</label>
-                <input type="email" id="email" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-800 transition" required>
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold">Email</label>
+                <input type="email" id="email" class="w-full border rounded-lg px-3 py-2" required>
             </div>
-            <div class="mb-5">
-                <label class="block text-gray-700 font-semibold text-lg">Message</label>
-                <textarea id="message" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-800 transition" rows="4" required></textarea>
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold">Message</label>
+                <textarea id="message" class="w-full border rounded-lg px-3 py-2" rows="4" required></textarea>
             </div>
-            <button type="submit" class="bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold text-lg transition hover:bg-blue-900">
+            <button type="submit" class="bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold">
                 Send Message
             </button>
         </form>
     </div>
-</div>
+</section>
 
-<!-- Google Maps -->
+<!-- Google Maps Embed -->
 <section class="py-20 px-10 text-center bg-gray-100">
-    <h2 class="text-4xl font-bold text-blue-800 mb-6 animate-fade-up">Find Us Here</h2>
+    <h2 class="text-3xl font-bold text-blue-800 mb-6" data-aos="fade-up">Find Us Here</h2>
 
-    <div class="w-full flex justify-center animate-fade-up delay-200">
+    <!-- Map Container -->
+    <div class="w-full flex justify-center" data-aos="fade-up" data-aos-delay="200">
         <div id="map" style="width: 100%; height: 400px;"></div>
     </div>
 </section>
