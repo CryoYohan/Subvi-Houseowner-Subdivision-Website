@@ -61,8 +61,7 @@ app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllerRoute(
         name: "default",
-        pattern: "/",
-        defaults: new { controller = "Home", action = "landing" }); // ✅ "/" now points to HomeController.Landing()
+        pattern: "{controller=Home}/{action=Landing}/{id?}");
 
     endpoints.MapControllerRoute(
         name: "about",
