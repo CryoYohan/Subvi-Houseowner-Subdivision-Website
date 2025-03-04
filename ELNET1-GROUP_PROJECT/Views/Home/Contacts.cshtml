@@ -3,45 +3,63 @@
     ViewData["Title"] = "Subvi | Contacts";
 }
 
-<section class="relative w-full h-96 flex items-center justify-center text-white"
+<section class="relative w-full h-96 flex items-center justify-center text-blue-600"
          style="background: url('/images/contact-hero.jpg') no-repeat center center; background-size: cover;">
-    <div class="bg-black bg-opacity-50 p-10 rounded-lg text-center w-2/3">
-        <h1 class="text-4xl font-bold mb-4" data-aos="fade-up">Get in Touch</h1>
+    <div class="bg-gray-100 p-10 rounded-lg text-center w-2/3">
+        <h1 class="text-4xl font-bold mb-4" style="#1E40AF" data-aos="fade-up">Get in Touch</h1>
         <p class="text-lg leading-relaxed" data-aos="fade-up" data-aos-delay="200">
-            Have questions or need assistance? Reach out to us anytime. We're here to help!
+            Have questions or need assistance?
         </p>
+        <p class="text-lg leading-relaxed" data-aos="fade-up" data-aos-delay="250">
+            Reach out to us anytime. We're here to help and assist you!
+        </p>
+        <div class="flex mt-4 justify-center font-semibold gap-4 animate-fade-in-up delay-300">
+            <a href="#contact-section" class="btn-secondary hover:underline" data-aos="fade-right" data-aos-delay="400">
+                Contact Details
+            </a>
+            <a data-aos="fade-down" data-aos-delay="350">|</a>
+            <a href="#message-section" class="btn-primary hover:underline" data-aos="zoom-in" data-aos-delay="400">
+                Send Message
+            </a>
+            <a data-aos="fade-down" data-aos-delay="350">|</a>
+            <a href="#map-section" class="btn-secondary hover:underline text-semibold" data-aos="fade-left" data-aos-delay="400">
+               Our Location
+            </a>
+        </div>
     </div>
+    
 </section>
 
 <!-- Contact Information -->
-<section class="py-20 px-10 text-center bg-gray-100">
-    <h2 class="text-3xl font-bold mb-10 text-blue-800" data-aos="fade-up">Contact Details</h2>
+<section class="py-20 px-10 text-center bg-gray-100" id="contact-section">
+    <h2 class="text-3xl font-bold mb-10 text-blue-600" data-aos="fade-up">Contact Details</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
         <!-- Phone -->
         <div class="bg-white shadow-lg p-6 rounded-lg flex flex-col items-center" data-aos="fade-right">
-            <img src="/images/phone-icon.png" class="w-16 mb-4">
+            <img src="/images/icon-images/phone-icon.png" class="w-16 mb-4">
             <h3 class="text-xl font-semibold">Phone</h3>
-            <p class="text-gray-600 mt-2">+1 (123) 456-7890</p>
+            <p class="text-gray-600 mt-2">+639 (123) 456-7890</p>
         </div>
         <!-- Email -->
         <div class="bg-white shadow-lg p-6 rounded-lg flex flex-col items-center" data-aos="fade-up" data-aos-delay="200">
-            <img src="/images/email-icon.png" class="w-16 mb-4">
+            <img src="/images/icon-images/email-icon.png" class="w-16 mb-4">
             <h3 class="text-xl font-semibold">Email</h3>
-            <p class="text-gray-600 mt-2">support@subvi.com</p>
+            <a href="mailto:support@subvi.com" class="text-gray-600 mt-2 hover:underline">support@subvi.com</a>
         </div>
         <!-- Address -->
         <div class="bg-white shadow-lg p-6 rounded-lg flex flex-col items-center" data-aos="fade-left" data-aos-delay="400">
-            <img src="/images/location-icon.png" class="w-16 mb-4">
+            <img src="/images/icon-images/location-icon.png" class="w-16 mb-4">
             <h3 class="text-xl font-semibold">Address</h3>
-            <p class="text-gray-600 mt-2">123 Subvi Street, City, Country</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=123+Subvi+Street,+City,+Country"
+                target="_blank" class="text-gray-600 mt-2 hover:underline">123 Subvi Street, City, Country</a>
         </div>
     </div>
 </section>
 
-<!-- Contact Form -->
-<section class="py-20 px-10 bg-white text-center">
-    <h2 class="text-3xl font-bold text-blue-800 mb-10" data-aos="fade-up">Send Us a Message</h2>
+<!-- Message Form -->
+<section class="py-10 px-10 bg-white text-center" id="message-section">
+    <h2 class="text-3xl font-bold text-blue-600 mb-10" data-aos="fade-up">Send Us a Message</h2>
 
     <div class="max-w-2xl mx-auto bg-gray-100 p-8 rounded-lg shadow-lg" data-aos="zoom-in">
         <form id="contact-form">
@@ -65,8 +83,8 @@
 </section>
 
 <!-- Google Maps Embed -->
-<section class="py-20 px-10 text-center bg-gray-100">
-    <h2 class="text-3xl font-bold text-blue-800 mb-6" data-aos="fade-up">Find Us Here</h2>
+<section class="py-10 px-10 text-center bg-gray-100" id="map-section">
+    <h2 class="text-3xl font-bold text-blue-600 mb-6" data-aos="fade-up">Find Us Here</h2>
 
     <!-- Map Container -->
     <div class="w-full flex justify-center" data-aos="fade-up" data-aos-delay="200">
