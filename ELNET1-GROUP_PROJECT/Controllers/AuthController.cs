@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Linq;
 
 namespace ELNET1_GROUP_PROJECT.Controllers
 {
@@ -20,12 +21,12 @@ namespace ELNET1_GROUP_PROJECT.Controllers
     public class AuthController : ControllerBase
     {
         private readonly MyAppDBContext _context;
-        private readonly IConfiguration _configuration; // ✅ Add this
+        private readonly IConfiguration _configuration;
 
         public AuthController(MyAppDBContext context, IConfiguration configuration)
         {
             _context = context;
-            _configuration = configuration; // ✅ Assign it
+            _configuration = configuration;
         }
 
         [HttpPost("signup")]
@@ -43,6 +44,171 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return Ok(new { message = "User registered successfully!" });
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
+        {
+            var existingToken = Request.Cookies["jwt"];
+            if (!string.IsNullOrEmpty(existingToken) && ValidateJwtToken(existingToken) != null)
+            {
+                var existingUser = GetUserFromToken(existingToken);
+                if (existingUser != null)
+                {
+                    return RedirectToRole(existingUser.Role);
+                }
+            }
+
+            var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Email == loginDTO.Email);
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDTO.Password, user.Password))
+            {
+                return Unauthorized(new { message = "Invalid credentials." });
+            }
+
+            var token = GenerateJwtToken(user);
+            SetJwtCookie(token, user.Role, user.Id.ToString()); 
+
+            return RedirectToRole(user.Role);
+        }
+
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetUserProfile()
+        {
+            if (!Request.Cookies.TryGetValue("jwt", out var token))
+            {
+                return Unauthorized("No token provided.");
+            }
+
+            var principal = ValidateJwtToken(token);
+            if (principal == null) return Unauthorized("Invalid token.");
+
+            var userId = principal.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (userId == null) return Unauthorized();
+
+            var user = await _context.User_Accounts.FindAsync(int.Parse(userId));
+            return Ok(user);
+        }
+
+        private string GenerateJwtToken(User_Account user)
+        {
+            var jwtSettings = _configuration.GetSection("JwtSettings");
+            var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? _configuration["JwtSettings:Secret"];
+            var key = Encoding.UTF8.GetBytes(secretKey);
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim("UserId", user.Id.ToString()),
+                    new Claim("Role", user.Role) // ✅ Include Role in the token
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(int.Parse(jwtSettings["ExpiryMinutes"])),
+                Issuer = jwtSettings["Issuer"],
+                Audience = jwtSettings["Audience"],
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature
+                )
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        private ClaimsPrincipal ValidateJwtToken(string token)
+        {
+            try
+            {
+                var jwtSettings = _configuration.GetSection("JwtSettings");
+                var key = Encoding.ASCII.GetBytes(jwtSettings["Secret"]);
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidIssuer = jwtSettings["Issuer"],
+                    ValidAudience = jwtSettings["Audience"],
+                    ValidateLifetime = true
+                };
+
+                return tokenHandler.ValidateToken(token, validationParameters, out _);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private void SetJwtCookie(string token, string role, string id)
+        {
+            Response.Cookies.Append("jwt", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddMinutes(60)
+            });
+
+            Response.Cookies.Append("UserRole", role, new CookieOptions
+            {
+                HttpOnly = false, 
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddMinutes(60)
+            });
+
+            Response.Cookies.Append("Id", id, new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddMinutes(60)
+            });
+        }
+
+        private User_Account GetUserFromToken(string token)
+        {
+            var principal = ValidateJwtToken(token);
+            if (principal == null) return null;
+
+            var userId = principal.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (userId == null) return null;
+
+            return _context.User_Accounts.Find(int.Parse(userId));
+        }
+
+        private IActionResult RedirectToRole(string role)
+        {
+            return role switch
+            {
+                "Admin" => Ok(new { redirectUrl = "/Admin" }),
+                "Homeowner" => Ok(new { redirectUrl = "/Home/dashboard" }),
+                "Staff" => Ok(new { redirectUrl = "/Staff" }),
+                _ => Ok(new { redirectUrl = "/home" })
+            };
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("jwt");
+            return Ok(new { redirectUrl = "/home", message = "Logged out successfully!" });
+        }
+
+        /*
+        [HttpPost("check-google-user")]
+        public async Task<IActionResult> CheckGoogleUser([FromBody] LoginDTO loginDTO)
+        {
+            var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Email == loginDTO.Email);
+            return Ok(new { exists = user != null });
+        }
+        */
+
+        /*
         [HttpPost("google-signup")]
         public async Task<IActionResult> GoogleSignUp([FromBody] User_Account user)
         {
@@ -65,124 +231,6 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
             return Ok(new { message = "Google Sign-In successful!" });
         }
-
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
-        {
-            var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Email == loginDTO.Email);
-
-            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDTO.Password, user.Password))
-            {
-                return Unauthorized("Invalid credentials.");
-            }
-
-            var token = GenerateJwtToken(user);
-
-            SetJwtCookie(token);
-
-            return Ok(new { message = "Login successful!" });
-        }
-
-        [HttpPost("check-google-user")]
-        public async Task<IActionResult> CheckGoogleUser([FromBody] LoginDTO loginDTO)
-        {
-            var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Email == loginDTO.Email);
-            return Ok(new { exists = user != null });
-        }
-
-        [Authorize]
-        [HttpGet("profile")]
-        public async Task<IActionResult> GetUserProfile()
-        {
-            if (!Request.Cookies.TryGetValue("jwt", out var token))
-            {
-                return Unauthorized("No token provided.");
-            }
-
-            var principal = ValidateJwtToken(token);
-            if (principal == null) return Unauthorized("Invalid token.");
-
-            var userId = principal.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
-
-            if (userId == null) return Unauthorized();
-
-            var user = await _context.User_Accounts.FindAsync(int.Parse(userId));
-
-            return Ok(user);
-        }
-
-        private string GenerateJwtToken(User_Account user)
-        {
-            var jwtSettings = _configuration.GetSection("JwtSettings");
-            var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? _configuration["JwtSettings:Secret"];
-            var key = Encoding.UTF8.GetBytes(secretKey);
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim("UserId", user.Id.ToString())
-                }),
-                Expires = DateTime.UtcNow.AddMinutes(int.Parse(jwtSettings["ExpiryMinutes"])),
-                Issuer = jwtSettings["Issuer"],
-                Audience = jwtSettings["Audience"],
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256Signature
-                )
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
-        }
-
-        private ClaimsPrincipal ValidateJwtToken(string token)
-        {
-            var jwtSettings = _configuration.GetSection("JwtSettings");
-            var key = Encoding.ASCII.GetBytes(jwtSettings["Secret"]);
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidIssuer = jwtSettings["Issuer"],
-                ValidAudience = jwtSettings["Audience"],
-                ValidateLifetime = true
-            };
-
-            try
-            {
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
-                return principal;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private void SetJwtCookie(string token)
-        {
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true, // Prevents JavaScript access (secure against XSS attacks)
-                Secure = true,   
-                SameSite = SameSiteMode.Strict, 
-                Expires = DateTime.UtcNow.AddMinutes(60)
-            };
-            Response.Cookies.Append("jwt", token, cookieOptions);
-        }
-
-        [HttpPost("logout")]
-        public IActionResult Logout()
-        {
-            Response.Cookies.Delete("jwt");
-            return Ok(new { message = "Logged out successfully!" });
-        }
+        */
     }
 }

@@ -1,33 +1,40 @@
-using ELNET1_GROUP_PROJECT.Data;
+﻿using ELNET1_GROUP_PROJECT.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using ELNET1_GROUP_PROJECT.Models; // Add this using directive
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add session services
-builder.Services.AddDistributedMemoryCache(); // Required for session storage
+builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // Set session timeout
-    options.Cookie.HttpOnly = true; // Secure cookie storage
-    options.Cookie.IsEssential = true; // Ensure it's stored even with GDPR compliance
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
 
-// Add SQLite database
 builder.Services.AddDbContext<MyAppDBContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/")
+    {
+        context.Response.Redirect("/home");
+        return;
+    }
+    await next();
+});
+
+app.UseRouting();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -45,12 +52,21 @@ app.UseStaticFiles(new StaticFileOptions
 // Enable session middleware
 app.UseSession();
 
-app.UseRouting();
+// ✅ Register Role Middleware here before Authorization
+app.UseMiddleware<RoleMiddleware>();
 
 app.UseAuthorization();
 
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Home}/{action=landing}/{id?}");
+});
+
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=landing}/{id?}");
+    name: "homeowner",
+    pattern: "Home/{action=dashboard}/{id?}",
+    defaults: new { controller = "Home" });
 
 app.Run();
