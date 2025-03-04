@@ -663,8 +663,8 @@ video {
 }
 
 .ml-10 {
-  margin-left: 2.5rem;
-=======
+    margin-left: 2.5rem;
+}
 .mt-1 {
   margin-top: 0.25rem;
 }
@@ -732,8 +732,8 @@ video {
 
 
 .h-48 {
-  height: 12rem;
-=======
+    height: 12rem;
+}
 .h-6 {
   height: 1.5rem;
 }
@@ -831,8 +831,8 @@ video {
 
 
 .grid-cols-1 {
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-=======
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+}
 .cursor-pointer {
   cursor: pointer;
 }
@@ -876,8 +876,8 @@ video {
 
 
 .gap-5 {
-  gap: 1.25rem;
-=======
+    gap: 1.25rem;
+}
 .gap-2 {
   gap: 0.5rem;
 }
@@ -1509,8 +1509,9 @@ body {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-.focus\:outline-none:focus {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
+    .focus\:outline-none:focus {
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+    }
 
 }
