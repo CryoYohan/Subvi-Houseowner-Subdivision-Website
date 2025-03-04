@@ -1,15 +1,15 @@
 ﻿@{
     ViewData["Title"] = "Unauthorized Access";
     Layout = "~/Views/Shared/_UnauthorizedLayout.cshtml";
-    var userRole = Context.Request.Cookies["UserRole"]; // Retrieve role from cookie
-    var redirectUrl = "/home"; // Default redirect
+    var userRole = Context.Request.Cookies["UserRole"]; 
+    var redirectUrl = "/home"; 
 
     if (!string.IsNullOrEmpty(userRole))
     {
         switch (userRole)
         {
             case "Admin":
-                redirectUrl = "/Admin";
+                redirectUrl = "/Admin/Index";
                 break;
             case "Staff":
                 redirectUrl = "/Staff";
@@ -35,7 +35,7 @@
     <!-- Access Denied Message -->
     <h1 class="text-4xl font-bold text-red-600 animate-fade-in mt-6">Access Denied</h1>
     <p class="mt-4 text-lg text-gray-700 animate-fade-in">
-        Oops! You do not have permission to view this page.
+        Oops! You do not have permission to view this page. Please login first.
     </p>
 
     <!-- Dynamic Redirect Button -->

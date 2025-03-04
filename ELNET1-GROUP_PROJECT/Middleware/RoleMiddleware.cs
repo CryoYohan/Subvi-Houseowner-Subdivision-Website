@@ -19,9 +19,9 @@ public class RoleMiddleware
         // If no JWT token, redirect to /home
         if (string.IsNullOrEmpty(jwtToken))
         {
-            if ((path.StartsWith("/admin") || path.StartsWith("/staff") || path.StartsWith("/home")) && path != "/home")
+            if ((path.StartsWith("/admin") || path.StartsWith("/staff") || path.StartsWith("/home")) && path != "/home" && path != "/")
             {
-                context.Response.Redirect("/home");
+                context.Response.Redirect("/Restricted/UnauthorizedAccess");
                 return;
             }
         }

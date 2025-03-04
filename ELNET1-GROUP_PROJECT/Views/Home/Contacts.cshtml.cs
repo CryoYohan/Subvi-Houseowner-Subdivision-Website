@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Subvi.Views.Homeowner
+namespace Subvi.Views.Home
 {
-    public class OwnerDashboardModel : PageModel
+    public class ContactsModel : PageModel
     {
         public void OnGet()
         {

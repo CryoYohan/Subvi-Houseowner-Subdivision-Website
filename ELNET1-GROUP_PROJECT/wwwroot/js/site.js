@@ -29,3 +29,18 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+const currentPath = window.location.pathname;
+
+// Function to highlight the active link with animation
+function setActiveNavLink() {
+    document.querySelectorAll(".nav-item").forEach(link => {
+        if (link.getAttribute("href") === currentPath) {
+            link.classList.add("active");
+        } else {
+            link.classList.remove("active");
+        }
+    });
+}
+
+setActiveNavLink();
