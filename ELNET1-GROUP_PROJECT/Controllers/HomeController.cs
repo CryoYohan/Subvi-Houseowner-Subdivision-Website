@@ -65,14 +65,9 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             {
                 "Admin" => RedirectToAction("Index", "Admin"),
                 "Homeowner" => RedirectToAction("dashboard", "Home"),
-                "Staff" => RedirectToAction("Dashboard", "Staff"),
+                "Staff" => RedirectToAction("staffdashboard", "Staff"),
                 _ => RedirectToAction("landing", "Home")
             };
-        }
-
-        public IActionResult StaffDashboard()
-        {
-            return View();
         }
 
         public IActionResult Calendar()

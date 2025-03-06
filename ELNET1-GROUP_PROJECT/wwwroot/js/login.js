@@ -25,6 +25,7 @@ document.getElementById("login-form").addEventListener("submit", async function 
 
     if (response.ok) {
         const data = await response.json();
+        document.getElementById("login-form").reset();
     //    alert("Login successful!");
 
         // Redirect to Dashboard
