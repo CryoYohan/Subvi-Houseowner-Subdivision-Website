@@ -52,7 +52,6 @@ app.UseStaticFiles(new StaticFileOptions
 // Enable session middleware
 app.UseSession();
 
-// ✅ Register Role Middleware here before Authorization
 app.UseMiddleware<RoleMiddleware>();
 
 app.UseAuthorization();
@@ -72,11 +71,23 @@ app.UseEndpoints(endpoints =>
         name: "contacts",
         pattern: "contacts",
         defaults: new { controller = "Home", action = "Contacts" });
+
+    endpoints.MapControllerRoute(
+        name: "admin",
+        pattern: "admin/{action=Index}/{id?}",
+        defaults: new { controller = "Admin" });
+
+    endpoints.MapControllerRoute(
+        name: "staff",
+        pattern: "staff/dashboard",
+        defaults: new { controller = "Staff", action = "Staffdashboard" });
+
+    endpoints.MapControllerRoute(
+        name: "homeowner",
+        pattern: "home/dashboard",
+        defaults: new { controller = "Home", action = "dashboard" });
 });
 
-app.MapControllerRoute(
-    name: "homeowner",
-    pattern: "Home/{action=dashboard}/{id?}",
-    defaults: new { controller = "Home" });
+
 
 app.Run();
