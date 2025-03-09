@@ -17,11 +17,10 @@ document.getElementById("signup-form").addEventListener("submit", async function
         lastname: document.getElementById("lastname").value,
         email: document.getElementById("email").value,
         password: document.getElementById("password").value,
-        role: "Buyer",
+        role: "Homeowner",
         address: document.getElementById("address").value,
         phoneNumber: document.getElementById("phonenumber").value
     };
-    console.log(userData)
 
     const response = await fetch("/api/auth/signup", {
         method: "POST",
@@ -30,6 +29,7 @@ document.getElementById("signup-form").addEventListener("submit", async function
     });
 
     if (response.ok) {
+        document.getElementById("signup-form").reset();
         alert("Sign up successful!");
         closeSignupModal();
     } else {

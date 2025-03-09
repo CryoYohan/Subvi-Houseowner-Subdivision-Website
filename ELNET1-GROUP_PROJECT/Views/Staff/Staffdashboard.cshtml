@@ -1,0 +1,147 @@
+﻿@{
+    ViewData["Title"] = "Subvi | Home";
+
+    // Retrieve the user's role from cookies
+    string role = Context.Request.Cookies["UserRole"];
+
+    // Declare controller
+    string homeController = "";
+    string calendarController = "";
+    string facilitiesController = "";
+    string billController = "";
+    string servicesController = "";
+    string forumsController = "";
+    string feedbacksController = "";
+
+    // Default action values
+    string homeAction = "Landing";
+    string calendarAction = "Calendar";
+    string facilitiesAction = "Facilities";
+    string billAction = "Bill";
+    string servicesAction = "Services";
+    string forumsAction = "Forums";
+    string feedbacksAction = "Feedbacks";
+
+    // Assign controllers/actions based on role
+    if (role == "Admin")
+    {
+        homeController = "admin"; homeAction = "Index";
+        calendarController = "admin"; calendarAction = "Calendar";
+        facilitiesController = "admin"; facilitiesAction = "Facilities";
+        billController = "admin"; billAction = "BillManagement";
+        servicesController = "admin"; servicesAction = "ServicesManagement";
+        forumsController = "admin"; forumsAction = "Forums";
+        feedbacksController = "admin"; feedbacksAction = "Feedbacks";
+    }
+    else if (role == "Homeowner")
+    {
+        homeController = "home"; homeAction = "dashboard";
+        calendarController = "home"; calendarAction = "Calendar";
+        facilitiesController = "home"; facilitiesAction = "Facilities";
+        billController = "home"; billAction = "Bill";
+        servicesController = "home"; servicesAction = "Services";
+        forumsController = "home"; forumsAction = "Forums";
+        feedbacksController = "home"; feedbacksAction = "Feedbacks";
+    }
+    else if (role == "Staff")
+    {
+        homeController = "staff"; homeAction = "Dashboard";
+        calendarController = "staff"; calendarAction = "Calendar";
+        facilitiesController = "staff"; facilitiesAction = "Facilities";
+        billController = "staff"; billAction = "Bill";
+        servicesController = "staff"; servicesAction = "Services";
+        forumsController = "staff"; forumsAction = "Forums";
+        feedbacksController = "staff"; feedbacksAction = "Feedbacks";
+    }
+}
+
+@* Sidebar *@
+<div class="flex flex-row overflow-hidden pt-4 gap-2 flex-shrink-0">
+    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6">
+        <ul class="space-y-4">
+             <!-- Home -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item" asp-controller="@homeController" asp-action="@homeAction">
+                    <i class="fas fa-home text-xl"></i>
+                    <span class="font-semibold">Home</span>
+                </a>
+            </li>
+
+             <!-- Calendar -->
+             <li>
+                <a class="flex items-center space-x-4 p-3 sidebar-item hover:bg-gray-100 transition ease-in-out rounded-l-full" asp-controller="@calendarController" asp-action="@calendarAction">
+                      <i class="fas fa-calendar-alt text-xl"></i>
+                      <span class="font-semibold">Calendar</span>
+                 </a>
+             </li>
+
+            <!-- Facilities -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@facilitiesController" asp-action="@facilitiesAction">
+                    <i class="fas fa-building text-xl"></i>
+                    <span class="font-semibold">Facilities</span>
+                 </a>
+            </li>
+
+            <!-- Bill Payment -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@billController" asp-action="@billAction">
+                   <i class="fas fa-file-invoice-dollar text-xl"></i>
+                   <span class="font-semibold">Bill Payment</span>
+               </a>
+           </li>
+
+           <!-- Services -->
+           <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@servicesController" asp-action="@servicesAction">
+                    <i class="fas fa-tools text-xl"></i>
+                    <span class="font-semibold">Services</span>
+                </a>
+           </li>
+
+            <!-- Forums -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@forumsController" asp-action="@forumsAction">
+                    <i class="fas fa-comments text-xl"></i>
+                    <span class="font-semibold">Forums</span>
+                </a>
+            </li>
+
+            <!-- Feedbacks -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@feedbacksController" asp-action="@feedbacksAction">
+                    <i class="fas fa-bullhorn text-xl"></i>
+                    <span class="font-semibold">Feedbacks</span>
+                 </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-4 w-vw-3/4">
+        <div class="flex space-x-6 text-blue-800 font-semibold border-b">
+            <button class="pb-2 border-b-2 border-blue-800">Announcements</button>
+            <button class="pb-2 hover:text-blue-500">Polls</button>
+            <button class="pb-2 hover:text-blue-500">Surveys</button>
+        </div>
+
+        <!-- Announcement Section -->
+        <div class="p-4 animate-pulse">
+            <div class="flex items-center space-x-4">
+                <img src="~/images/admin-avatar.png" class="h-10 w-10 rounded-full" alt="Admin">
+                <div>
+                    <h3 class="font-bold">Admin</h3>
+                    <p class="text-gray-500 text-sm">Description of the announcement goes here.</p>
+                </div>
+            </div>
+            <div class="mt-4 space-y-2">
+                <p class="bg-gray-200 h-4 rounded w-5/6"></p>
+                <p class="bg-gray-200 h-4 rounded w-3/4"></p>
+                <p class="bg-gray-200 h-4 rounded w-4/5"></p>
+            </div>
+        </div>
+    </div>
+
+    <aside>
+        Calendar
+    </aside>
+</div>

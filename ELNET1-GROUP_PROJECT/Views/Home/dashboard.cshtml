@@ -1,66 +1,119 @@
 ﻿@{
     ViewData["Title"] = "Subvi | Home";
+
+    // Retrieve the user's role from cookies
+    string role = Context.Request.Cookies["UserRole"];
+
+    // Declare controller
+    string homeController = "";
+    string calendarController = "";
+    string facilitiesController = "";
+    string billController = "";
+    string servicesController = "";
+    string forumsController = "";
+    string feedbacksController = "";
+
+    // Default action values
+    string homeAction = "Landing";
+    string calendarAction = "Calendar";
+    string facilitiesAction = "Facilities";
+    string billAction = "Bill";
+    string servicesAction = "Services";
+    string forumsAction = "Forums";
+    string feedbacksAction = "Feedbacks";
+
+    // Assign controllers/actions based on role
+    if (role == "Admin")
+    {
+        homeController = "admin"; homeAction = "Index";
+        calendarController = "admin"; calendarAction = "Calendar";
+        facilitiesController = "admin"; facilitiesAction = "Facilities";
+        billController = "admin"; billAction = "BillManagement";
+        servicesController = "admin"; servicesAction = "ServicesManagement";
+        forumsController = "admin"; forumsAction = "Forums";
+        feedbacksController = "admin"; feedbacksAction = "Feedbacks";
+    }
+    else if (role == "Homeowner")
+    {
+        homeController = "home"; homeAction = "dashboard";
+        calendarController = "home"; calendarAction = "Calendar";
+        facilitiesController = "home"; facilitiesAction = "Facilities";
+        billController = "home"; billAction = "Bill";
+        servicesController = "home"; servicesAction = "Services";
+        forumsController = "home"; forumsAction = "Forums";
+        feedbacksController = "home"; feedbacksAction = "Feedbacks";
+    }
+    else if (role == "Staff")
+    {
+        homeController = "staff"; homeAction = "Dashboard";
+        calendarController = "staff"; calendarAction = "Calendar";
+        facilitiesController = "staff"; facilitiesAction = "Facilities";
+        billController = "staff"; billAction = "Bill";
+        servicesController = "staff"; servicesAction = "Services";
+        forumsController = "staff"; forumsAction = "Forums";
+        feedbacksController = "staff"; feedbacksAction = "Feedbacks";
+    }
 }
 
 @* Sidebar *@
-<div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
-    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
+<div class="flex flex-row overflow-hidden pt-4 gap-2 flex-shrink-0">
+    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6">
         <ul class="space-y-4">
-                            <!-- Home -->
-                            <li>
-                                <a class="flex items-center space-x-4 p-3 rounded-l-full bg-gray-200" asp-controller="Home" asp-action="dashboard">
-                                    <i class="fas fa-home text-blue-800 text-xl"></i>
-                                    <span class="text-blue-800 font-semibold">Home</span>
-                                </a>
-                            </li>
+             <!-- Home -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item" asp-controller="@homeController" asp-action="@homeAction">
+                    <i class="fas fa-home text-xl"></i>
+                    <span class="font-semibold">Home</span>
+                </a>
+            </li>
 
-                            <!-- Calendar -->
-                            <li>
-                                <a class="flex items-center space-x-4 p-3  hover:bg-gray-100 transition ease-in-out rounded-l-full" asp-controller="Home" asp-action="Calendar">
-                                    <i class="fas fa-calendar-alt text-blue-800 text-xl"></i>
-                                    <span class="text-blue-800 font-semibold">Calendar</span>
-                                </a>
-                            </li>
+            <!-- Calendar -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 sidebar-item hover:bg-gray-100 transition ease-in-out rounded-l-full" asp-controller="@calendarController" asp-action="@calendarAction">
+                    <i class="fas fa-calendar-alt text-xl"></i>
+                    <span class="font-semibold">Calendar</span>
+                </a>
+            </li>
 
-                            <!-- Facilities -->
-                            <li>
-                                <a class="flex items-center space-x-4 p-3 rounded-l-full hover:bg-gray-100 transition ease-in-out" asp-controller="Home" asp-action="facilities">
-                                    <i class="fas fa-building text-blue-800 text-xl"></i>
-                                    <span class="text-blue-800 font-semibold">Facilities</span>
-                                </a>
-                            </li>
+            <!-- Facilities -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@facilitiesController" asp-action="@facilitiesAction">
+                    <i class="fas fa-building text-xl"></i>
+                    <span class="font-semibold">Facilities</span>
+                </a>
+            </li>
 
-                            <!-- Bill Payment -->
-                            <li>
-                                <a class="flex items-center space-x-4 p-3 rounded-l-full hover:bg-gray-100 transition ease-in-out" asp-controller="Home" asp-action="bill">
-                                    <i class="fas fa-file-invoice-dollar text-blue-800 text-xl"></i>
-                                    <span class="text-blue-800 font-semibold">Bill Payment</span>
-                                </a>
-                            </li>
+            <!-- Bill Payment -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@billController" asp-action="@billAction">
+                    <i class="fas fa-file-invoice-dollar text-xl"></i>
+                    <span class="font-semibold">Bill Payment</span>
+                </a>
+            </li>
 
-                            <!-- Services -->
-                            <li>
-                                <a class="flex items-center space-x-4 p-3 rounded-l-full hover:bg-gray-100 transition ease-in-out" asp-controller="Home" asp-action="services">
-                                    <i class="fas fa-tools text-blue-800 text-xl"></i>
-                                    <span class="text-blue-800 font-semibold">Services</span>
-                                </a>
-                            </li>
+            <!-- Services -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@servicesController" asp-action="@servicesAction">
+                    <i class="fas fa-tools text-xl"></i>
+                    <span class="font-semibold">Services</span>
+                </a>
+            </li>
 
-                            <!-- Forums -->
-                            <li>
-                                <a class="flex items-center space-x-4 p-3 rounded-l-full hover:bg-gray-100 transition ease-in-out" asp-controller="Home" asp-action="forums">
-                                    <i class="fas fa-comments text-blue-800 text-xl"></i>
-                                    <span class="text-blue-800 font-semibold">Forums</span>
-                                </a>
-                            </li>
+            <!-- Forums -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@forumsController" asp-action="@forumsAction">
+                    <i class="fas fa-comments text-xl"></i>
+                    <span class="font-semibold">Forums</span>
+                </a>
+            </li>
 
-                            <!-- Feedbacks -->
-                            <li>
-                                <a class="flex items-center space-x-4 p-3 rounded-l-full hover:bg-gray-100 transition ease-in-out" asp-controller="Home" asp-action="feedbacks">
-                                    <i class="fas fa-bullhorn text-blue-800 text-xl"></i>
-                                    <span class="text-blue-800 font-semibold">Feedbacks</span>
-                                </a>
-                            </li>
+            <!-- Feedbacks -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@feedbacksController" asp-action="@feedbacksAction">
+                    <i class="fas fa-bullhorn text-xl"></i>
+                    <span class="font-semibold">Feedbacks</span>
+                </a>
+            </li>
         </ul>
     </div>
 

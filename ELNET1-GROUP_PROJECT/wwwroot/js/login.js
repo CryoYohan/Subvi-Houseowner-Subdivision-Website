@@ -24,14 +24,17 @@ document.getElementById("login-form").addEventListener("submit", async function 
     });
 
     if (response.ok) {
-        alert("Login successful!");
-        const user = await response.json();
-        displayUserProfile(user);
-        closeLoginModal();
+        const data = await response.json();
+        document.getElementById("login-form").reset();
+    //    alert("Login successful!");
+
+        // Redirect to Dashboard
+        window.location.href = data.redirectUrl;
     } else {
         alert("Login failed. Invalid credentials.");
     }
 });
+
 
 // Handle Google login directly
 async function handleGoogleLogin(response) {
