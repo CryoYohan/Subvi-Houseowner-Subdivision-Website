@@ -28,13 +28,23 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return jwtToken?.Claims.FirstOrDefault(c => c.Type == "Role")?.Value;
         }
 
-        public IActionResult Landing()
+        public IActionResult landing()
         {
             var role = GetUserRoleFromToken();
             if (!string.IsNullOrEmpty(role))
             {
                 return RedirectToRoleDashboard(role);
             }
+            return View();
+        }
+
+        public IActionResult AboutUs()
+        {
+            return View();
+        }
+
+        public IActionResult Contacts()
+        {
             return View();
         }
 
@@ -55,14 +65,9 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             {
                 "Admin" => RedirectToAction("Index", "Admin"),
                 "Homeowner" => RedirectToAction("dashboard", "Home"),
-                "Staff" => RedirectToAction("Dashboard", "Staff"),
-                _ => RedirectToAction("landing")
+                "Staff" => RedirectToAction("staffdashboard", "Staff"),
+                _ => RedirectToAction("landing", "Home")
             };
-        }
-
-        public IActionResult StaffDashboard()
-        {
-            return View();
         }
 
         public IActionResult Calendar()

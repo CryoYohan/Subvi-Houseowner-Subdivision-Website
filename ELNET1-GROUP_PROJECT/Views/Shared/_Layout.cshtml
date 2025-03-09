@@ -18,7 +18,7 @@
             <nav>
                 <div class="flex items-center justify-between">
                     <!-- Logo Section -->
-                    <a href="#" class="block">
+                    <a class="block">
                         <img src="~/images/subvi-logo.png" class="h-12 pl-4" alt="Subvi Logo">
                     </a>
 
@@ -32,7 +32,23 @@
                                 <i class="fas fa-user-circle text-xl userbutton"></i>
                             </button>         
                         </div>
-
+                        <!-- Dropdown Menu -->
+                        <div id="user-dropdown" class="absolute text-right mt-2 w-1/2 bg-white shadow-lg rounded-lg overflow-hidden border flex-1 border-gray-200 hidden">
+                            <ul class="text-sm text-gray-800">
+                                <li>
+                                    <a href="#" class="flex items-center px-4 py-2 hover:bg-gray-100 transition">
+                                        <i class="fas fa-cog text-gray-600 mr-2"></i><span> Settings</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a onclick="openLogoutPopup()"
+                                       class="flex items-center px-4 py-2 text-red-600 hover:bg-gray-100 transition">
+                                        <i class="fas fa-sign-out-alt text-red-600 text-xl"></i>
+                                        <span class="text-red-600 font-semibold"> Logout</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                         <!-- Theme Toggle Button -->
                         <button id="theme-toggle" class="focus:outline-none transition">
                             <i id="theme-icon" class="fas fa-moon text-xl userbutton"></i>
@@ -41,23 +57,7 @@
                 </div>
             </nav> 
             
-            <!-- Dropdown Menu -->
-            <div id="user-dropdown" class="absolute text-right mt-2 w-1/2 bg-white shadow-lg rounded-lg overflow-hidden border flex-1 border-gray-200 hidden">
-                <ul class="text-sm text-gray-800">
-                    <li>
-                        <a href="#" class="flex items-center px-4 py-2 hover:bg-gray-100 transition">
-                            <i class="fas fa-cog text-gray-600 mr-2"></i><span> Settings</span>
-                        </a>
-                    </li>
-                    <li>
-                        <button onclick="openLogoutPopup()"
-                                class="flex items-center px-4 py-2 text-red-600 hover:bg-gray-100 transition">
-                            <i class="fas fa-sign-out-alt text-red-600 text-xl"></i>
-                            <span class="text-red-600 font-semibold"> Logout</span>
-                        </button>
-                    </li>
-                </ul>
-            </div>
+            
         </header>
 
         <div id="loading-screen" class="d-flex justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100 bg-white" style="z-index: 1050; display: none;">
