@@ -55,6 +55,23 @@
     }
 }
 
+<style>
+  
+    .facility-card:hover img {
+        transform: scale(1.05);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .facility-card {
+        overflow: hidden;
+    }
+
+    .facility-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: box-shadow 0.3s ease-in-out;
+    }
+</style>
+
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
     <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
@@ -65,6 +82,7 @@
                    asp-controller="@homeController" asp-action="@homeAction">
                     <i class="fas fa-home text-xl"></i>
                     <span class="font-semibold">Home</span>
+
                 </a>
             </li>
 
@@ -125,55 +143,90 @@
     </div>
 
     @* MainContent *@  
-<div class="flex-1 p-8 bg-white ml-10">
-    <h1 class="text-2xl font-bold text-blue-800 mb-6 text-center">Our Special Facilities</h1>
-    <div class="flex justify-center">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <!-- Swimming Pool -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="/images/swimmingpool.jpg" alt="Swimming Pool" class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h2 class="text-xl font-semibold text-blue-800">Swimming Pool</h2>
-                    <p class="text-gray-600">A refreshing pool for leisure and fitness.</p>
+    <div class="flex-1 p-8 bg-white ml-10">
+        <h1 class="text-2xl font-bold text-blue-800 mb-6 text-center">Our Special Facilities</h1>
+        <div class="flex justify-center">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Swimming Pool -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden facility-card">
+                    <img src="/images/swimmingpool.jpg" alt="Swimming Pool" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <h2 class="text-xl font-semibold text-blue-800">Swimming Pool</h2>
+                        <p class="text-gray-600">A refreshing pool for leisure and fitness.</p>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Basketball Court -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="/images/court.jpg" alt="Basketball Court" class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h2 class="text-xl font-semibold text-blue-800">Basketball Court</h2>
-                    <p class="text-gray-600">A sports court for games and practice.</p>
+                <!-- Basketball Court -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden facility-card">
+                    <img src="/images/court.jpg" alt="Basketball Court" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <h2 class="text-xl font-semibold text-blue-800">Basketball Court</h2>
+                        <p class="text-gray-600">A sports court for games and practice.</p>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Fitness Gym -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="/images/gym.jpg" alt="Fitness Gym" class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h2 class="text-xl font-semibold text-blue-800">Fitness Gym</h2>
-                    <p class="text-gray-600">A well-equipped space for exercise.</p>
+                <!-- Fitness Gym -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden facility-card">
+                    <img src="/images/gym.jpg" alt="Fitness Gym" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <h2 class="text-xl font-semibold text-blue-800">Fitness Gym</h2>
+                        <p class="text-gray-600">A well-equipped space for exercise.</p>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Playgrounds -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="/images/playground.jpg" alt="Playgrounds" class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h2 class="text-xl font-semibold text-blue-800">Playgrounds</h2>
-                    <p class="text-gray-600">A fun and safe area for children.</p>
+                <!-- Playgrounds -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden facility-card">
+                    <img src="/images/playground.jpg" alt="Playgrounds" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <h2 class="text-xl font-semibold text-blue-800">Playgrounds</h2>
+                        <p class="text-gray-600">A fun and safe area for children.</p>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Function Hall -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="/images/hall.jpg" alt="Party Room" class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h2 class="text-xl font-semibold text-blue-800">Function Hall</h2>
-                    <p class="text-gray-600">A venue for events and meetings.</p>
+                <!-- Function Hall -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden facility-card">
+                    <img src="/images/hall.jpg" alt="Party Room" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <h2 class="text-xl font-semibold text-blue-800">Function Hall</h2>
+                        <p class="text-gray-600">A venue for events and meetings.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<!-- Reservation Modal -->
+<div id="reservationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Reservation Form</h3>
+            <div class="mt-2 px-7 py-3">
+                <form id="reservationForm">
+                    <input type="text" id="facilityName" name="facilityName" class="hidden">
+                    <div class="mb-4">
+                        <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
+                        <input type="date" id="date" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div class="mb-4">
+                        <label for="time" class="block text-sm font-medium text-gray-700">Time</label>
+                        <input type="time" id="time" name="time" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div class="mb-4">
+                        <label for="name" class="block text-sm font-medium text-gray-700">Your Name</label>
+                        <input type="text" id="name" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button type="submit" class="px-4 py-2 bg-blue-800 text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            Reserve
+                        </button>
+                        <button type="button" id="closeModal" class="ml-2 px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
+<script src="~/js/facilities.js"></script>
