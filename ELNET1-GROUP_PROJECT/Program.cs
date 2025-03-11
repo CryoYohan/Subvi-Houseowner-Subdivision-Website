@@ -74,8 +74,8 @@ app.UseEndpoints(endpoints =>
 
     endpoints.MapControllerRoute(
         name: "admin",
-        pattern: "admin/{action=Index}/{id?}",
-        defaults: new { controller = "Admin" });
+        pattern: "admin/dashboard",
+        defaults: new { controller = "Admin", action = "Dashboard" });
 
     endpoints.MapControllerRoute(
         name: "staff",

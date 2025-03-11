@@ -25,6 +25,17 @@ public class StaffController : Controller
         return jwtToken?.Claims.FirstOrDefault(c => c.Type == "Role")?.Value;
     }
 
+    public IActionResult Landing()
+    {
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (role == "Admin")
+        {
+            return RedirectToAction("Dashboard", "Admin");
+        }
+        return View();
+    }
+
+
     public IActionResult Staffdashboard()
     {
         var role = GetUserRoleFromToken();

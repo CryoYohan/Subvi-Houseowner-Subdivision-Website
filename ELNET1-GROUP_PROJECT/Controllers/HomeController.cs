@@ -63,7 +63,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         {
             return role switch
             {
-                "Admin" => RedirectToAction("Index", "Admin"),
+                "Admin" => RedirectToAction("Dashboard", "Admin"),
                 "Homeowner" => RedirectToAction("dashboard", "Home"),
                 "Staff" => RedirectToAction("staffdashboard", "Staff"),
                 _ => RedirectToAction("landing", "Home")
