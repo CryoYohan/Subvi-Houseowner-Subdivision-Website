@@ -52,11 +52,11 @@
             background: url('/images/777.png') no-repeat center center; background-size: cover; display: flex; justify-content: center; align-items: center;"
              data-aos="fade-up" data-aos-delay="800">
             <div class="flex space-x-10">
-                <button class="hover-animate"
+                <button class="hover-animate" onclick="openSignupModal()"
                         style="padding: 10px 20px; font-size: 20px; background-color: #1E3A8A; font-family: Tahoma, sans-serif; color: white; border: none; border-radius: 20px; cursor: pointer; height: 70px; width: 180px;">
                     Inquire now!
                 </button>
-                <button class="hover-animate"
+                <button class="hover-animate" onclick="openSignupModal()"
                         style="padding: 10px 20px; font-size: 20px; background-color: #1E3A8A; font-family: Tahoma, sans-serif; color: white; border: none; border-radius: 20px; cursor: pointer; width: 180px;">
                     Apply now
                 </button>
@@ -100,10 +100,6 @@
     </div>
 </div>
 
-<div class="developer">
-    <h2 style="margin-top: 600px;">Project Developer</h2>
-</div>
-
 <!-- Login Modal -->
 <div id="login-modal" class="hidden fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
     <div class="modal-content p-6 rounded-lg shadow-lg w-96">
@@ -122,20 +118,6 @@
                 <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
             </div>
         </form>
-
-        <div class="w-full border-t border-gray-300 mt-4"></div>
-
-        <!-- Google Sign-In Section -->
-        <div class="flex flex-col items-center space-y-4 mt-4">
-            <p class="text-gray-500">Or log in with Google</p>
-
-            <div id="g_id_onload"
-                    data-client_id="556953627417-j7ck52oo8s1ciavni7i5hrn5rbko7jhu.apps.googleusercontent.com"
-                    data-callback="handleGoogleSignIn"
-                    data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin" data-type="standard"></div>
-        </div>
     </div>
 </div>
 
@@ -143,22 +125,6 @@
 <div id="signup-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
     <div class="modal-content p-8 rounded-lg shadow-lg w-1/3">
         <h2 class="text-2xl font-bold text-blue-800 mb-4">Sign Up</h2>
-
-        <!-- Google Sign-Up Button -->
-        <div class="flex flex-col items-center space-y-4">
-            <div id="g_id_onload"
-                    data-client_id="556953627417-j7ck52oo8s1ciavni7i5hrn5rbko7jhu.apps.googleusercontent.com"
-                    data-callback="handleGoogleSignIn"
-                    data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin" data-type="standard"></div>
-
-            <p class="text-gray-500">OR</p>
-
-            <!-- Divider -->
-            <div class="w-full border-t border-gray-300 mt-4"></div>
-        </div>
-
         <form id="signup-form">
             <div class="mb-4">
                 <label class="block text-gray-700">First Name</label>

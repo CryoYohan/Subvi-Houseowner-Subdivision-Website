@@ -116,20 +116,6 @@
                 <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
             </div>
         </form>
-
-        <div class="w-full border-t border-gray-300 mt-4"></div>
-
-        <!-- Google Sign-In Section -->
-        <div class="flex flex-col items-center space-y-4 mt-4">
-            <p class="text-gray-500">Or log in with Google</p>
-
-            <div id="g_id_onload"
-                 data-client_id="556953627417-j7ck52oo8s1ciavni7i5hrn5rbko7jhu.apps.googleusercontent.com"
-                 data-callback="handleGoogleSignIn"
-                 data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin" data-type="standard"></div>
-        </div>
     </div>
 </div>
 
@@ -137,22 +123,6 @@
 <div id="signup-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
     <div class="modal-content p-8 rounded-lg shadow-lg w-1/3">
         <h2 class="text-2xl font-bold text-blue-800 mb-4">Sign Up</h2>
-
-        <!-- Google Sign-Up Button -->
-        <div class="flex flex-col items-center space-y-4">
-            <div id="g_id_onload"
-                 data-client_id="556953627417-j7ck52oo8s1ciavni7i5hrn5rbko7jhu.apps.googleusercontent.com"
-                 data-callback="handleGoogleSignIn"
-                 data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin" data-type="standard"></div>
-
-            <p class="text-gray-500">OR</p>
-
-            <!-- Divider -->
-            <div class="w-full border-t border-gray-300 mt-4"></div>
-        </div>
-
         <form id="signup-form">
             <div class="mb-4">
                 <label class="block text-gray-700">First Name</label>
