@@ -10,24 +10,19 @@ public class AdminController : Controller
     public AdminController(MyAppDBContext context)
     {
         _context = context;
-        ViewData["Layout"] = "_AdminLayout";  // Specify the custom layout for the Admin section
-    }
-
-    public IActionResult Index()
-    {
-        // Get all users from the database to display in the table
-        var users = _context.User_Accounts.ToList();
-        return View(users);  // Pass the users list to the view
+        ViewData["Layout"] = "_AdminLayout"; 
     }
 
     public IActionResult Dashboard()
     {
-        var role = HttpContext.Request.Cookies["jwt"];
-        if (role != "Admin")
+        // Get all users from the database to display in the table
+        var users = _context.User_Accounts.ToList();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
         {
-            return RedirectToAction("landing");
+            return RedirectToAction("landing", "Home");
         }
-        return View();
+        return View(users); 
     }
 
     // POST: /Admin/AddUserAccount

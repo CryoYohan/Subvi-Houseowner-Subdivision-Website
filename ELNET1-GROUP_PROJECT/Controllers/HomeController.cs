@@ -63,16 +63,11 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         {
             return role switch
             {
-                "Admin" => RedirectToAction("Index", "Admin"),
+                "Admin" => RedirectToAction("Dashboard", "Admin"),
                 "Homeowner" => RedirectToAction("dashboard", "Home"),
-                "Staff" => RedirectToAction("Dashboard", "Staff"),
+                "Staff" => RedirectToAction("staffdashboard", "Staff"),
                 _ => RedirectToAction("landing", "Home")
             };
-        }
-
-        public IActionResult StaffDashboard()
-        {
-            return View();
         }
 
         public IActionResult Calendar()

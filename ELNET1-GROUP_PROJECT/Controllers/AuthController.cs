@@ -185,9 +185,9 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         {
             return role switch
             {
-                "Admin" => Ok(new { redirectUrl = "/admin" }),
+                "Admin" => Ok(new { redirectUrl = "/admin/dashboard" }),
                 "Homeowner" => Ok(new { redirectUrl = "/home/dashboard" }),
-                "Staff" => Ok(new { redirectUrl = "/staff" }),
+                "Staff" => Ok(new { redirectUrl = "/staff/dashboard" }),
                 _ => Ok(new { redirectUrl = "/home" })
             };
         }
