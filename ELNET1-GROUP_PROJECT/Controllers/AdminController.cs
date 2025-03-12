@@ -16,14 +16,16 @@ public class AdminController : Controller
     public IActionResult Dashboard()
     {
         // Get all users from the database to display in the table
-        var users = _context.User_Accounts.ToList();
+        //var users = _context.User_Accounts.ToList();
         var role = HttpContext.Request.Cookies["UserRole"];
         if (string.IsNullOrEmpty(role) || role != "Admin")
         {
             return RedirectToAction("landing", "Home");
         }
-        return View(users); 
+        return View(); 
     }
+
+
 
     // POST: /Admin/AddUserAccount
     [HttpPost]
@@ -137,14 +139,5 @@ public class AdminController : Controller
 
         // If validation fails, redisplay the form
         return View(model);
-    }
-
-    public IActionResult Logout()
-    {
-        // Clear authentication cookies
-        Response.Cookies.Delete("jwt");
-
-        // Redirect to Home page after logging out
-        return RedirectToAction("Index", "Admin");
     }
 }
