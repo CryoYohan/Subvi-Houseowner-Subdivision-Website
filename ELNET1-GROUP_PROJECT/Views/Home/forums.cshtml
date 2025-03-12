@@ -123,6 +123,157 @@
             </li>
         </ul>
     </div>
-    <!-- Ari pag start code Gale-->
-    <h1>HELLO WORLD</h1>
+<div class="flex-1 p-6 overflow-y-auto bg-white">
+    <!-- Community Forum-->
+    <h1 class="text-2xl font-semibold mb-6 bg-white-500 text-blue-900 p-4 rounded-lg shadow-md" style="font-family: 'Poppins', sans-serif;"><b>COMMUNITY FORUM</b></h1>
+
+    <div class="flex items-center justify-between mb-6">
+        <!-- Search Bar -->
+        <div class="w-64">
+            <input id="searchInput" type="text" placeholder="Search..." class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+        </div>
+
+        <!-- Add Forum Button with Icon -->
+        <button id="addForumButton" class="flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition ease-in-out">
+            <i class="fas fa-plus mr-2"></i>
+            Add Forum
+        </button>
+    </div>
+
+    <!-- Add Forum Section -->
+    <div id="addForumSection" class="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-6 hidden">
+        <h2 class="text-xl font-semibold mb-4">Add Forum</h2>
+        <!-- Username Input -->
+        <input id="postUsername" type="text" placeholder="Your name..." class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+        <!-- Title Input -->
+        <input id="postTitle" type="text" placeholder="Enter post title..." class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+        <!-- Content Textarea -->
+        <textarea id="forumContent" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" placeholder="Write your forum post here..."></textarea>
+        <!-- Post Button -->
+        <button id="postButton" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition ease-in-out">Post</button>
+    </div>
+
+    <!-- Recent Posts Section -->
+    <div id="recentPosts" class="space-y-6">
+    </div>
 </div>
+
+<!-- JavaScript for Post Addition and Search -->
+<script>
+    // Get references to the elements
+    const addForumButton = document.getElementById('addForumButton');
+    const addForumSection = document.getElementById('addForumSection');
+    const postButton = document.getElementById('postButton');
+    const postUsername = document.getElementById('postUsername');
+    const postTitle = document.getElementById('postTitle');
+    const forumContent = document.getElementById('forumContent');
+    const recentPosts = document.getElementById('recentPosts');
+    const searchInput = document.getElementById('searchInput');
+
+    // Key for localStorage
+    const localStorageKey = 'forumPosts';
+
+    // Function to save posts to localStorage
+    const savePostsToLocalStorage = (posts) => {
+        localStorage.setItem(localStorageKey, JSON.stringify(posts));
+    };
+
+    // Function to load posts from localStorage
+    const loadPostsFromLocalStorage = () => {
+        const posts = localStorage.getItem(localStorageKey);
+        return posts ? JSON.parse(posts) : [];
+    };
+
+    // Function to render posts
+    const renderPosts = (filteredPosts = null) => {
+        const posts = filteredPosts || loadPostsFromLocalStorage();
+        recentPosts.innerHTML = ''; 
+        posts.forEach(post => {
+            const newPost = document.createElement('div');
+            newPost.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-200';
+            newPost.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">${post.title}</h3>
+                    <p class="text-sm text-gray-500">Posted by <span class="font-semibold">${post.username}</span></p>
+                </div>
+                <p class="text-gray-700 mb-4">${post.content}</p>
+                <div class="flex items-center space-x-4">
+                    <button class="flex items-center text-gray-600 hover:text-blue-500">
+                        <i class="fas fa-thumbs-up mr-2"></i>
+                        Like
+                    </button>
+                    <button class="flex items-center text-gray-600 hover:text-blue-500">
+                        <i class="fas fa-comment mr-2"></i>
+                        Comment
+                    </button>
+                </div>
+            `;
+            recentPosts.appendChild(newPost);
+        });
+    };
+
+    // Function to filter posts based on search query
+    const filterPosts = (query) => {
+        const posts = loadPostsFromLocalStorage();
+        return posts.filter(post => {
+            return (
+                post.title.toLowerCase().includes(query.toLowerCase()) ||
+                post.content.toLowerCase().includes(query.toLowerCase()) ||
+                post.username.toLowerCase().includes(query.toLowerCase())
+            );
+        });
+    };
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderPosts();
+    });
+
+    // Show the "Add Forum" section when the "+ Add Forum" button is clicked
+    addForumButton.addEventListener('click', () => {
+        addForumSection.classList.toggle('hidden');
+    });
+
+    // Handle the "Post" button click
+    postButton.addEventListener('click', () => {
+        const username = postUsername.value.trim();
+        const title = postTitle.value.trim();
+        const content = forumContent.value.trim();
+
+        if (username && title && content) {
+        
+            const newPost = { username, title, content };
+
+            // Load existing posts from localStorage
+            const posts = loadPostsFromLocalStorage();
+
+           
+            posts.unshift(newPost);
+
+            // Save the updated posts to localStorage
+            savePostsToLocalStorage(posts);
+
+          
+            renderPosts();
+
+            
+            postUsername.value = '';
+            postTitle.value = '';
+            forumContent.value = '';
+            addForumSection.classList.add('hidden');
+        } else {
+            alert('Please enter your name, a title, and write something before posting.');
+        }
+    });
+
+    // Handle search input
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.trim();
+        if (query) {
+            const filteredPosts = filterPosts(query);
+            renderPosts(filteredPosts);
+        } else {
+            renderPosts(); 
+        }
+    });
+</script>
