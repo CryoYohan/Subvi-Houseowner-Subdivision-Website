@@ -25,50 +25,65 @@
     } 
 }
 
-<div class="flex h-screen overflow-hidden bg-gray-100">
+<div class="flex overflow-hidden bg-gray-100">
     <!-- Sidebar -->
-    <aside class="bg-white shadow-xl w-72 p-6 flex flex-col border-r border-gray-200">
+    <aside class="bg-white shadow-xl w-72 p-4 flex flex-col border-r border-gray-200">
         <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
         <nav class="flex-1 space-y-3">
-            <a asp-controller="Admin" asp-action="Dashboard" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-100 text-blue-600" : "")">
+            <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
+               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-100 text-blue-600" : "")">
                 <i class="fas fa-home w-6"></i>
                 <span class="ml-3">Dashboard</span>
             </a>
-            <a asp-controller="Admin" asp-action="AddHomeowner" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition @(ViewContext.RouteData.Values["Action"].ToString() == "AddHomeowner" ? "bg-blue-100 text-blue-600" : "")">
-                <i class="fas fa-user-plus w-6"></i>
-                <span class="ml-3">Add Homeowner</span>
-            </a>
-            <a asp-controller="Admin" asp-action="UserAccounts" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition @(ViewContext.RouteData.Values["Action"].ToString() == "UserAccounts" ? "bg-blue-100 text-blue-600" : "")">
+            <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
+               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "bg-blue-100 text-blue-600" : "")">
                 <i class="fas fa-users w-6"></i>
-                <span class="ml-3">User Accounts</span>
+                <span class="ml-3">Reservations</span>
             </a>
-            <a asp-controller="Admin" asp-action="Settings" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition @(ViewContext.RouteData.Values["Action"].ToString() == "Settings" ? "bg-blue-100 text-blue-600" : "")">
-                <i class="fas fa-cog w-6"></i>
-                <span class="ml-3">Settings</span>
+            <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
+               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "bg-blue-100 text-blue-600" : "")">
+                <i class="fas fa-users w-6"></i>
+                <span class="ml-3">Homeowners & Staff Accounts</span>
+            </a>
+            <a asp-controller="admin" asp-action="billpayment" style="text-decoration: none;"
+               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "bg-blue-100 text-blue-600" : "")">
+                <i class="fas fa-users w-6"></i>
+                <span class="ml-3">Bill Payment</span>
+            </a>
+            <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
+               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "bg-blue-100 text-blue-600" : "")">
+                <i class="fas fa-users w-6"></i>
+                <span class="ml-3">Payment History</span>
+            </a>
+            <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
+               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "bg-blue-100 text-blue-600" : "")">
+                <i class="fas fa-users w-6"></i>
+                <span class="ml-3">Services</span>
+            </a>
+            <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
+               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "bg-blue-100 text-blue-600" : "")">
+                <i class="fas fa-users w-6"></i>
+                <span class="ml-3">Announcements</span>
             </a>
         </nav>
-        <a asp-controller="Account" asp-action="Logout" class="mt-auto flex items-center p-3 rounded-lg text-red-600 hover:bg-red-100 hover:text-red-700 transition">
-            <i class="fas fa-sign-out-alt w-6"></i>
-            <span class="ml-3">Logout</span>
-        </a>
     </aside>
 
     <!-- Main Content -->
     <main class="p-4">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+        <div class="flex gap-4">
+
             <!-- Left Section (Greeting & Announcements) -->
-            <div class="lg:col-span-2 space-y-6">
+            <div class="w-1/2 space-y-6">
                 <!-- Greeting -->
                 <div>
                     <h1 class="text-3xl font-bold">@greeting Admin!</h1>
                     <p class="text-gray-500">Here’s a summary of community activities and homeowner updates.</p>
                 </div>
 
-                <!-- Latest Announcement -->
+                <!-- Latest Announcements -->
                 <div class="bg-white shadow-md rounded-xl p-4">
                     <h2 class="text-lg font-bold flex items-center">
-                        <span class="text-blue-600 mr-2">🔔</span> Latest Announcement
+                        <span class="text-blue-600 mr-2">🔔</span> Latest Announcements
                     </h2>
                     <div class="space-y-3 mt-4">
                         <div class="bg-gray-100 p-3 rounded-lg">
@@ -84,70 +99,96 @@
             </div>
 
             <!-- Right Section (Stats & Calendar) -->
-            <div class="grid grid-cols-2 gap-4">
-                <!-- Facilities -->
-                <div class="bg-red-100 p-6 rounded-xl shadow-md">
-                    <span class="text-red-500 bg-white p-4 rounded-full text-2xl shadow-md flex items-center justify-center w-2 h-2">📢</span>
-                    <h3 id="facilityCount" class="text-base text-center font-bold mt-2">0</h3>
-                    <p class="text-gray-500 text-center text-sm">Total Pending Facilities</p>
-                </div>
-
-                <!-- Users -->
-                <div class="bg-yellow-100 p-6 rounded-xl shadow-md">
-                    <span class="text-yellow-500 bg-white p-4 rounded-full text-2xl shadow-md flex items-center justify-center w-2 h-2">👤</span>
-                    <h3 id="totalUsers" class="text-base font-bold text-center mt-2">0</h3>
-                    <p class="text-gray-500 text-center text-sm">Total Users</p>
-                    <div class="grid grid-cols-3 text-center mt-2">
-                        <span>Admin: <span id="adminCount">0</span></span>
-                        <span>Staff: <span id="staffCount">0</span></span>
-                        <span>Homeowner: <span id="homeownerCount">0</span></span>
+            <div class="w-1/2 space-y-2">
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Facilities -->
+                    <div class="bg-red-100 p-6 rounded-xl shadow-md text-center">
+                        <div class="flex">
+                            <span class="text-red-500 bg-white p-2 rounded-full text-2xl shadow-md">📢</span>
+                        </div>
+                        <h3 id="facilityCount" class="text-4xl font-bold mt-2">0</h3>
+                        <p class="text-gray-500 text-sm">Total Pending Facilities</p>
                     </div>
-                </div>
 
-                <!-- Reservations -->
-                <div class="bg-blue-100 p-6 rounded-xl shadow-md">
-                    <span class="text-blue-500 bg-white p-4 rounded-full text-2xl shadow-md flex items-center justify-center w-2 h-2">🏠</span>
-                    <h3 id="totalReservations" class="text-base font-bold mt-2">0</h3>
-                    <p class="text-gray-500 text-sm">Total Reservations</p>
-                    <div class="grid grid-cols-3 text-center mt-2">
-                        <span>Pending: <span id="pendingReservations">0</span></span>
-                        <span>Approved: <span id="approvedReservations">0</span></span>
-                        <span>Declined: <span id="declinedReservations">0</span></span>
-                    </div>
-                </div>
+                    <!-- Users -->
+                    <div class="bg-yellow-100 p-4 rounded-xl shadow-md text-center">
+                        <div class="flex">
+                            <span class="text-yellow-500 bg-white p-2 rounded-full text-2xl shadow-md">👤</span>
+                        </div>
+                        <h3 id="totalUsers" class="text-4xl font-bold mt-2">0</h3>
+                        <p class="text-gray-500 text-sm">Total Users</p>
+                        <div class="grid grid-cols-3 text-center mt-2 text-sm">
+                            <!-- Admin Column -->
+                            <div class="flex flex-col items-center">
+                                <span class="text-gray-500">Admin</span>
+                                <span id="adminCount" class="text-lg font-bold text-blue-600">0</span>
+                            </div>
 
-                <!-- Service Requests -->
-                <div class="bg-green-100 p-6 rounded-xl shadow-md">
-                    <span class="text-green-500 bg-white p-4 rounded-full text-2xl shadow-md flex items-center justify-center w-2 h-2">🛠</span>
-                    <h3 id="totalRequests" class="text-base font-bold mt-2">0</h3>
-                    <p class="text-gray-500 text-sm">Total Service Requests</p>
-                    <div class="grid grid-cols-3 text-center mt-2">
-                        <span>Pending: <span id="pendingRequests">0</span></span>
-                        <span>Approved: <span id="approvedRequests">0</span></span>
-                        <span>Declined: <span id="declinedRequests">0</span></span>
-                    </div>
-                </div>
-            
+                            <!-- Staff Column -->
+                            <div class="flex flex-col items-center">
+                                <span class="text-gray-500">Staff</span>
+                                <span id="staffCount" class="text-lg font-bold text-yellow-600">0</span>
+                            </div>
 
-                <!-- Week Calendar Section -->
-                <div class="bg-white shadow-md rounded-xl p-4">
-                    <div class="flex justify-between items-center">
-                        <!-- Month & Year with Arrows -->
-                        <h2 id="month" class="text-xl font-bold"></h2><span id="year" class="text-xl font-bold text-gray-500"></span>
-                        <div>
-                            <button id="prevWeek" class="text-gray-500 hover:text-black">&larr;</button>
-                            <button id="nextWeek" class=" text-gray-500 hover:text-black ml-2">&rarr;</button>
+                            <!-- Homeowner Column -->
+                            <div class="flex flex-col items-center">
+                                <span class="text-gray-500">Homeowner</span>
+                                <span id="homeownerCount" class="text-lg font-bold text-green-600">0</span>
+                            </div>
                         </div>
                     </div>
-                    <div>
 
-                        <!-- Days of the week -->
-                        <div id="weekDays" class="flex space-x-2"></div>
+                    <!-- Reservations -->
+                    <div class="bg-blue-100 p-6 rounded-xl shadow-md text-center">
+                        <div class="flex">
+                            <span class="text-blue-500 bg-white p-2 rounded-full text-2xl shadow-md">🏠</span>
+                        </div>
+                        <h3 id="totalReservations" class="text-4xl font-bold mt-2">0</h3>
+                        <p class="text-gray-500 text-sm">Total Reservations</p>
+                        <div class="grid grid-cols-3 text-center mt-2 text-sm">
+                            <span>Pending: <span id="pendingReservations">0</span></span>
+                            <span>Approved: <span id="approvedReservations">0</span></span>
+                            <span>Declined: <span id="declinedReservations">0</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Service Requests -->
+                    <div class="bg-green-100 p-6 rounded-xl shadow-md text-center">
+                        <div class="flex">
+                            <span class="text-green-500 bg-white p-2 rounded-full text-2xl shadow-md">🛠</span>
+                        </div>
+                        <h3 id="totalRequests" class="text-4xl font-bold mt-2">0</h3>
+                        <p class="text-gray-500 text-sm">Total Service Requests</p>
+                        <div class="grid grid-cols-3 text-center mt-2 text-sm">
+                            <span>Pending: <span id="pendingRequests">0</span></span>
+                            <span>Approved: <span id="approvedRequests">0</span></span>
+                            <span>Declined: <span id="declinedRequests">0</span></span>
+                        </div>
                     </div>
                 </div>
 
-                
-                
+                <!-- Week Calendar Section -->
+                <div class="flex justify-center p-2">
+                    <div class="bg-white shadow-md rounded-xl p-4 w-3/4">
+                        <div class="flex justify-between items-center">
+                            <!-- Month & Year Side by Side -->
+                            <div class="flex items-baseline space-x-2">
+                                <h2 id="month" class="text-xl font-bold"></h2>
+                                <span id="year" class="text-xl font-bold text-gray-500"></span>
+                            </div>
+                            <!-- Navigation Buttons -->
+                            <div>
+                                <button id="prevWeek" class="text-gray-500 hover:text-black">&larr;</button>
+                                <button id="nextWeek" class="text-gray-500 hover:text-black ml-2">&rarr;</button>
+                            </div>
+                        </div>
+
+                        <!-- Week Days -->
+                        <div class="grid grid-cols-7 text-center mt-3">
+                            <div id="weekDays" class="flex space-x-2"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>

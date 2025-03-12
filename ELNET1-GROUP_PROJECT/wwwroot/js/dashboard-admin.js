@@ -1,20 +1,18 @@
 ﻿document.addEventListener("DOMContentLoaded", async function () {
     try {
-        const response = await fetch("/dashboard-data");
+        const response = await fetch("/AdminDashboard/dashboard-data");
 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        const text = await response.text(); // Read as text first
-        console.log("Raw Response:", text);
+        const text = await response.text();
 
         if (!text) {
             throw new Error("Empty response from server");
         }
 
-        const data = JSON.parse(text); // Convert text to JSON
-        console.log("Parsed JSON:", data);
+        const data = JSON.parse(text); 
 
         if (!data || Object.keys(data).length === 0) {
             throw new Error("No valid data found in response");
@@ -43,7 +41,7 @@
     const prevWeekBtn = document.getElementById("prevWeek");
     const nextWeekBtn = document.getElementById("nextWeek");
     const monthDisplay = document.getElementById("month");
-    const YearDisplay = document.getElementById("year");
+    const yearDisplay = document.getElementById("year");
 
     let today = new Date();
     let currentDate = new Date(today); // Clone the current date
@@ -51,44 +49,51 @@
     function renderWeek() {
         weekDaysContainer.innerHTML = "";
 
-        // Update month and year
-        monthDisplay.textContent = currentDate.toLocaleString("en-US", { month: "long" });
-        YearDisplay.textContent = currentDate.getFullYear();
+        // Update month and year based on the center date (currentDate)
+        monthDisplay.textContent = currentDate.toLocaleString("en-PH", { month: "long" });
+        yearDisplay.textContent = currentDate.getFullYear();
 
         for (let i = -3; i <= 3; i++) {
             let day = new Date(currentDate);
-            day.setDate(today.getDate() + i);
+            day.setDate(currentDate.getDate() + i);
 
             let dayElement = document.createElement("div");
             dayElement.classList.add(
-                "p-3", "rounded-lg", "text-center", "w-14", "cursor-pointer",
+                "p-3", "rounded-lg", "text-center", "w-22", "cursor-pointer",
                 "transition-all", "text-gray-600", "shadow-md"
             );
 
-            if (i === 0) {
+            // Highlight today's date with blue color
+            if (
+                day.getDate() === today.getDate() &&
+                day.getMonth() === today.getMonth() &&
+                day.getFullYear() === today.getFullYear()
+            ) {
                 dayElement.classList.add("bg-blue-600", "text-white", "font-bold");
             } else {
                 dayElement.classList.add("bg-white");
             }
 
             dayElement.innerHTML = `
-                <div class="text-sm">${day.toLocaleString("en-US", { weekday: "short" })}</div>
-                <div class="text-lg">${day.getDate()}</div>
-            `;
+            <div class="text-sm">${day.toLocaleString("en-US", { weekday: "short" })}</div>
+            <div class="text-lg">${day.getDate()}</div>
+        `;
 
             weekDaysContainer.appendChild(dayElement);
         }
     }
 
+    // Event listeners for previous and next week buttons
     prevWeekBtn.addEventListener("click", () => {
-        today.setDate(today.getDate() - 7);
+        currentDate.setDate(currentDate.getDate() - 7);
         renderWeek();
     });
 
     nextWeekBtn.addEventListener("click", () => {
-        today.setDate(today.getDate() + 7);
+        currentDate.setDate(currentDate.getDate() + 7);
         renderWeek();
     });
 
+    // Initial render
     renderWeek();
 });
