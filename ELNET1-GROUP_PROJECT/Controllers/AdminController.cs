@@ -10,7 +10,7 @@ public class AdminController : Controller
     public AdminController(MyAppDBContext context)
     {
         _context = context;
-        ViewData["Layout"] = "_AdminLayout"; 
+        ViewData["Layout"] = "_AdminLayout";
     }
 
     public IActionResult Dashboard()
@@ -20,7 +20,7 @@ public class AdminController : Controller
         {
             return RedirectToAction("landing", "Home");
         }
-        return View(); 
+        return View();
     }
 
     public IActionResult Reservations()
