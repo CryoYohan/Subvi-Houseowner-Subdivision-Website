@@ -2,93 +2,101 @@
     ViewData["Title"] = "Subvi | Home";
 }
 
-@* Sidebar *@
-<div class="flex flex-row overflow-hidden pt-4 gap-2 flex-shrink-0">
-    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6">
-        <ul class="space-y-4">
-             <!-- Home -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item" asp-controller="home" asp-action="dashboard">
-                    <i class="fas fa-home text-xl"></i>
-                    <span class="font-semibold">Home</span>
-                </a>
-            </li>
+<div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
+    @* Sidebar *@
+    <div class="flex flex-row overflow-hidden pt-4 gap-2 flex-shrink-0">
+        <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6">
+            <ul class="space-y-4">
+                <!-- Home -->
+                <li>
+                    <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item" asp-controller="home" asp-action="dashboard">
+                        <i class="fas fa-home text-xl"></i>
+                        <span class="font-semibold">Home</span>
+                    </a>
+                </li>
 
-             <!-- Calendar -->
-             <li>
-                <a class="flex items-center space-x-4 p-3 sidebar-item hover:bg-gray-100 transition ease-in-out rounded-l-full" asp-controller="home" asp-action="calendar">
-                      <i class="fas fa-calendar-alt text-xl"></i>
-                      <span class="font-semibold">Calendar</span>
-                 </a>
-             </li>
+                <!-- Calendar -->
+                <li>
+                    <a class="flex items-center space-x-4 p-3 sidebar-item hover:bg-gray-100 transition ease-in-out rounded-l-full" asp-controller="home" asp-action="calendar">
+                        <i class="fas fa-calendar-alt text-xl"></i>
+                        <span class="font-semibold">Calendar</span>
+                    </a>
+                </li>
 
-            <!-- Facilities -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="home" asp-action="facilities">
-                    <i class="fas fa-building text-xl"></i>
-                    <span class="font-semibold">Facilities</span>
-                 </a>
-            </li>
+                <!-- Facilities -->
+                <li>
+                    <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="home" asp-action="facilities">
+                        <i class="fas fa-building text-xl"></i>
+                        <span class="font-semibold">Facilities</span>
+                    </a>
+                </li>
 
-            <!-- Bill Payment -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="home" asp-action="bill">
-                   <i class="fas fa-file-invoice-dollar text-xl"></i>
-                   <span class="font-semibold">Bill Payment</span>
-               </a>
-           </li>
+                <!-- Bill Payment -->
+                <li>
+                    <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="home" asp-action="bill">
+                        <i class="fas fa-file-invoice-dollar text-xl"></i>
+                        <span class="font-semibold">Bill Payment</span>
+                    </a>
+                </li>
 
-           <!-- Services -->
-           <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="home" asp-action="services">
-                    <i class="fas fa-tools text-xl"></i>
-                    <span class="font-semibold">Services</span>
-                </a>
-           </li>
+                <!-- Services -->
+                <li>
+                    <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="home" asp-action="services">
+                        <i class="fas fa-tools text-xl"></i>
+                        <span class="font-semibold">Services</span>
+                    </a>
+                </li>
 
-            <!-- Forums -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="home" asp-action="forums">
-                    <i class="fas fa-comments text-xl"></i>
-                    <span class="font-semibold">Forums</span>
-                </a>
-            </li>
+                <!-- Forums -->
+                <li>
+                    <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="home" asp-action="forums">
+                        <i class="fas fa-comments text-xl"></i>
+                        <span class="font-semibold">Forums</span>
+                    </a>
+                </li>
 
-            <!-- Feedbacks -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="home" asp-action="feedbacks">
-                    <i class="fas fa-bullhorn text-xl"></i>
-                    <span class="font-semibold">Feedbacks</span>
-                 </a>
-            </li>
-        </ul>
-    </div>
-
-    <div class="bg-white shadow-md rounded-lg p-4 w-vw-3/4">
-        <div class="flex space-x-6 text-blue-800 font-semibold border-b">
-            <button class="pb-2 border-b-2 border-blue-800">Announcements</button>
-            <button class="pb-2 hover:text-blue-500">Polls</button>
-            <button class="pb-2 hover:text-blue-500">Surveys</button>
+                <!-- Feedbacks -->
+                <li>
+                    <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="home" asp-action="feedbacks">
+                        <i class="fas fa-bullhorn text-xl"></i>
+                        <span class="font-semibold">Feedbacks</span>
+                    </a>
+                </li>
+            </ul>
         </div>
 
-        <!-- Announcement Section -->
-        <div class="p-4 animate-pulse">
-            <div class="flex items-center space-x-4">
-                <img src="~/images/admin-avatar.png" class="h-10 w-10 rounded-full" alt="Admin">
-                <div>
-                    <h3 class="font-bold">Admin</h3>
-                    <p class="text-gray-500 text-sm">Description of the announcement goes here.</p>
+        <!-- INSERT CODE HERE-->
+        <div class="flex flex-grow gap-4 p-6">
+            <!-- Announcements Card -->
+            <div class="flex-1 bg-white shadow-md rounded-2xl p-6">
+                <div class="border-b pb-2 mb-4 flex space-x-6">
+                    <span class="text-lg font-semibold text-blue-600 border-b-2 border-blue-600 pb-1">Announcements</span>
+                    <span class="text-lg text-gray-500">Polls</span>
+                    <span class="text-lg text-gray-500">Surveys</span>
+                </div>
+                <div class="bg-gray-100 p-4 rounded-lg shadow-sm">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <img class="w-8 h-8 rounded-full" src="https://via.placeholder.com/40" alt="Admin">
+                        <div>
+                            <p class="text-sm font-semibold">Admin</p>
+                            <p class="text-xs text-gray-500">Description</p>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Welcome to the Subvi Smart Living in a Thriving Community</h3>
+                    <p class="text-sm text-gray-600">
+                        We are thrilled to announce the launch of SUBDIV, a brand-new community offering a perfect blend of modern design, comfort, and convenience...
+                    </p>
                 </div>
             </div>
-            <div class="mt-4 space-y-2">
-                <p class="bg-gray-200 h-4 rounded w-5/6"></p>
-                <p class="bg-gray-200 h-4 rounded w-3/4"></p>
-                <p class="bg-gray-200 h-4 rounded w-4/5"></p>
+
+            <!-- Calendar -->
+            <div class="w-80 bg-white shadow-md rounded-2xl p-4">
+                <h3 class="text-lg font-semibold mb-2">Select date</h3>
+                <div class="border p-3 rounded-lg">
+                    <input type="date" class="w-full border-none focus:ring-0" value="2025-08-17">
+                </div>
             </div>
         </div>
-    </div>
 
-    <aside>
-        Calendar
-    </aside>
+    </div>
 </div>
