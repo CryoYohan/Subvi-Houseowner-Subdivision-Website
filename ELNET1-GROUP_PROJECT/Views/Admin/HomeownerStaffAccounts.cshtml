@@ -1,10 +1,10 @@
 ﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.User_Account>
 
-
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "User Accounts";
 }
+
 <div class="flex overflow-hidden bg-gray-100">
     <!-- Sidebar -->
     <aside class="bg-white shadow-xl w-72 p-4 flex flex-col border-r border-gray-200">
@@ -48,110 +48,251 @@
         </nav>
     </aside>
 
-    <div class="col-12 col-md-6 bsb-tpl-bg-lotion">
-        <div class="p-3 p-md-4 p-xl-5">
-            <div class="row">
-                <div class="col-12">
-                    <div class="mb-5">
-                        <h2 class="h3">Add Homeowner</h2>
-                        <h3 class="fs-6 fw-normal text-secondary m-0">Enter homeowner details to register</h3>
-                    </div>
-                </div>
-            </div>
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <script>
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: '@TempData["SuccessMessage"]',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                </script>
-            }
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <script>
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: '@TempData["ErrorMessage"]',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                </script>
-            }
-            <form asp-action="AddUserAccount" method="post">
-                <div class="row gy-3 gy-md-4 overflow-hidden">
-                    <div class="col-12">
-                        <label for="FirstName" class="form-label">First Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="FirstName" id="FirstName" placeholder="First Name" required>
-                    </div>
-                    <div class="col-12">
-                        <label for="LastName" class="form-label">Last Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="LastName" id="LastName" placeholder="Last Name" required>
-                    </div>
-                    <div class="col-12">
-                        <label for="Role" class="form-label">Role <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="Role" id="Role" placeholder="Role" required>
-                    </div>
-                    <div class="col-12">
-                        <label for="Address" class="form-label">Address <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="Address" id="Address" placeholder="Address" required>
-                    </div>
-                    <div class="col-12">
-                        <label for="PhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                        <input type="tel" class="form-control" name="PhoneNumber" id="PhoneNumber" placeholder="Phone Number" required>
-                    </div>
-                    <div class="col-12">
-                        <label for="Email" class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" name="Email" id="Email" placeholder="name@example.com" required>
-                    </div>
-                    <div class="col-12">
-                        <label for="Password" class="form-label">Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" name="Password" id="Password" placeholder="Password" required>
-                    </div>
-                    <!-- You can include other fields as necessary -->
-                    <div class="col-12">
-                        <div class="d-grid">
-                            <button class="btn bsb-btn-xl btn-primary" type="submit">Sign up</button>
+    <!-- Main Content -->
+    <div class="flex-1 p-6">
+        <div class="grid grid-cols-2 gap-6">
+            <!-- Left Side: Sign Up Form -->
+            <div class="bg-white shadow-lg rounded-lg p-6">
+                <h2 class="text-2xl font-bold text-blue-600 mb-4">Add Homeowner</h2>
+                <h3 class="text-sm text-gray-600 mb-6">Enter homeowner details to register</h3>
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <script>
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: '@TempData["SuccessMessage"]',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    </script>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <script>
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: '@TempData["ErrorMessage"]',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    </script>
+                }
+
+                <form asp-action="AddUserAccount" method="post">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="FirstName" class="block text-sm font-medium text-gray-700">First Name <span class="text-red-500">*</span></label>
+                            <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="FirstName" id="FirstName" placeholder="First Name" required>
+                        </div>
+                        <div>
+                            <label for="LastName" class="block text-sm font-medium text-gray-700">Last Name <span class="text-red-500">*</span></label>
+                            <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="LastName" id="LastName" placeholder="Last Name" required>
+                        </div>
+                        <div>
+                            <label for="Role" class="block text-sm font-medium text-gray-700">Role <span class="text-red-500">*</span></label>
+                            <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Role" id="Role" placeholder="Role" required>
+                        </div>
+                        <div>
+                            <label for="Address" class="block text-sm font-medium text-gray-700">Address <span class="text-red-500">*</span></label>
+                            <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Address" id="Address" placeholder="Address" required>
+                        </div>
+                        <div>
+                            <label for="PhoneNumber" class="block text-sm font-medium text-gray-700">Phone Number <span class="text-red-500">*</span></label>
+                            <input type="tel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="PhoneNumber" id="PhoneNumber" placeholder="Phone Number" required>
+                        </div>
+                        <div>
+                            <label for="Email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
+                            <input type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Email" id="Email" placeholder="name@example.com" required>
+                        </div>
+                        <div>
+                            <label for="Password" class="block text-sm font-medium text-gray-700">Password <span class="text-red-500">*</span></label>
+                            <input type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Password" id="Password" placeholder="Password" required>
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">Add User</button>
                         </div>
                     </div>
+                </form>
+            </div>
+
+            <!-- Right Side: User Accounts Table -->
+            <div class="bg-white shadow-lg rounded-lg p-6" style="max-height: 700px; overflow-y: auto;">
+                <h2 class="text-2xl font-bold text-blue-600 mb-4">User Accounts</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-2 py-2 text-left text-xs font-sm text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-2 py-2 text-left text-xs font-sm text-gray-500 uppercase tracking-wider">First Name</th>
+                                <th class="px-2 py-2 text-left text-xs font-sm text-gray-500 uppercase tracking-wider">Last Name</th>
+                                <th class="px-2 py-2 text-left text-xs font-sm text-gray-500 uppercase tracking-wider">Role</th>
+                                <th class="px-2 py-2 text-left text-xs font-sm text-gray-500 uppercase tracking-wider">Address</th>
+                                <th class="px-2 py-2 text-left text-xs font-sm text-gray-500 uppercase tracking-wider">Phone Number</th>
+                                <th class="px-2 py-2 text-left text-xs font-sm text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-2 py-2 text-left text-xs font-sm text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            @foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">@user.Id</td>
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">@user.Firstname</td>
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">@user.Lastname</td>
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">@user.Role</td>
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">@user.Address</td>
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">@user.PhoneNumber</td>
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">@user.Email</td>
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">
+                                        <button onclick='openEditModal(@Html.Raw(Json.Serialize(user)))' class="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600">Edit</button>
+                                        <button onclick='deleteUser(@user.Id)' class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 ml-2">Delete</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
-            </form>
-            <!-- Display User Table -->
-            <h3 class="mt-5">User Accounts</h3>
-            <table class="table table-bordered mt-3">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Role</th>
-                        <th>Address</th>
-                        <th>Phone Number</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in Model)
-                    {
-                        <tr>
-                            <td>@user.Id</td>
-                            <td>@user.Firstname</td>
-                            <td>@user.Lastname</td>
-                            <td>@user.Role</td>
-                            <td>@user.Address</td>
-                            <td>@user.PhoneNumber</td>
-                            <td>@user.Email</td>
-                            <td>@user.Role</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-       
+            </div>
         </div>
     </div>
+
+    <!-- Modal for Editing User -->
+    <div id="editUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 p-6">
+            <h2 class="text-2xl font-bold text-blue-600 mb-4">Edit User</h2>
+            <form asp-action="EditUser" method="post">
+                <input type="hidden" id="editUserId" name="Id" />
+                <div class="space-y-4">
+                    <div>
+                        <label for="editFirstName" class="block text-sm font-medium text-gray-700">First Name</label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Firstname" id="editFirstName" placeholder="First Name">
+                    </div>
+                    <div>
+                        <label for="editLastName" class="block text-sm font-medium text-gray-700">Last Name</label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Lastname" id="editLastName" placeholder="Last Name">
+                    </div>
+                    <div>
+                        <label for="editRole" class="block text-sm font-medium text-gray-700">Role</label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Role" id="editRole" placeholder="Role">
+                    </div>
+                    <div>
+                        <label for="editAddress" class="block text-sm font-medium text-gray-700">Address</label>
+                        <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Address" id="editAddress" placeholder="Address">
+                    </div>
+                    <div>
+                        <label for="editPhoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input type="tel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="PhoneNumber" id="editPhoneNumber" placeholder="Phone Number">
+                    </div>
+                    <div>
+                        <label for="editEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Email" id="editEmail" placeholder="name@example.com">
+                    </div>
+                    <div>
+                        <label for="editPassword" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Password" id="editPassword" placeholder="Enter New Password (leave blank to keep current)">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="closeEditModal()" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Cancel</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <strong>Error:</strong> @TempData["ErrorMessage"]
+        </div>
+    }
 </div>
+<!-- Include SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<!-- Include SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function openEditModal(user) {
+        // Parse the JSON string into a JavaScript object (if needed)
+        if (typeof user === 'string') {
+            user = JSON.parse(user);
+        }
+
+        // Populate the form fields
+        document.getElementById('editUserId').value = user.id;
+        document.getElementById('editFirstName').value = user.firstname;
+        document.getElementById('editLastName').value = user.lastname;
+        document.getElementById('editRole').value = user.role;
+        document.getElementById('editAddress').value = user.address;
+        document.getElementById('editPhoneNumber').value = user.phoneNumber;
+        document.getElementById('editEmail').value = user.email;
+
+        // Show the modal
+        document.getElementById('editUserModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editUserModal').classList.add('hidden');
+    }
+
+    // Handle form submission
+    document.getElementById('editUserForm').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent default form submission
+
+        // Submit the form via AJAX or let it submit normally
+        this.submit();
+    });
+
+    function deleteUser(userId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Send a DELETE request to the server
+                fetch(`/Admin/DeleteUser/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Reload the page or update the table
+                        window.location.reload();
+                    } else {
+                        Swal.fire('Error', 'Failed to delete the user.', 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', 'An error occurred while deleting the user.', 'error');
+                });
+            }
+        });
+    }
+
+    function deleteUser(userId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Redirect to the DeleteUser action
+                window.location.href = `/Admin/DeleteUser?id=${userId}`;
+            }
+        });
+    }
+</script>
