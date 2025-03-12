@@ -20,7 +20,11 @@ public class AdminController : Controller
         {
             return RedirectToAction("landing", "Home");
         }
-        return View(); 
+        var announcements = _context.Announcement
+        .OrderByDescending(a => a.DatePosted)
+        .ToList();
+
+        return View(announcements);
     }
 
     public IActionResult Reservations()
@@ -77,12 +81,10 @@ public class AdminController : Controller
 
     public IActionResult Announcements()
     {
-        var role = HttpContext.Request.Cookies["UserRole"];
-        if (string.IsNullOrEmpty(role) || role != "Admin")
-        {
-            return RedirectToAction("landing", "Home");
-        }
-        return View();
+        var announcements = _context.Announcement
+            .OrderByDescending(a => a.DatePosted)
+            .ToList();
+        return View(announcements);
     }
 
     // POST: /Admin/AddUserAccount

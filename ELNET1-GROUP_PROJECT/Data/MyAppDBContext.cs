@@ -26,8 +26,11 @@ namespace ELNET1_GROUP_PROJECT.Data
 
             modelBuilder.Entity<Service_Request>()
                 .HasKey(s => s.ServiceRequestId);
+
+            modelBuilder.Entity<Announcement>()
+                .HasKey(s => s.AnnouncementId);
         }
-        //public DbSet<ELNET1_GROUP_PROJECT.Models.Announcement> Announcement { get; set; }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.Announcement> Announcement { get; set; }
         //public DbSet<ELNET1_GROUP_PROJECT.Models.Bill> Bill { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Event_Calendar> Event_Calendar { get; set; }
 
