@@ -115,3 +115,54 @@ function displayUserProfile(user) {
     closeLoginModal();
     closeSignupModal();
 }
+
+
+
+//For Admin Part
+// Open Add Modal
+function openAddModal() {
+    document.getElementById("userModal").classList.remove("hidden");
+}
+
+// Open Edit Modal
+// Function to open the edit modal with user data
+// Open the Edit Modal with user data
+function openEditModal(user) {
+    document.getElementById("editUserId").value = user.id;
+    document.getElementById("editFirstname").value = user.firstname;
+    document.getElementById("editLastname").value = user.lastname;
+    document.getElementById("editRole").value = user.role;
+    document.getElementById("editAddress").value = user.address;
+    document.getElementById("editPhoneNumber").value = user.phoneNumber;
+    document.getElementById("editEmail").value = user.email;
+    document.getElementById("editUserModal").classList.remove("hidden");
+}
+
+
+// Close the modal when clicking outside
+window.onclick = function (event) {
+    const editModal = document.getElementById("editUserModal");
+    if (event.target === editModal) {
+        editModal.classList.add("hidden");
+    }
+}
+
+
+// Confirm Delete
+function confirmDelete(id) {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Send DELETE request
+            fetch(`/Admin/DeleteUser/${id}`, { method: "POST" })
+                .then(() => window.location.reload());
+        }
+    });
+}

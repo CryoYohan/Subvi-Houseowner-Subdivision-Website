@@ -48,40 +48,91 @@
         </nav>
     </aside>
 
-    <div class="col-12 col-md-6 bsb-tpl-bg-lotion">
-        <div class="p-3 p-md-4 p-xl-5">
-            <div class="row">
-                <div class="col-12">
-                    <div class="mb-5">
-                        <h2 class="h3">Add Homeowner</h2>
-                        <h3 class="fs-6 fw-normal text-secondary m-0">Enter homeowner details to register</h3>
-                    </div>
-                </div>
-            </div>
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <script>
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: '@TempData["SuccessMessage"]',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                </script>
-            }
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <script>
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: '@TempData["ErrorMessage"]',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                </script>
-            }
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-4 text-blue-600">Homeowners & Staff Accounts</h1>
+
+        <!-- Success and Error Messages -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: '@TempData["SuccessMessage"]',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            </script>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <script>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '@TempData["ErrorMessage"]',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            </script>
+        }
+
+        <!-- Add Button -->
+        <div class="flex justify-end mb-4">
+            <button onclick="openAddModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                + Add User
+            </button>
+        </div>
+
+        <!-- User Table -->
+        <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+            <table class="min-w-full bg-white border border-gray-300">
+                <thead class="bg-blue-600 text-white">
+                    <tr>
+                        <th class="py-2 px-4 border">ID</th>
+                        <th class="py-2 px-4 border">First Name</th>
+                        <th class="py-2 px-4 border">Last Name</th>
+                        <th class="py-2 px-4 border">Role</th>
+                        <th class="py-2 px-4 border">Address</th>
+                        <th class="py-2 px-4 border">Phone Number</th>
+                        <th class="py-2 px-4 border">Email</th>
+                        <th class="py-2 px-4 border">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr class="hover:bg-gray-100">
+                            <td class="py-2 px-4 border">@user.Id</td>
+                            <td class="py-2 px-4 border">@user.Firstname</td>
+                            <td class="py-2 px-4 border">@user.Lastname</td>
+                            <td class="py-2 px-4 border">@user.Role</td>
+                            <td class="py-2 px-4 border">@user.Address</td>
+                            <td class="py-2 px-4 border">@user.PhoneNumber</td>
+                            <td class="py-2 px-4 border">@user.Email</td>
+                            <td class="py-2 px-4 border space-x-2">
+                                <button class="text-blue-600 hover:text-blue-800" onclick='openEditModal(@Html.Raw(Json.Serialize(user)))'>
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <form asp-action="DeleteUser" method="post" class="inline">
+                                    <input type="hidden" name="Id" value="@user.Id" />
+                                    <button type="submit" class="text-red-600 hover:text-red-800" onclick="return confirm('Are you sure you want to delete this user?')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- User Modal (Add) -->
+    <div id="userModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-96 max-w-full shadow-xl">
+            <h2 id="modalTitle" class="text-xl font-bold mb-4 text-blue-600">Add User</h2>
+
             <form asp-action="AddUserAccount" method="post">
                 <div class="row gy-3 gy-md-4 overflow-hidden">
                     <div class="col-12">
@@ -120,38 +171,65 @@
                     </div>
                 </div>
             </form>
-            <!-- Display User Table -->
-            <h3 class="mt-5">User Accounts</h3>
-            <table class="table table-bordered mt-3">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Role</th>
-                        <th>Address</th>
-                        <th>Phone Number</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in Model)
-                    {
-                        <tr>
-                            <td>@user.Id</td>
-                            <td>@user.Firstname</td>
-                            <td>@user.Lastname</td>
-                            <td>@user.Role</td>
-                            <td>@user.Address</td>
-                            <td>@user.PhoneNumber</td>
-                            <td>@user.Email</td>
-                            <td>@user.Role</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-       
         </div>
     </div>
+
+    <!-- User Modal (Edit) -->
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-96 max-w-full shadow-xl">
+            <h2 id="editModalTitle" class="text-xl font-bold mb-4 text-blue-600">Edit User</h2>
+
+            <form id="editUserForm" asp-action="EditUser" method="post">
+                <!-- Hidden ID -->
+                <input type="hidden" id="editUserId" name="Id" />
+
+                <!-- First Name -->
+                <div class="col-12">
+                    <label for="editFirstname" class="form-label">First Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="Firstname" id="editFirstname" placeholder="First Name" required>
+                </div>
+
+                <!-- Last Name -->
+                <div class="col-12">
+                    <label for="editLastname" class="form-label">Last Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="Lastname" id="editLastname" placeholder="Last Name" required>
+                </div>
+
+                <!-- Role -->
+                <div class="col-12">
+                    <label for="editRole" class="form-label">Role <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="Role" id="editRole" placeholder="Role" required>
+                </div>
+
+                <!-- Address -->
+                <div class="col-12">
+                    <label for="editAddress" class="form-label">Address <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="Address" id="editAddress" placeholder="Address" required>
+                </div>
+
+                <!-- Phone Number -->
+                <div class="col-12">
+                    <label for="editPhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                    <input type="tel" class="form-control" name="PhoneNumber" id="editPhoneNumber" placeholder="Phone Number" required>
+                </div>
+
+                <!-- Email -->
+                <div class="col-12">
+                    <label for="editEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" name="Email" id="editEmail" placeholder="name@example.com" required>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="col-12">
+                    <div class="d-grid">
+                        <button class="btn bsb-btn-xl btn-primary" type="submit">Update</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
 </div>
