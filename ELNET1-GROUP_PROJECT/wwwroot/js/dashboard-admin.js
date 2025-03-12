@@ -59,7 +59,7 @@
 
             let dayElement = document.createElement("div");
             dayElement.classList.add(
-                "p-3", "rounded-lg", "text-center", "w-22", "cursor-pointer",
+                "p-3", "rounded-lg", "text-center", "w-13", "cursor-pointer",
                 "transition-all", "text-gray-600", "shadow-md"
             );
 

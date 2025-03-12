@@ -25,7 +25,7 @@ public class RoleMiddleware
                 return;
             }
         }
-        else
+        else if (!string.IsNullOrEmpty(userRole))
         {
             // Restrict access based on role
             if (path.StartsWith("/admin") && userRole != "Admin")

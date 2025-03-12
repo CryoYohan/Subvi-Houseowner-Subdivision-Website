@@ -37,7 +37,7 @@
             </a>
             <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
                class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "bg-blue-100 text-blue-600" : "")">
-                <i class="fas fa-users w-6"></i>
+                <i class="fas fa-calendar-check w-6"></i>
                 <span class="ml-3">Reservations</span>
             </a>
             <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
@@ -47,22 +47,22 @@
             </a>
             <a asp-controller="admin" asp-action="billpayment" style="text-decoration: none;"
                class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "bg-blue-100 text-blue-600" : "")">
-                <i class="fas fa-users w-6"></i>
+                <i class="fas fa-file-invoice-dollar w-6"></i>
                 <span class="ml-3">Bill Payment</span>
             </a>
             <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
                class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "bg-blue-100 text-blue-600" : "")">
-                <i class="fas fa-users w-6"></i>
+                <i class="fas fa-history w-6"></i>
                 <span class="ml-3">Payment History</span>
             </a>
             <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
                class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "bg-blue-100 text-blue-600" : "")">
-                <i class="fas fa-users w-6"></i>
+                <i class="fas fa-tools w-6"></i>
                 <span class="ml-3">Services</span>
             </a>
             <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
                class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "bg-blue-100 text-blue-600" : "")">
-                <i class="fas fa-users w-6"></i>
+                <i class="fas fa-bullhorn w-6"></i>
                 <span class="ml-3">Announcements</span>
             </a>
         </nav>
@@ -74,6 +74,10 @@
 
             <!-- Left Section (Greeting & Announcements) -->
             <div class="w-1/2 space-y-6">
+                <div class="bg-white shadow-md rounded-xl p-3 mb-3 flex items-center space-x-3">
+                    <span><i class="fas fa-home text-blue-700 text-xl"></i></span>
+                    <h1 class="text-blue-700 font-bold text-lg">Admin Dashboard</h1>
+                </div>
                 <!-- Greeting -->
                 <div>
                     <h1 class="text-3xl font-bold">@greeting Admin!</h1>
@@ -169,7 +173,7 @@
 
                 <!-- Week Calendar Section -->
                 <div class="flex justify-center p-2">
-                    <div class="bg-white shadow-md rounded-xl p-4 w-3/4">
+                    <div class="bg-white shadow-md rounded-xl p-3 w-3/4">
                         <div class="flex justify-between items-center">
                             <!-- Month & Year Side by Side -->
                             <div class="flex items-baseline space-x-2">
