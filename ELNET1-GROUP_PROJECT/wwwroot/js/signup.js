@@ -29,6 +29,7 @@ document.getElementById("signup-form").addEventListener("submit", async function
     });
 
     if (response.ok) {
+        document.getElementById("signup-form").reset();
         alert("Sign up successful!");
         closeSignupModal();
     } else {

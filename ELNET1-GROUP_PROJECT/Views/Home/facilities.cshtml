@@ -25,35 +25,52 @@
     // Assign controllers/actions based on role
     if (role == "Admin")
     {
-        homeController = "Admin"; homeAction = "Index";
-        calendarController = "Admin"; calendarAction = "Calendar";
-        facilitiesController = "Admin"; facilitiesAction = "Facilities";
-        billController = "Admin"; billAction = "BillManagement";
-        servicesController = "Admin"; servicesAction = "ServicesManagement";
-        forumsController = "Admin"; forumsAction = "Forums";
-        feedbacksController = "Admin"; feedbacksAction = "Feedbacks";
+        homeController = "admin"; homeAction = "Index";
+        calendarController = "admin"; calendarAction = "Calendar";
+        facilitiesController = "admin"; facilitiesAction = "Facilities";
+        billController = "admin"; billAction = "BillManagement";
+        servicesController = "admin"; servicesAction = "ServicesManagement";
+        forumsController = "admin"; forumsAction = "Forums";
+        feedbacksController = "admin"; feedbacksAction = "Feedbacks";
     }
     else if (role == "Homeowner")
     {
-        homeController = "Home"; homeAction = "dashboard";
-        calendarController = "Home"; calendarAction = "Calendar";
-        facilitiesController = "Home"; facilitiesAction = "Facilities";
-        billController = "Home"; billAction = "Bill";
-        servicesController = "Home"; servicesAction = "Services";
-        forumsController = "Home"; forumsAction = "Forums";
-        feedbacksController = "Home"; feedbacksAction = "Feedbacks";
+        homeController = "home"; homeAction = "dashboard";
+        calendarController = "home"; calendarAction = "Calendar";
+        facilitiesController = "home"; facilitiesAction = "Facilities";
+        billController = "home"; billAction = "Bill";
+        servicesController = "home"; servicesAction = "Services";
+        forumsController = "home"; forumsAction = "Forums";
+        feedbacksController = "home"; feedbacksAction = "Feedbacks";
     }
     else if (role == "Staff")
     {
-        homeController = "Staff"; homeAction = "Dashboard";
-        calendarController = "Staff"; calendarAction = "Calendar";
-        facilitiesController = "Staff"; facilitiesAction = "Facilities";
-        billController = "Staff"; billAction = "Bill";
-        servicesController = "Staff"; servicesAction = "Services";
-        forumsController = "Staff"; forumsAction = "Forums";
-        feedbacksController = "Staff"; feedbacksAction = "Feedbacks";
+        homeController = "staff"; homeAction = "Dashboard";
+        calendarController = "staff"; calendarAction = "Calendar";
+        facilitiesController = "staff"; facilitiesAction = "Facilities";
+        billController = "staff"; billAction = "Bill";
+        servicesController = "staff"; servicesAction = "Services";
+        forumsController = "staff"; forumsAction = "Forums";
+        feedbacksController = "staff"; feedbacksAction = "Feedbacks";
     }
 }
+
+<style>
+  
+    .facility-card:hover img {
+        transform: scale(1.05);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .facility-card {
+        overflow: hidden;
+    }
+
+    .facility-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: box-shadow 0.3s ease-in-out;
+    }
+</style>
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
@@ -65,6 +82,7 @@
                    asp-controller="@homeController" asp-action="@homeAction">
                     <i class="fas fa-home text-xl"></i>
                     <span class="font-semibold">Home</span>
+
                 </a>
             </li>
 

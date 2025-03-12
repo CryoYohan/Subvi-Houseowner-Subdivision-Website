@@ -3,11 +3,100 @@
     ViewData["Title"] = "Subvi | About Us";
 }
 
-<main>
-	<h1>About Us</h1>
-	<p>Welcome to the About Us page of Subvi!</p>
-</main>
+<!-- Hero Section -->
+<section class="relative w-full h-screen flex items-center justify-center text-white"
+         style="background: url('/images/about-hero.jpg') no-repeat center center; background-size: cover;">
+    <div class="bg-blue-700 bg-opacity-50 p-10 rounded-lg text-center w-2/3">
+        <h1 class="text-4xl font-bold mb-4" data-aos="fade-up">Who We Are</h1>
+        <p class="text-lg leading-relaxed" data-aos="fade-up" data-aos-delay="200">
+            Welcome to <strong>Subvi</strong>, a thriving residential community designed for modern living.
+            We are dedicated to providing safe, comfortable, and well-managed neighborhoods where families can flourish.
+            Our commitment to quality, security, and sustainability ensures a peaceful and fulfilling living experience.
+        </p>
+    </div>
+</section>
 
+ <!-- Mission, Vision, and Core Values -->
+<section class="py-20 px-10 text-center bg-gray-100">
+    <h2 class="text-3xl font-bold mb-10 text-blue-600" data-aos="fade-up">Our Foundation</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <!-- Mission -->
+        <div class="bg-white shadow-lg p-6 rounded-lg" data-aos="flip-left">
+            <img src="/images/mission.png" class="w-20 mx-auto mb-4">
+            <h3 class="text-xl font-semibold">Our Mission</h3>
+            <p class="text-gray-600 mt-2">
+                To provide a safe, well-planned, and vibrant community where families can thrive, ensuring modern amenities and efficient management for a high-quality living experience.
+            </p>
+        </div>
+        <!-- Vision -->
+        <div class="bg-white shadow-lg p-6 rounded-lg" data-aos="flip-up" data-aos-delay="200">
+            <img src="/images/vision.png" class="w-20 mx-auto mb-4">
+            <h3 class="text-xl font-semibold">Our Vision</h3>
+            <p class="text-gray-600 mt-2">
+                To be the most trusted and innovative residential community, setting the standard for sustainable, secure, and harmonious neighborhood living.
+            </p>
+        </div>
+        <!-- Core Values -->
+        <div class="bg-white shadow-lg p-6 rounded-lg" data-aos="flip-right" data-aos-delay="400">
+            <img src="/images/values.png" class="w-20 mx-auto mb-4">
+            <h3 class="text-xl font-semibold">Core Values</h3>
+            <p class="text-center mt-2"><strong>Community, Security, Sustainability, and Innovation</strong></p>
+            <p class="text-gray-600">
+                These values shape our commitment to providing a comfortable and future-ready residential environment.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Our Team -->
+<section class="py-10 px-10 bg-white text-center">
+    <h2 class="text-3xl font-bold text-blue-600 mb-10" data-aos="fade-up">Meet Our Team</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-10">
+        <!-- Team Member 1 -->
+        <div class="bg-gray-100 p-6 rounded-lg shadow-lg" data-aos="zoom-in">
+            <img src="/images/profile/Ypil.jpg" class="w-32 h-32 rounded-full mx-auto mb-4">
+            <h3 class="text-xl font-semibold">Cyril John T. Ypil</h3>
+            <p class="text-gray-600">Project Manager</p>
+        </div>
+        <!-- Team Member 2 -->
+        <div class="bg-gray-100 p-6 rounded-lg shadow-lg" data-aos="zoom-in" data-aos-delay="200">
+            <img src="/images/profile/Espelita.jpg" class="w-32 h-32 rounded-full mx-auto mb-4">
+            <h3 class="text-xl font-semibold">Franz Espelita</h3>
+            <p class="text-gray-600">UI/UX Designer & Assistant Project Manager</p>
+        </div>
+        <!-- Team Member 3 -->
+        <div class="bg-gray-100 p-6 rounded-lg shadow-lg" data-aos="zoom-in" data-aos-delay="300">
+            <img src="/images/profile/Arcenal.jpg" class="w-32 h-32 rounded-full mx-auto mb-4">
+            <h3 class="text-xl font-semibold">Therese Andrei Arcenal</h3>
+            <p class="text-gray-600">UI/UX Designer</p>
+        </div>
+        <!-- Team Member 4 -->
+        <div class="bg-gray-100 p-6 rounded-lg shadow-lg" data-aos="zoom-in" data-aos-delay="400">
+            <img src="/images/profile/Montemar.jpg" class="w-32 h-32 rounded-full mx-auto mb-4">
+            <h3 class="text-xl font-semibold">Jherick Isaiah F. Montemar</h3>
+            <p class="text-gray-600">Backend Developer</p>
+        </div>
+        <!-- Team Member 5 -->
+        <div class="bg-gray-100 p-6 rounded-lg shadow-lg" data-aos="zoom-in" data-aos-delay="500">
+            <img src="/images/profile/Wenceslao.jpg" class="w-32 h-32 rounded-full mx-auto mb-4">
+            <h3 class="text-xl font-semibold">Kent S. Wenceslao</h3>
+            <p class="text-gray-600">Database Manager & UI/UX Designer</p>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-10 px-10 text-center bg-blue-800 text-white" data-aos="fade-up">
+    <h2 class="text-3xl font-bold mb-6" >Join Us on Our Journey</h2>
+    <p class="text-lg leading-relaxed mb-6">
+        Be a part of something bigger! Connect with us and explore endless opportunities.
+    </p>
+    <a href="/contacts" class="bg-gray-100 px-6 py-3 rounded-lg font-semibold" style="color: #1E40AF">
+        Get in Touch
+    </a>
+</section>
 
 <!-- Login Modal -->
 <div id="login-modal" class="hidden fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">

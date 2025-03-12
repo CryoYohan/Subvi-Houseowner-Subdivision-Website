@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Subvi | Feedbacks";
+    ViewData["Title"] = "Subvi | Services";
 
     // Retrieve the user's role from cookies
     string role = Context.Request.Cookies["UserRole"];
@@ -97,7 +97,7 @@
 
             <!-- Services -->
             <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item"
                    asp-controller="@servicesController" asp-action="@servicesAction">
                     <i class="fas fa-tools text-xl"></i>
                     <span class="font-semibold">Services</span>
@@ -115,7 +115,7 @@
 
             <!-- Feedbacks -->
             <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item"
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
                    asp-controller="@feedbacksController" asp-action="@feedbacksAction">
                     <i class="fas fa-bullhorn text-xl"></i>
                     <span class="font-semibold">Feedbacks</span>
