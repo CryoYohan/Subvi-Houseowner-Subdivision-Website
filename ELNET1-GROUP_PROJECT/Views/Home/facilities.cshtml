@@ -1,4 +1,4 @@
-@{
+﻿@{
     ViewData["Title"] = "Subvi | Facilities";
 
     // Retrieve the user's role from cookies
@@ -55,6 +55,23 @@
     }
 }
 
+<style>
+  
+    .facility-card:hover img {
+        transform: scale(1.05);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .facility-card {
+        overflow: hidden;
+    }
+
+    .facility-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: box-shadow 0.3s ease-in-out;
+    }
+</style>
+
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
     <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
@@ -65,6 +82,7 @@
                    asp-controller="@homeController" asp-action="@homeAction">
                     <i class="fas fa-home text-xl"></i>
                     <span class="font-semibold">Home</span>
+
                 </a>
             </li>
 
@@ -125,55 +143,242 @@
     </div>
 
     @* MainContent *@  
-<div class="flex-1 p-8 bg-white ml-10">
-    <h1 class="text-2xl font-bold text-blue-800 mb-6 text-center">Our Special Facilities</h1>
-    <div class="flex justify-center">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <!-- Swimming Pool -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="/images/swimmingpool.jpg" alt="Swimming Pool" class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h2 class="text-xl font-semibold text-blue-800">Swimming Pool</h2>
-                    <p class="text-gray-600">A refreshing pool for leisure and fitness.</p>
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Left Side: Facilities List -->
+            <div class="col-md-7 p-lg-5">
+                <div class="bg-white rounded-lg shadow-md p-5 overflow-y-auto max-h-[300px]">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-5">
+                        <!-- Swimming Pool -->
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <img src="/images/swimmingpool.jpg" alt="Swimming Pool" class="w-full h-48 object-cover">
+                            <div class="p-4">
+                                <h2 class="text-xl text-center font-semibold text-blue-800">Swimming Pool</h2>
+                                <p class="text-center text-gray-600">A refreshing pool for leisure and fitness.</p>
+                            </div>
+                            <div class="p-4 flex justify-center gap-4">
+                                <button class="px-6 py-2 border rounded-lg text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white">View</button>
+                                <button class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Reserve</button>
+                            </div>
+                        </div>
+
+                        <!-- Basketball Court -->
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <img src="/images/court.jpg" alt="Basketball Court" class="w-full h-48 object-cover">
+                            <div class="p-4">
+                                <h2 class="text-center text-xl font-semibold text-blue-800">Basketball Court</h2>
+                                <p class="text-center text-gray-600">A sports court for games and practice.</p>
+                            </div>
+                            <div class="p-4 flex justify-center gap-4">
+                                <button class="px-6 py-2 border rounded-lg text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white">View</button>
+                                <button class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Reserve</button>
+                            </div>
+                        </div>
+
+                        <!-- Fitness Gym -->
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <img src="/images/gym.jpg" alt="Fitness Gym" class="w-full h-48 object-cover">
+                            <div class="p-4">
+                                <h2 class="text-center text-xl font-semibold text-blue-800">Fitness Gym</h2>
+                                <p class="text-center text-gray-600">A well-equipped space for exercise.</p>
+                            </div>
+                            <div class="p-4 flex justify-center gap-4">
+                                <button class="px-6 py-2 border rounded-lg text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white">View</button>
+                                <button class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Reserve</button>
+                            </div>
+                        </div>
+
+                        <!-- Playgrounds -->
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <img src="/images/playground.jpg" alt="Playgrounds" class="w-full h-48 object-cover">
+                            <div class="p-4">
+                                <h2 class="text-center text-xl font-semibold text-blue-800">Playgrounds</h2>
+                                <p class="text-center text-gray-600">A fun and safe area for children.</p>
+                            </div>
+                            <div class="p-4 flex justify-center gap-4">
+                                <button class="px-6 py-2 border rounded-lg text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white">View</button>
+                                <button class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Reserve</button>
+                            </div>
+                        </div>
+
+                        <!-- Function Hall -->
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <img src="/images/hall.jpg" alt="Party Room" class="w-full h-48 object-cover">
+                            <div class="p-4">
+                                <h2 class="text-center text-xl font-semibold text-blue-800">Function Hall</h2>
+                                <p class="text-center text-gray-600">A venue for events and meetings.</p>
+                            </div>
+                            <div class="p-4 flex justify-center gap-4">
+                                <button class="px-6 py-2 border rounded-lg text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white">View</button>
+                                <button class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Reserve</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Basketball Court -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="/images/court.jpg" alt="Basketball Court" class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h2 class="text-xl font-semibold text-blue-800">Basketball Court</h2>
-                    <p class="text-gray-600">A sports court for games and practice.</p>
-                </div>
-            </div>
 
-            <!-- Fitness Gym -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="/images/gym.jpg" alt="Fitness Gym" class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h2 class="text-xl font-semibold text-blue-800">Fitness Gym</h2>
-                    <p class="text-gray-600">A well-equipped space for exercise.</p>
+            <!-- Right Side: Requested Facilities & Reservation History -->
+            <div class="col-md-5">
+                <div class="card mb-3 p-3">
+                    <h5>Requested Facilities</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Facility</th>
+                                <th>Date Requested</th>
+                                <th>Status</th>
+                                <th>Staff Assigned</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Swimming Pool</td>
+                                <td>10-12-24</td>
+                                <td>Pending</td>
+                                <td>N/A</td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>Swimming Pool</td>
+                                <td>10-12-24</td>
+                                <td>Pending</td>
+                                <td>N/A</td>
+                            <tr>
+                                <td>1</td>
+                                <td>Swimming Pool</td>
+                                <td>10-12-24</td>
+                                <td>Pending</td>
+                                <td>N/A</td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>Swimming Pool</td>
+                                <td>10-12-24</td>
+                                <td>Pending</td>
+                                <td>N/A</td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>Swimming Pool</td>
+                                <td>10-12-24</td>
+                                <td>Pending</td>
+                                <td>N/A</td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>Swimming Pool</td>
+                                <td>10-12-24</td>
+                                <td>Pending</td>
+                                <td>N/A</td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>Swimming Pool</td>
+                                <td>10-12-24</td>
+                                <td>Pending</td>
+                                <td>N/A</td>
+                            </tr>
+                            <tr>
+                                <td>1</td>
+                                <td>Swimming Pool</td>
+                                <td>10-12-24</td>
+                                <td>Pending</td>
+                                <td>N/A</td>
+                            </tr>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
 
-            <!-- Playgrounds -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="/images/playground.jpg" alt="Playgrounds" class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h2 class="text-xl font-semibold text-blue-800">Playgrounds</h2>
-                    <p class="text-gray-600">A fun and safe area for children.</p>
-                </div>
-            </div>
-
-            <!-- Function Hall -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="/images/hall.jpg" alt="Party Room" class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h2 class="text-xl font-semibold text-blue-800">Function Hall</h2>
-                    <p class="text-gray-600">A venue for events and meetings.</p>
+                <div class="card p-3">
+                    <h5>Reservation History</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Facility</th>
+                                <th>Date Completed</th>
+                                <th>Status</th>
+                                <th>Staff Assigned</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                            </tr>
+                            <tr>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                            <tr>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                            <tr>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                            <tr>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                            <tr>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                            </tr>
+                            <tr>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                            </tr>
+                            <tr>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                            </tr>
+                            <tr>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                            </tr>
+                            <tr>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                                <td>--</td>
+                            </tr>
+                            </tr>
+                            </tr>
+                            </tr>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
-</div>
-

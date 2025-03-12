@@ -124,24 +124,38 @@
             <button class="pb-2 hover:text-blue-500">Surveys</button>
         </div>
 
-        <!-- Announcement Section -->
-        <div class="p-4 animate-pulse">
-            <div class="flex items-center space-x-4">
-                <img src="~/images/admin-avatar.png" class="h-10 w-10 rounded-full" alt="Admin">
-                <div>
-                    <h3 class="font-bold">Admin</h3>
-                    <p class="text-gray-500 text-sm">Description of the announcement goes here.</p>
+        <!-- INSERT CODE HERE-->
+        <div class="flex flex-grow gap-4 p-6">
+            <!-- Announcements Card -->
+            <div class="flex-1 bg-white shadow-md rounded-2xl p-6">
+                <div class="border-b pb-2 mb-4 flex space-x-6">
+                    <span class="text-lg font-semibold text-blue-600 border-b-2 border-blue-600 pb-1">Announcements</span>
+                    <span class="text-lg text-gray-500">Polls</span>
+                    <span class="text-lg text-gray-500">Surveys</span>
+                </div>
+                <div class="bg-gray-100 p-4 rounded-lg shadow-sm">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <img class="w-8 h-8 rounded-full" src="https://via.placeholder.com/40" alt="Admin">
+                        <div>
+                            <p class="text-sm font-semibold">Admin</p>
+                            <p class="text-xs text-gray-500">Description</p>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Welcome to the Subvi Smart Living in a Thriving Community</h3>
+                    <p class="text-sm text-gray-600">
+                        We are thrilled to announce the launch of SUBDIV, a brand-new community offering a perfect blend of modern design, comfort, and convenience...
+                    </p>
                 </div>
             </div>
-            <div class="mt-4 space-y-2">
-                <p class="bg-gray-200 h-4 rounded w-5/6"></p>
-                <p class="bg-gray-200 h-4 rounded w-3/4"></p>
-                <p class="bg-gray-200 h-4 rounded w-4/5"></p>
+
+            <!-- Calendar -->
+            <div class="w-80 bg-white shadow-md rounded-2xl p-4">
+                <h3 class="text-lg font-semibold mb-2">Select date</h3>
+                <div class="border p-3 rounded-lg">
+                    <input type="date" class="w-full border-none focus:ring-0" value="2025-08-17">
+                </div>
             </div>
         </div>
-    </div>
 
-    <aside>
-        Calendar
-    </aside>
+    </div>
 </div>
