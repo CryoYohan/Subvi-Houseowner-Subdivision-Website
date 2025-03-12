@@ -185,9 +185,9 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         {
             return role switch
             {
-                "Admin" => Ok(new { redirectUrl = "/Admin" }),
-                "Homeowner" => Ok(new { redirectUrl = "/Home/dashboard" }),
-                "Staff" => Ok(new { redirectUrl = "/Staff" }),
+                "Admin" => Ok(new { redirectUrl = "/admin" }),
+                "Homeowner" => Ok(new { redirectUrl = "/home/dashboard" }),
+                "Staff" => Ok(new { redirectUrl = "/staff" }),
                 _ => Ok(new { redirectUrl = "/home" })
             };
         }
@@ -196,6 +196,8 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         public IActionResult Logout()
         {
             Response.Cookies.Delete("jwt");
+            Response.Cookies.Delete("UserRole");
+            Response.Cookies.Delete("Id");
             return Ok(new { redirectUrl = "/home", message = "Logged out successfully!" });
         }
 

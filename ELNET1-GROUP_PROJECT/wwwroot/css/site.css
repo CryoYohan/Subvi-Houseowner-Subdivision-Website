@@ -111,7 +111,7 @@ body {
     color: var(--reservation-text-color);
 }
 
-.calendar-reservation-text-list-color {
+.calendar-reservation-text-title-color {
     color: var(--reservation-text-title-color);
 }
 
@@ -142,9 +142,29 @@ body {
     color: var(--text-color);
     padding: 1.5rem;
     border-radius: 8px;
+    z-index: 50px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 15px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+    border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #3498db; /* background color */
+    border-radius: 8px;
+    border: 2px solid #f1f1f1; 
+}
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #2980b9; /* hover background color */
+    }
 
 #loading-screen {
     position: fixed;
@@ -159,3 +179,27 @@ body {
     z-index: 9999;
     visibility: hidden;
 }
+
+/* For landing page link underline */
+.nav-item {
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+    /* Animated underline effect */
+    .nav-item::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: -4px;
+        width: 0;
+        height: 2px;
+        background-color: #1E3A8A;
+        transition: width 0.3s ease, left 0.3s ease;
+    }
+
+    /* Active state (underline expands smoothly) */
+    .nav-item.active::after {
+        width: 100%;
+        left: 0;
+    }

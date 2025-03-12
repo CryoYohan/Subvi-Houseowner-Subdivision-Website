@@ -600,6 +600,10 @@ video {
   position: fixed;
 }
 
+.absolute {
+  position: absolute;
+}
+
 .relative {
   position: relative;
 }
@@ -658,12 +662,18 @@ video {
 }
 
 
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+
+
 .mb-6 {
   margin-bottom: 1.5rem;
 }
 
 .ml-10 {
-    margin-left: 2.5rem;
+  margin-left: 2.5rem;
 }
 .mt-1 {
   margin-top: 0.25rem;
@@ -747,8 +757,16 @@ video {
   height: 100vh;
 }
 
+.max-h-32 {
+  max-height: 8rem;
+}
+
 .min-h-screen {
   min-height: 100vh;
+}
+
+.w-1\/2 {
+  width: 50%;
 }
 
 .w-1\/3 {
@@ -927,6 +945,10 @@ video {
   overflow: hidden;
 }
 
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
 .truncate {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -983,6 +1005,11 @@ video {
   border-color: rgb(30 64 175 / var(--tw-border-opacity, 1));
 }
 
+.border-gray-200 {
+  --tw-border-opacity: 1;
+  border-color: rgb(229 231 235 / var(--tw-border-opacity, 1));
+}
+
 .border-gray-300 {
   --tw-border-opacity: 1;
   border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
@@ -1001,11 +1028,6 @@ video {
 .bg-blue-400 {
   --tw-bg-opacity: 1;
   background-color: rgb(96 165 250 / var(--tw-bg-opacity, 1));
-}
-
-.bg-blue-50 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(239 246 255 / var(--tw-bg-opacity, 1));
 }
 
 .bg-blue-600 {
@@ -1058,11 +1080,6 @@ video {
   background-color: rgb(34 197 94 / var(--tw-bg-opacity, 1));
 }
 
-.bg-orange-50 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(255 247 237 / var(--tw-bg-opacity, 1));
-}
-
 .bg-red-600 {
   --tw-bg-opacity: 1;
   background-color: rgb(220 38 38 / var(--tw-bg-opacity, 1));
@@ -1077,9 +1094,12 @@ video {
   --tw-bg-opacity: 0.5;
 }
 
+.p-1 {
+  padding: 0.25rem;
+  }
 .object-cover {
   -o-object-fit: cover;
-     object-fit: cover;
+
 }
 
 .p-2 {
@@ -1180,6 +1200,10 @@ video {
   text-align: center;
 }
 
+.text-right {
+  text-align: right;
+}
+
 .font-\[Poppins\] {
   font-family: Poppins;
 }
@@ -1226,11 +1250,6 @@ video {
   font-weight: 600;
 }
 
-.text-blue-100 {
-  --tw-text-opacity: 1;
-  color: rgb(219 234 254 / var(--tw-text-opacity, 1));
-}
-
 .text-blue-700 {
   --tw-text-opacity: 1;
   color: rgb(29 78 216 / var(--tw-text-opacity, 1));
@@ -1264,16 +1283,6 @@ video {
 .text-gray-800 {
   --tw-text-opacity: 1;
   color: rgb(31 41 55 / var(--tw-text-opacity, 1));
-}
-
-.text-orange-700 {
-  --tw-text-opacity: 1;
-  color: rgb(194 65 12 / var(--tw-text-opacity, 1));
-}
-
-.text-orange-900 {
-  --tw-text-opacity: 1;
-  color: rgb(124 45 18 / var(--tw-text-opacity, 1));
 }
 
 .text-red-600 {
@@ -1342,7 +1351,12 @@ video {
   --sidebar-text-color: #1e40af;
   --icon-color: #1e40af;
   --active-bg: #e5e7eb;
-  --schedule-list-bg: #BFDBFE;
+  --event-list-bg: #BFDBFE;
+  --event-text-color: #1E40AF;
+  --event-text-title-color: #1E3A8A;
+  --reservation-list-bg: #FFF7ED;
+  --reservation-text-color: #7C2D12;
+  --reservation-text-title-color: #C2410C;
   --selected-date-bg: #93C5FD;
 }
 
@@ -1352,7 +1366,12 @@ video {
   --sidebar-text-color: #ffffff;
   --icon-color: #1d4ed8;
   --active-bg: #3fa2f2;
-  --schedule-list-bg: #1E3A8A;
+  --event-list-bg: #1E3A8A;
+  --event-text-color: #e1f0fc;
+  --event-text-title-color: #c1ddf7;
+  --reservation-list-bg: #7C2D12;
+  --reservation-text-color: #fce3e1;
+  --reservation-text-title-color: #fcd5d2;
   --selected-date-bg: #3fa2f2;
 }
 
@@ -1416,8 +1435,28 @@ body {
   /* Tailwind blue-500 */
 }
 
-.calendar-schedule-list-bg {
-  background-color: var(--schedule-list-bg);
+.calendar-event-list-bg {
+  background-color: var(--event-list-bg);
+}
+
+.calendar-event-text-list-color {
+  color: var(--event-text-color);
+}
+
+.calendar-event-text-title-color {
+  color: var(--event-text-title-color);
+}
+
+.calendar-reservation-list-bg {
+  background-color: var(--reservation-list-bg);
+}
+
+.calendar-reservation-text-list-color {
+  color: var(--reservation-text-color);
+}
+
+.calendar-reservation-text-title-color {
+  color: var(--reservation-text-title-color);
 }
 
 .calendar-selected-bg {
@@ -1442,6 +1481,37 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+#logoutPopup .modal-content {
+  background-color: #ffffff;
+  color: var(--text-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+  z-index: 50px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 15px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #3498db;
+  /* background color */
+  border-radius: 8px;
+  border: 2px solid #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2980b9;
+  /* hover background color */
+}
+
 #loading-screen {
   position: fixed;
   top: 0;
@@ -1454,6 +1524,33 @@ body {
   align-items: center;
   z-index: 9999;
   visibility: hidden;
+}
+
+/* For landing page link underline */
+
+.nav-item {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+/* Animated underline effect */
+
+.nav-item::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 0;
+  height: 2px;
+  background-color: #1E3A8A;
+  transition: width 0.3s ease, left 0.3s ease;
+}
+
+/* Active state (underline expands smoothly) */
+
+.nav-item.active::after {
+  width: 100%;
+  left: 0;
 }
 
 .hover\:scale-105:hover {
@@ -1480,11 +1577,6 @@ body {
 .hover\:bg-gray-400:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(156 163 175 / var(--tw-bg-opacity, 1));
-}
-
-.hover\:bg-red-100:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(254 226 226 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:bg-red-700:hover {

@@ -26,7 +26,7 @@
 
   <ItemGroup>
 	  <Folder Include="Views\Admin\" />
-	  <Folder Include="Views\Home\" />
+	  <Folder Include="Views\HomeLanding\" />
     <Folder Include="Views\Staff\" />
   </ItemGroup>
 
