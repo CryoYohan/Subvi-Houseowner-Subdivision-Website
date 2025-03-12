@@ -15,8 +15,6 @@ public class AdminController : Controller
 
     public IActionResult Dashboard()
     {
-        // Get all users from the database to display in the table
-        //var users = _context.User_Accounts.ToList();
         var role = HttpContext.Request.Cookies["UserRole"];
         if (string.IsNullOrEmpty(role) || role != "Admin")
         {
@@ -25,7 +23,67 @@ public class AdminController : Controller
         return View(); 
     }
 
+    public IActionResult Reservations()
+    {
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View();
+    }
 
+    public IActionResult HomeownerStaffAccounts()
+    {
+        // Get all users from the database to display in the table
+        var users = _context.User_Accounts.ToList();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View(users);
+    }
+
+    public IActionResult BillPayment()
+    {
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View();
+    }
+
+    public IActionResult PaymentHistory()
+    {
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View();
+    }
+
+    public IActionResult Services()
+    {
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View();
+    }
+
+    public IActionResult Announcements()
+    {
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View();
+    }
 
     // POST: /Admin/AddUserAccount
     [HttpPost]
