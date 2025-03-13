@@ -5,6 +5,31 @@
     Layout = "_AdminLayout";
     ViewData["Title"] = "Announcements";
 }
+
+<script>
+        document.addEventListener("DOMContentLoaded", function () {
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>
+                            Swal.fire({
+                                icon: 'success',
+                            title: 'Success',
+                            text: '@TempData["SuccessMessage"]'
+                                    });
+                </text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>
+                            Swal.fire({
+                                icon: 'error',
+                            title: 'Error',
+                            text: '@TempData["ErrorMessage"]'
+                                    });
+                </text>
+            }
+    });
+</script>
 <div class="flex overflow-hidden bg-gray-100">
     <!-- Sidebar -->
     <aside class="bg-white shadow-xl w-72 p-4 flex flex-col border-r border-gray-200">
@@ -48,15 +73,15 @@
         </nav>
     </aside>
 
-    <div class="flex flex-col bg-gray-100 p-6">
-        <div class="bg-white shadow-md rounded-lg p-6 mb-4">
+    <div class="bg-gray-100 p-6 w-full">
+        <div class="bg-white shadow-md rounded-lg flex justify-between items-center p-6 mb-4">
             <h2 class="text-2xl font-bold text-blue-600">Announcements</h2>
-            <button onclick="toggleAddForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg mt-4 hover:bg-blue-700 transition">+ Add Announcement</button>
+            <button onclick="toggleAddForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">+ Add Announcement</button>
         </div>
 
         <!-- Add Announcement Form -->
         <div id="addAnnouncementForm" class="hidden bg-white shadow-md rounded-lg p-4 mb-4">
-            <form method="post" asp-controller="Announcement" asp-action="AddAnnouncement">
+            <form method="post" asp-controller="Admin" asp-action="AddAnnouncement">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Title</label>
                     <input type="text" name="title" class="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required>
@@ -72,19 +97,52 @@
             </form>
         </div>
 
+        <!-- Edit Announcement Modal -->
+        <div id="editAnnouncementModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300">
+            <div class="bg-white shadow-lg rounded-lg p-6 w-full max-w-lg transform scale-95 transition-transform duration-300">
+                <h2 class="text-lg font-bold text-blue-600 mb-4">Edit Announcement</h2>
+                <form method="post" asp-controller="Admin" asp-action="EditAnnouncement" onsubmit="return validateForm('editTitle', 'editDescription')">
+                    <input type="hidden" id="editAnnouncementId" name="id" />
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Title</label>
+                        <input type="text" id="editTitle" name="title" class="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="editDescription" name="description" class="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" onclick="closeAnnouncementModal('editAnnouncementModal')" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">Cancel</button>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Announcement Cards -->
-        @foreach (var announcement in Model)
+        @if (!Model.Any())
         {
-            <div class="bg-white shadow-md rounded-lg p-4 mb-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-blue-600">@announcement.Title</h3>
-                    <span class="text-sm text-gray-500">@announcement.DatePosted</span>
-                </div>
-                <p class="mt-2 text-gray-700">@announcement.Description</p>
-                <div class="flex justify-end mt-4 space-x-2">
-                    <button onclick="confirmDelete(@announcement.AnnouncementId)" class="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition">Delete</button>
-                </div>
+            <div class="bg-white shadow-md rounded-lg p-4 mb-4 text-center">
+                <p class="text-gray-500">No announcements. Press Add Announcements to create announcement.</p>
             </div>
         }
+        else
+        {
+           @foreach (var announcement in Model)
+            {
+                <div class="bg-white shadow-md rounded-lg p-4 mb-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-blue-600">@announcement.Title</h3>
+                        <span class="text-sm text-gray-500">Posted @Convert.ToDateTime(announcement.DatePosted).ToString("MMMM dd, yyyy hh:mm tt")</span>
+                    </div>
+                    <p class="mt-2 text-gray-700">@announcement.Description</p>
+                    <div class="flex justify-end mt-4 space-x-2">
+                        <button onclick='openAnnouncementEditModal(@Html.Raw(Json.Serialize(announcement)))' class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition">Edit</button>
+                        <button onclick="confirmDelete(@announcement.AnnouncementId)" class="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition">Delete</button>
+                    </div>
+                </div>
+            }
+        }
+        
     </div>
 </div>

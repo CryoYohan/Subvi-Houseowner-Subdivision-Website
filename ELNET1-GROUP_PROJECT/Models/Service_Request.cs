@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ELNET1_GROUP_PROJECT.Models
 {
+    [Table("SERVICE_REQUEST")]
     public class Service_Request
     {
         [Key]

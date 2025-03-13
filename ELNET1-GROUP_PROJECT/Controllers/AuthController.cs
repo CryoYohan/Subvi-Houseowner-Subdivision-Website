@@ -69,25 +69,6 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return RedirectToRole(user.Role);
         }
 
-        [Authorize]
-        [HttpGet("profile")]
-        public async Task<IActionResult> GetUserProfile()
-        {
-            if (!Request.Cookies.TryGetValue("jwt", out var token))
-            {
-                return Unauthorized("No token provided.");
-            }
-
-            var principal = ValidateJwtToken(token);
-            if (principal == null) return Unauthorized("Invalid token.");
-
-            var userId = principal.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
-            if (userId == null) return Unauthorized();
-
-            var user = await _context.User_Accounts.FindAsync(int.Parse(userId));
-            return Ok(user);
-        }
-
         private string GenerateJwtToken(User_Account user)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");

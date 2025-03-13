@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ELNET1_GROUP_PROJECT.Models
 {
+    [Table("ANNOUNCEMENT")]
     public class Announcement
     {
         [Key]

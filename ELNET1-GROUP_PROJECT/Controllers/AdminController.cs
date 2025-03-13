@@ -1,6 +1,7 @@
 ﻿using ELNET1_GROUP_PROJECT.Data;
 using ELNET1_GROUP_PROJECT.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 using System.Linq;
 
 public class AdminController : Controller
@@ -49,6 +50,144 @@ public class AdminController : Controller
         return View(users);
     }
 
+    // POST: /Admin/AddUserAccount
+    [HttpPost]
+    public IActionResult AddUserAccount(User_Account model)
+    {
+        if (ModelState.IsValid)
+        {
+            try
+            {
+                // Check if the email already exists
+                var existingUser = _context.User_Accounts
+                    .FirstOrDefault(u => u.Email == model.Email);
+
+                if (existingUser != null)
+                {
+                    TempData["ErrorMessage"] = "User already exists with this email.";
+                    return RedirectToAction("HomeownerStaffAccounts");
+                }
+
+                // Hash the password before saving it
+                model.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
+
+                // Add the new user to the database
+                _context.User_Accounts.Add(model);
+                _context.SaveChanges();
+
+                TempData["SuccessMessage"] = "User registered successfully!";
+                return RedirectToAction("HomeownerStaffAccounts");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error registering user: " + ex.Message;
+                return RedirectToAction("HomeownerStaffAccounts");
+            }
+        }
+
+        // If validation fails, redisplay the form with validation errors
+        return View(model);
+    }
+
+    // Function to delete all users
+    public IActionResult DeleteAllUsers()
+    {
+        var allUsers = _context.User_Accounts.ToList(); // Retrieve all users
+
+        _context.User_Accounts.RemoveRange(allUsers); // Remove all users
+        _context.SaveChanges(); // Save changes to the database
+
+        // Optionally, you can add a success message here or redirect
+        return RedirectToAction("HomeownerStaffAccounts"); // Or display a confirmation
+    }
+
+    // POST: /Admin/EditUser
+    [HttpPost]
+    public IActionResult EditUser(User_Account model)
+    {
+        // Remove the Password field from model validation
+        ModelState.Remove("Password");
+
+        if (!ModelState.IsValid)
+        {
+            // Log validation errors
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+            TempData["ErrorMessage"] = "Validation failed: " + string.Join(", ", errors);
+            return RedirectToAction("HomeownerStaffAccounts");
+        }
+
+        try
+        {
+            // Find the existing user by ID
+            var existingUser = _context.User_Accounts.FirstOrDefault(u => u.Id == model.Id);
+            if (existingUser == null)
+            {
+                TempData["ErrorMessage"] = "User not found.";
+                return RedirectToAction("HomeownerStaffAccounts");
+            }
+
+            // Check if the email is being updated and if the new email already exists
+            if (existingUser.Email != model.Email && _context.User_Accounts
+                    .Any(u => u.Email == model.Email))
+            {
+                TempData["ErrorMessage"] = "User already exists with this email.";
+                return RedirectToAction("HomeownerStaffAccounts");
+            }
+
+            // Update the user data
+            existingUser.Firstname = model.Firstname;
+            existingUser.Lastname = model.Lastname;
+            existingUser.Email = model.Email;
+            existingUser.Role = model.Role;
+            existingUser.Address = model.Address;
+            existingUser.PhoneNumber = model.PhoneNumber;
+
+            // Conditionally update the password with BCrypt
+            if (!string.IsNullOrEmpty(model.Password))
+            {
+                existingUser.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
+            }
+
+            // Save changes to the database
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "User updated successfully!";
+            return RedirectToAction("HomeownerStaffAccounts");
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Error updating user: " + ex.Message;
+            return RedirectToAction("HomeownerStaffAccounts");
+        }
+    }
+
+    // Function to delete a specific user by ID
+    public IActionResult DeleteUser(int id)
+    {
+        try
+        {
+            // Find the user by ID
+            var user = _context.User_Accounts.FirstOrDefault(u => u.Id == id);
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "User not found.";
+                return RedirectToAction("HomeownerStaffAccounts");
+            }
+
+            // Remove the specific user from the database
+            _context.User_Accounts.Remove(user);
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "User deleted successfully!";
+            return RedirectToAction("HomeownerStaffAccounts");
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Error deleting user: " + ex.Message;
+            return RedirectToAction("HomeownerStaffAccounts");
+        }
+    }
+
     public IActionResult BillPayment()
     {
         var role = HttpContext.Request.Cookies["UserRole"];
@@ -87,125 +226,81 @@ public class AdminController : Controller
         return View(announcements);
     }
 
-    // POST: /Admin/AddUserAccount
+    // Add a new announcement
     [HttpPost]
-    public IActionResult AddUserAccount(User_Account model)
-    {
-        if (ModelState.IsValid)
+    public IActionResult AddAnnouncement(string title, string description)
+    {   
+        var userId = Request.Cookies["Id"];
+        try
         {
-            try
+            var newAnnouncement = new Announcement
             {
-                // Check if the email already exists
-                var existingUser = _context.User_Accounts
-                    .FirstOrDefault(u => u.Email == model.Email);
+                Title = title,
+                Description = description,
+                DatePosted = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                UserId = userId
+            };
 
-                if (existingUser != null)
-                {
-                    TempData["ErrorMessage"] = "User already exists with this email.";
-                    return RedirectToAction("HomeownerStaffAccounts");
-                }
-
-                // Add the new user account to the database
-                _context.User_Accounts.Add(model);
-                _context.SaveChanges();
-
-                // Pass a success message to TempData
-                TempData["SuccessMessage"] = "User account added successfully!";
-
-                // Redirect to the HomeownerStaffAccounts action to reload the page with the updated list of users
-                return RedirectToAction("HomeownerStaffAccounts");
-            }
-            catch (Exception ex)
-            {
-                // Pass an error message to TempData
-                TempData["ErrorMessage"] = "Error adding user account: " + ex.Message;
-                return RedirectToAction("HomeownerStaffAccounts");
-            }
-        }
-
-        // If validation fails, redisplay the form with the existing data
-        return View("HomeownerStaffAccounts", model);
-    }
-
-    // Function to delete all users
-    public IActionResult DeleteAllUsers()
-    {
-        var allUsers = _context.User_Accounts.ToList(); // Retrieve all users
-
-        _context.User_Accounts.RemoveRange(allUsers); // Remove all users
-        _context.SaveChanges(); // Save changes to the database
-
-        // Optionally, you can add a success message here or redirect
-        return RedirectToAction("HomeownerStaffAccounts"); // Or display a confirmation
-    }
-
-    // POST: /Admin/EditUser
-    [HttpPost]
-    public IActionResult EditUser(User_Account model)
-    {
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                // Check if the user exists in the database
-                var existingUser = _context.User_Accounts.FirstOrDefault(u => u.Id == model.Id);
-                if (existingUser == null)
-                {
-                    TempData["ErrorMessage"] = "User not found.";
-                    return RedirectToAction("HomeownerStaffAccounts");
-                }
-
-                // Check if the new email already exists and belongs to another user
-                if (_context.User_Accounts.Any(u => u.Email == model.Email && u.Id != model.Id))
-                {
-                    TempData["ErrorMessage"] = "Email is already taken.";
-                    return RedirectToAction("HomeownerStaffAccounts");
-                }
-
-                // Update the user data
-                existingUser.Firstname = model.Firstname;
-                existingUser.Lastname = model.Lastname;
-                existingUser.Role = model.Role;
-                existingUser.Address = model.Address;
-                existingUser.PhoneNumber = model.PhoneNumber;
-                existingUser.Email = model.Email;
-
-                // Save changes
-                _context.SaveChanges();
-
-                TempData["SuccessMessage"] = "User updated successfully!";
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"Error updating user: {ex.Message}";
-            }
-        }
-        else
-        {
-            TempData["ErrorMessage"] = "Invalid data provided.";
-        }
-
-        // Redirect to the main page
-        return RedirectToAction("HomeownerStaffAccounts");
-    }
-
-
-    [HttpPost]
-    public IActionResult DeleteUser(int id)
-    {
-        var user = _context.User_Accounts.FirstOrDefault(u => u.Id == id);
-        if (user != null)
-        {
-            _context.User_Accounts.Remove(user);
+            _context.Announcement.Add(newAnnouncement);
             _context.SaveChanges();
-            TempData["SuccessMessage"] = "User deleted successfully!";
+            TempData["SuccessMessage"] = "Announcement added successfully!";
         }
-        else
+        catch (Exception ex)
         {
-            TempData["ErrorMessage"] = "User not found!";
+            TempData["ErrorMessage"] = ex.InnerException?.Message;
         }
+        return RedirectToAction("Announcements");
+    }
 
-        return RedirectToAction("HomeownerStaffAccounts");
+    // Edit an existing announcement
+    [HttpPost]
+    public IActionResult EditAnnouncement(int id, string title, string description)
+    {
+        try
+        {
+            var announcement = _context.Announcement.Find(id);
+            if (announcement != null)
+            {
+                announcement.Title = title;
+                announcement.Description = description;
+                _context.SaveChanges();
+                TempData["SuccessMessage"] = "Announcement updated successfully!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Announcement not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Failed to update announcement. Please try again.";
+        }
+        return RedirectToAction("Announcements");
+    }
+
+    // Delete an announcement
+    [HttpPost]
+    public IActionResult DeleteAnnouncement(int id)
+    {
+        try
+        {
+            var announcement = _context.Announcement.Find(id);
+            if (announcement != null)
+            {
+                _context.Announcement.Remove(announcement);
+                _context.SaveChanges();
+                TempData["SuccessMessage"] = "Announcement deleted successfully!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Announcement not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Failed to delete announcement. Please try again.";
+        }
+        return RedirectToAction("Announcements");
     }
 
 }
