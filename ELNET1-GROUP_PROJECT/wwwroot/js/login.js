@@ -58,13 +58,3 @@ async function handleGoogleLogin(response) {
         document.getElementById("googleEmail").value = user.email;
     }
 }
-
-async function logout() {
-    await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-    });
-
-    alert("Logged out!");
-    window.location.href = "/login.html";
-}

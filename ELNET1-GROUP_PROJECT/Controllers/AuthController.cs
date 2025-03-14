@@ -82,7 +82,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 {
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim("UserId", user.Id.ToString()),
-                    new Claim("Role", user.Role) // ✅ Include Role in the token
+                    new Claim("Role", user.Role) 
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(int.Parse(jwtSettings["ExpiryMinutes"])),
                 Issuer = jwtSettings["Issuer"],
@@ -126,29 +126,19 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         private void SetJwtCookie(string token, string role, string id)
         {
-            Response.Cookies.Append("jwt", token, new CookieOptions
+            var options = new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(60)
-            });
+                SameSite = SameSiteMode.Strict
+            };
 
-            Response.Cookies.Append("UserRole", role, new CookieOptions
-            {
-                HttpOnly = false, 
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(60)
-            });
+            Response.Cookies.Append("jwt", token, options);
 
-            Response.Cookies.Append("Id", id, new CookieOptions
-            {
-                HttpOnly = false,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(60)
-            });
+            // Non-HttpOnly cookies for frontend access
+            options.HttpOnly = false;
+            Response.Cookies.Append("UserRole", role, options);
+            Response.Cookies.Append("Id", id, options);
         }
 
         private User_Account GetUserFromToken(string token)

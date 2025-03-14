@@ -3,31 +3,31 @@
 
 @{
     Layout = "_AdminLayout";
-    ViewData["Title"] = "User Accounts";
+    ViewData["Title"] = "Homeowner & Staff Accounts";
 }
 
 <script>
-     document.addEventListener("DOMContentLoaded", function () {
-         @if (TempData["SuccessMessage"] != null)
-            {
-               <text>
-                     Swal.fire({
-                            icon: 'success',
-                         title: 'Success',
-                         text: '@TempData["SuccessMessage"]'
-                     });
-               </text>
-            }
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <text>
-                     Swal.fire({
-                            icon: 'error',
-                         title: 'Error',
-                         text: '@TempData["ErrorMessage"]'
-                     });
-                </text>
-            }
+    document.addEventListener("DOMContentLoaded", function () {
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <text>
+            Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: '@TempData["SuccessMessage"]'
+            });
+        </text>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <text>
+            Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: '@TempData["ErrorMessage"]'
+            });
+        </text>
+    }
     });
 </script>
 
@@ -37,37 +37,37 @@
         <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
         <nav class="flex-1 space-y-3">
             <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-100 text-blue-600" : "")">
+            class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-100 text-blue-600" : "")">
                 <i class="fas fa-home w-6"></i>
                 <span class="ml-3">Dashboard</span>
             </a>
             <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "bg-blue-100 text-blue-600" : "")">
+            class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "bg-blue-100 text-blue-600" : "")">
                 <i class="fas fa-calendar-check w-6"></i>
                 <span class="ml-3">Reservations</span>
             </a>
             <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "bg-blue-100 text-blue-600" : "")">
+            class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "bg-blue-100 text-blue-600" : "")">
                 <i class="fas fa-users w-6"></i>
                 <span class="ml-3">Homeowners & Staff Accounts</span>
             </a>
             <a asp-controller="admin" asp-action="billpayment" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "bg-blue-100 text-blue-600" : "")">
+            class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "bg-blue-100 text-blue-600" : "")">
                 <i class="fas fa-file-invoice-dollar w-6"></i>
                 <span class="ml-3">Bill Payment</span>
             </a>
             <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "bg-blue-100 text-blue-600" : "")">
+            class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "bg-blue-100 text-blue-600" : "")">
                 <i class="fas fa-history w-6"></i>
                 <span class="ml-3">Payment History</span>
             </a>
             <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "bg-blue-100 text-blue-600" : "")">
+            class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "bg-blue-100 text-blue-600" : "")">
                 <i class="fas fa-tools w-6"></i>
                 <span class="ml-3">Services</span>
             </a>
             <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "bg-blue-100 text-blue-600" : "")">
+            class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "bg-blue-100 text-blue-600" : "")">
                 <i class="fas fa-bullhorn w-6"></i>
                 <span class="ml-3">Announcements</span>
             </a>
@@ -137,7 +137,7 @@
                 <div class="grid grid-cols-1 gap-4">
                     <!-- Right Side: User Accounts Table -->
                     <div class="bg-white shadow-lg rounded-lg p-6 transition-all duration-300">
-                        
+
 
                         <!-- User Info Section (Hidden by Default) -->
                         <div id="userInfoBox" class="hidden bg-blue-50 p-4 rounded-lg shadow-md mb-4 transition-all duration-300">
@@ -174,6 +174,13 @@
                             </div>
                         </div>
 
+                        @if (!Model.Any())
+                        {
+                            <div class="bg-white shadow-md rounded-lg p-4 mb-4 text-center">
+                                <p class="text-gray-500">No Users. Add to create now.</p>
+                            </div>
+                        } else
+                        {
                         <div id="userTableContainer" class="transition-all duration-300 overflow-y-auto" style="max-height: 545px;">
                             <table class="min-w-full bg-white">
                                 <thead class="bg-gray-50">
@@ -202,6 +209,8 @@
                                 </tbody>
                             </table>
                         </div>
+                        }
+                        
                     </div>
                 </div>
             </div>

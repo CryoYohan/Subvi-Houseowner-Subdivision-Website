@@ -1,7 +1,85 @@
 ﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
-// Write your JavaScript code.
+/*
+let expiryTime;
+const countdownWarningMinutes = 3;
+const refreshInterval = 1000;
+
+// Fetch expiry from headers once on page load
+async function refreshSession() {
+    try {
+        const response = await fetch(window.location.href, { method: 'HEAD' });
+        const expiryHeader = response.headers.get("Session-Expiry");
+        if (expiryHeader) {
+            expiryTime = new Date(expiryHeader).getTime();
+        }
+    } catch (error) {
+        console.error("Failed to refresh session:", error);
+    }
+}
+
+// Wrap window.fetch to refresh session on every API call
+const originalFetch = window.fetch;
+window.fetch = async (...args) => {
+    const response = await originalFetch(...args);
+    refreshSession();  // Refresh session only when API calls happen
+    return response;
+};
+
+// Countdown logic
+function startSessionCountdown() {
+    setInterval(() => {
+        if (!expiryTime) return;
+
+        const now = new Date().getTime();
+        const timeLeft = expiryTime - now;
+
+        if (timeLeft <= 0) {
+            autoLogout();
+            return;
+        }
+
+        if (timeLeft <= countdownWarningMinutes * 60 * 1000) {
+            showSessionWarning(Math.ceil(timeLeft / 1000));
+        }
+    }, refreshInterval);
+}
+
+function showSessionWarning(secondsLeft) {
+    const minutes = Math.floor(secondsLeft / 60);
+    const seconds = secondsLeft % 60;
+
+    if (!document.getElementById("session-warning")) {
+        Swal.fire({
+            title: 'Session Expiring Soon',
+            html: `<p>Your session will expire in <strong id="countdown"></strong>.</p>`,
+            icon: 'warning',
+            showCancelButton: false,
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            backdrop: true
+        });
+    }
+    document.getElementById("countdown").textContent = `${minutes}m ${seconds}s`;
+}
+
+function autoLogout() {
+    Swal.fire({
+        icon: 'error',
+        title: 'Session Expired',
+        text: 'You have been logged out due to inactivity.',
+        timer: 5000,
+        showConfirmButton: false
+    }).then(() => window.location.href = '/home');
+}
+
+// Start countdown and session refresh on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    await refreshSession();
+    startSessionCountdown();
+});
+*/
 
 document.addEventListener("DOMContentLoaded", function () {
     $(document).ajaxStart(function () {

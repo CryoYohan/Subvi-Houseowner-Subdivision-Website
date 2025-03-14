@@ -14,34 +14,24 @@
     string feedbacksController = "";
 
     // Default action values
-    string homeAction = "Landing";
-    string calendarAction = "Calendar";
-    string facilitiesAction = "Facilities";
-    string billAction = "Bill";
-    string servicesAction = "Services";
-    string forumsAction = "Forums";
-    string feedbacksAction = "Feedbacks";
+    string homeAction = "";
+    string calendarAction = "";
+    string facilitiesAction = "";
+    string billAction = "";
+    string servicesAction = "";
+    string forumsAction = "";
+    string feedbacksAction = "";
 
-    // Assign controllers/actions based on role
+
      if (role == "Homeowner")
     {
         homeController = "home"; homeAction = "dashboard";
-        calendarController = "home"; calendarAction = "Calendar";
-        facilitiesController = "home"; facilitiesAction = "Facilities";
-        billController = "home"; billAction = "Bill";
-        servicesController = "home"; servicesAction = "Services";
-        forumsController = "home"; forumsAction = "Forums";
-        feedbacksController = "home"; feedbacksAction = "Feedbacks";
-    }
-    else if (role == "Staff")
-    {
-        homeController = "staff"; homeAction = "Dashboard";
-        calendarController = "staff"; calendarAction = "Calendar";
-        facilitiesController = "staff"; facilitiesAction = "Facilities";
-        billController = "staff"; billAction = "Bill";
-        servicesController = "staff"; servicesAction = "Services";
-        forumsController = "staff"; forumsAction = "Forums";
-        feedbacksController = "staff"; feedbacksAction = "Feedbacks";
+        calendarController = "home"; calendarAction = "calendar";
+        facilitiesController = "home"; facilitiesAction = "facilities";
+        billController = "home"; billAction = "bill";
+        servicesController = "home"; servicesAction = "services";
+        forumsController = "home"; forumsAction = "forums";
+        feedbacksController = "home"; feedbacksAction = "feedbacks";
     }
 }
 
@@ -120,18 +110,18 @@
             <i class="fas fa-tools text-xl"></i>
             <h1 class="text-2xl font-bold">Our Services</h1>
         </div>
-
+        
         <!-- Main content grid with 70-30 split -->
         <div class="grid grid-cols-12 gap-4 mx-4">
             <!-- Left side - Services List -->
             <div class="col-span-8 bg-white p-4 rounded-xl shadow-md">
                 <h2 class="text-xl items-center font-bold mb-4 text-[#1E3A8A]">List of Services</h2>
-
+                
                 <!-- Services Grid -->
                 <div class="grid grid-cols-2 gap-6 mb-6">
                     <!-- Clean-up Service Card -->
                     <div class="bg-white p-4 rounded-xl shadow-md">
-                        <img src="/images/cleanup.png" alt="Clean-up Service" class="w-full h-48 object-cover rounded-lg mb-4">
+                        <img src="~/images/admin-resources/services/cleanup.png" alt="Clean-up Service" class="w-full h-48 object-cover rounded-lg mb-4">
                         <h3 class="text-lg font-semibold text-[#1E3A8A] mb-2">Clean-up Service</h3>
                         <p class="text-gray-600 mb-4">Ensuring a tidy and well-maintained community through regular street sweeping, garbage collection, and landscaping upkeep.</p>
                         <div class="flex space-x-3">
@@ -142,7 +132,7 @@
 
                     <!-- Maintenance Services Card -->
                     <div class="bg-white p-4 rounded-xl shadow-md">
-                        <img src="/images/maintenance.png" alt="Maintenance Services" class="w-full h-48 object-cover rounded-lg mb-4">
+                        <img src="~/images/admin-resources/services/maintenance.png" alt="Maintenance Services" class="w-full h-48 object-cover rounded-lg mb-4">
                         <h3 class="text-lg font-semibold text-[#1E3A8A] mb-2">Maintenance Services</h3>
                         <p class="text-gray-600 mb-4">Maintaining and repairing essential infrastructure, including lighting, plumbing, and communal amenities, to keep the subdivision in top condition.</p>
                         <div class="flex space-x-3">
@@ -155,7 +145,7 @@
                 <!-- Security Services Card (Single Card Row) -->
                 <div class="max-w-[48%]">
                     <div class="bg-white p-4 rounded-xl shadow-md">
-                        <img src="/images/security.png" alt="Security Services" class="w-full h-48 object-cover rounded-lg mb-4">
+                        <img src="~/images/admin-resources/services/security.png" alt="Security Services" class="w-full h-48 object-cover rounded-lg mb-4">
                         <h3 class="text-lg font-semibold text-[#1E3A8A] mb-2">Security Services</h3>
                         <p class="text-gray-600 mb-4">Ensuring a safe and well-maintained community through regular access monitoring, garbage collection and landscaping upkeep.</p>
                         <div class="flex space-x-3">

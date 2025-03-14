@@ -65,7 +65,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             {
                 "Admin" => RedirectToAction("Dashboard", "Admin"),
                 "Homeowner" => RedirectToAction("dashboard", "Home"),
-                "Staff" => RedirectToAction("staffdashboard", "Staff"),
+                "Staff" => RedirectToAction("Dashboard", "Staff"),
                 _ => RedirectToAction("landing", "Home")
             };
         }

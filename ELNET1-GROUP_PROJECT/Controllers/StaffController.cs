@@ -11,7 +11,7 @@ public class StaffController : Controller
     public StaffController(MyAppDBContext context)
     {
         _context = context;
-        ViewData["Layout"] = "_Layout";
+        ViewData["Layout"] = "_StaffLayout";
     }
 
     private string GetUserRoleFromToken()
@@ -28,20 +28,19 @@ public class StaffController : Controller
     public IActionResult Landing()
     {
         var role = HttpContext.Request.Cookies["UserRole"];
-        if (role == "Admin")
+        if (role != "Staff")
         {
-            return RedirectToAction("Dashboard", "Admin");
+            return RedirectToAction("Landing");
         }
         return View();
     }
 
-
-    public IActionResult Staffdashboard()
+    public IActionResult Dashboard()
     {
         var role = GetUserRoleFromToken();
         if (role != "Staff")
         {
-            return RedirectToAction("landing");
+            return RedirectToAction("Landing");
         }
 
         return View();

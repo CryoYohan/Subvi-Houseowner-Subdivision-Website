@@ -1,4 +1,5 @@
 ﻿using ELNET1_GROUP_PROJECT.Data;
+using ELNET1_GROUP_PROJECT.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using ELNET1_GROUP_PROJECT.Models; // Add this using directive
@@ -30,6 +31,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseMiddleware<SlidingExpirationMiddleware>();
 app.UseRouting();
 
 if (!app.Environment.IsDevelopment())
@@ -80,7 +82,7 @@ app.UseEndpoints(endpoints =>
     endpoints.MapControllerRoute(
         name: "staff",
         pattern: "staff/dashboard",
-        defaults: new { controller = "Staff", action = "Staffdashboard" });
+        defaults: new { controller = "Staff", action = "Dashboard" });
 
     endpoints.MapControllerRoute(
         name: "homeowner",

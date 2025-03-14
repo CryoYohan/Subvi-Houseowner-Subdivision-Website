@@ -80,7 +80,7 @@ public class AdminController : Controller
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Error registering user: " + ex.Message;
+                TempData["ErrorMessage"] = "Failed to register new account. Try again later. ";
                 return RedirectToAction("HomeownerStaffAccounts");
             }
         }
@@ -156,7 +156,7 @@ public class AdminController : Controller
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = "Error updating user: " + ex.Message;
+            TempData["ErrorMessage"] = "Failed to update user info. Please try again later. ";
             return RedirectToAction("HomeownerStaffAccounts");
         }
     }
@@ -183,7 +183,7 @@ public class AdminController : Controller
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = "Error deleting user: " + ex.Message;
+            TempData["ErrorMessage"] = "Failed to delete user. Please try again later. ";
             return RedirectToAction("HomeownerStaffAccounts");
         }
     }

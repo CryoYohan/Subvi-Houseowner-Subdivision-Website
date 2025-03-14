@@ -14,44 +14,24 @@
     string feedbacksController = "";
 
     // Default action values
-    string homeAction = "Landing";
-    string calendarAction = "Calendar";
-    string facilitiesAction = "Facilities";
-    string billAction = "Bill";
-    string servicesAction = "Services";
-    string forumsAction = "Forums";
-    string feedbacksAction = "Feedbacks";
+    string homeAction = "";
+    string calendarAction = "";
+    string facilitiesAction = "";
+    string billAction = "";
+    string servicesAction = "";
+    string forumsAction = "";
+    string feedbacksAction = "";
 
     // Assign controllers/actions based on role
-    if (role == "Admin")
-    {
-        homeController = "admin"; homeAction = "Index";
-        calendarController = "admin"; calendarAction = "Calendar";
-        facilitiesController = "admin"; facilitiesAction = "Facilities";
-        billController = "admin"; billAction = "BillManagement";
-        servicesController = "admin"; servicesAction = "ServicesManagement";
-        forumsController = "admin"; forumsAction = "Forums";
-        feedbacksController = "admin"; feedbacksAction = "Feedbacks";
-    }
-    else if (role == "Homeowner")
+    if (role == "Homeowner")
     {
         homeController = "home"; homeAction = "dashboard";
-        calendarController = "home"; calendarAction = "Calendar";
-        facilitiesController = "home"; facilitiesAction = "Facilities";
-        billController = "home"; billAction = "Bill";
-        servicesController = "home"; servicesAction = "Services";
-        forumsController = "home"; forumsAction = "Forums";
-        feedbacksController = "home"; feedbacksAction = "Feedbacks";
-    }
-    else if (role == "Staff")
-    {
-        homeController = "staff"; homeAction = "Dashboard";
-        calendarController = "staff"; calendarAction = "Calendar";
-        facilitiesController = "staff"; facilitiesAction = "Facilities";
-        billController = "staff"; billAction = "Bill";
-        servicesController = "staff"; servicesAction = "Services";
-        forumsController = "staff"; forumsAction = "Forums";
-        feedbacksController = "staff"; feedbacksAction = "Feedbacks";
+        calendarController = "home"; calendarAction = "calendar";
+        facilitiesController = "home"; facilitiesAction = "facilities";
+        billController = "home"; billAction = "bill";
+        servicesController = "home"; servicesAction = "services";
+        forumsController = "home"; forumsAction = "forums";
+        feedbacksController = "home"; feedbacksAction = "feedbacks";
     }
 }
 
