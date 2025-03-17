@@ -32,6 +32,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpPost("signup")]
         public async Task<IActionResult> SignUp([FromBody] User_Account user)
         {
+            RefreshJwtCookies();
             if (await _context.User_Accounts.AnyAsync(u => u.Email == user.Email))
             {
                 return BadRequest("Email already in use.");
@@ -47,6 +48,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
+            RefreshJwtCookies();
             var existingToken = Request.Cookies["jwt"];
             if (!string.IsNullOrEmpty(existingToken) && ValidateJwtToken(existingToken) != null)
             {
@@ -139,6 +141,44 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             options.HttpOnly = false;
             Response.Cookies.Append("UserRole", role, options);
             Response.Cookies.Append("Id", id, options);
+        }
+
+        //Resetting the cookies time
+        private void RefreshJwtCookies()
+        {
+            var token = Request.Cookies["jwt"];
+            var role = Request.Cookies["UserRole"];
+            var id = Request.Cookies["Id"];
+
+            if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(role) && !string.IsNullOrEmpty(id))
+            {
+                // Reset cookies with updated expiration
+                var expiryMinutes = 15;  // Reset to 15 minutes
+
+                var options = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+                };
+
+                Response.Cookies.Append("jwt", token, options);
+                Response.Cookies.Append("UserRole", role, new CookieOptions
+                {
+                    HttpOnly = false,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+                });
+                Response.Cookies.Append("Id", id, new CookieOptions
+                {
+                    HttpOnly = false,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+                });
+            }
         }
 
         private User_Account GetUserFromToken(string token)

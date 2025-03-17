@@ -1,13 +1,12 @@
 ﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
-/*
 let expiryTime;
 const countdownWarningMinutes = 3;
-const refreshInterval = 1000;
+const refreshInterval = 1000; // 1 second
 
 // Fetch expiry from headers once on page load
-async function refreshSession() {
+async function fetchSessionExpiry() {
     try {
         const response = await fetch(window.location.href, { method: 'HEAD' });
         const expiryHeader = response.headers.get("Session-Expiry");
@@ -15,37 +14,35 @@ async function refreshSession() {
             expiryTime = new Date(expiryHeader).getTime();
         }
     } catch (error) {
-        console.error("Failed to refresh session:", error);
+        console.error("Failed to fetch session expiry:", error);
     }
 }
 
-// Wrap window.fetch to refresh session on every API call
-const originalFetch = window.fetch;
-window.fetch = async (...args) => {
-    const response = await originalFetch(...args);
-    refreshSession();  // Refresh session only when API calls happen
-    return response;
-};
-
 // Countdown logic
 function startSessionCountdown() {
-    setInterval(() => {
+    fetchSessionExpiry(); // Get the initial expiry time
+
+    const countdown = setInterval(() => {
         if (!expiryTime) return;
 
         const now = new Date().getTime();
         const timeLeft = expiryTime - now;
 
+        // Auto logout when session expires
         if (timeLeft <= 0) {
+            clearInterval(countdown);
             autoLogout();
             return;
         }
 
+        // Show warning before expiry
         if (timeLeft <= countdownWarningMinutes * 60 * 1000) {
             showSessionWarning(Math.ceil(timeLeft / 1000));
         }
     }, refreshInterval);
 }
 
+// Show session expiration warning
 function showSessionWarning(secondsLeft) {
     const minutes = Math.floor(secondsLeft / 60);
     const seconds = secondsLeft % 60;
@@ -64,6 +61,7 @@ function showSessionWarning(secondsLeft) {
     document.getElementById("countdown").textContent = `${minutes}m ${seconds}s`;
 }
 
+// Auto logout when session expires
 function autoLogout() {
     Swal.fire({
         icon: 'error',
@@ -74,12 +72,24 @@ function autoLogout() {
     }).then(() => window.location.href = '/home');
 }
 
-// Start countdown and session refresh on page load
-document.addEventListener('DOMContentLoaded', async () => {
-    await refreshSession();
-    startSessionCountdown();
-});
-*/
+// Manual Logout Button Function
+async function logoutUser() {
+    await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+    });
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Logged Out',
+        text: 'You have been successfully logged out.',
+        timer: 3000,
+        showConfirmButton: false
+    }).then(() => window.location.href = "/home");
+}
+
+// Start countdown when page loads
+document.addEventListener('DOMContentLoaded', startSessionCountdown);
 
 document.addEventListener("DOMContentLoaded", function () {
     $(document).ajaxStart(function () {

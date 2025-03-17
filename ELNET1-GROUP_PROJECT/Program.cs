@@ -81,8 +81,23 @@ app.UseEndpoints(endpoints =>
 
     endpoints.MapControllerRoute(
         name: "staff",
-        pattern: "staff/dashboard",
-        defaults: new { controller = "Staff", action = "Dashboard" });
+        pattern: "staff/{action=Dashboard}",
+        defaults: new { controller = "Staff" });
+
+    endpoints.MapControllerRoute(
+        name: "staff_vehicle",
+        pattern: "staff/vehicle/{action}",
+        defaults: new { controller = "Staff" });
+
+    endpoints.MapControllerRoute(
+        name: "staff_requests",
+        pattern: "staff/requests/{action}",
+        defaults: new { controller = "Staff" });
+
+    endpoints.MapControllerRoute(
+        name: "staff_pass",
+        pattern: "staff/pass/{action}",
+        defaults: new { controller = "Staff" });
 
     endpoints.MapControllerRoute(
         name: "homeowner",

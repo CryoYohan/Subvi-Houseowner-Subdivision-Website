@@ -14,8 +14,51 @@ public class AdminController : Controller
         ViewData["Layout"] = "_AdminLayout"; 
     }
 
+    //Resetting the cookies time
+    private void RefreshJwtCookies()
+    {
+        var token = Request.Cookies["jwt"];
+        var role = Request.Cookies["UserRole"];
+        var id = Request.Cookies["Id"];
+
+        if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(role) && !string.IsNullOrEmpty(id))
+        {
+            // Reset cookies with updated expiration
+            var expiryMinutes = 15;  // Reset to 15 minutes
+
+            var options = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+            };
+
+            Response.Cookies.Append("jwt", token, options);
+            Response.Cookies.Append("UserRole", role, new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+            });
+            Response.Cookies.Append("Id", id, new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+            });
+        }
+    }
+    public IActionResult RedirectToDashboard()
+    {
+        return RedirectToAction("Dashboard");
+    }
+
     public IActionResult Dashboard()
     {
+        RefreshJwtCookies();
         var role = HttpContext.Request.Cookies["UserRole"];
         if (string.IsNullOrEmpty(role) || role != "Admin")
         {
@@ -30,6 +73,7 @@ public class AdminController : Controller
 
     public IActionResult Reservations()
     {
+        RefreshJwtCookies();
         var role = HttpContext.Request.Cookies["UserRole"];
         if (string.IsNullOrEmpty(role) || role != "Admin")
         {
@@ -40,6 +84,7 @@ public class AdminController : Controller
 
     public IActionResult HomeownerStaffAccounts()
     {
+        RefreshJwtCookies();
         // Get all users from the database to display in the table
         var users = _context.User_Accounts.ToList();
         var role = HttpContext.Request.Cookies["UserRole"];
@@ -56,6 +101,7 @@ public class AdminController : Controller
     {
         if (ModelState.IsValid)
         {
+            RefreshJwtCookies();
             try
             {
                 // Check if the email already exists
@@ -92,6 +138,7 @@ public class AdminController : Controller
     // Function to delete all users
     public IActionResult DeleteAllUsers()
     {
+        RefreshJwtCookies();
         var allUsers = _context.User_Accounts.ToList(); // Retrieve all users
 
         _context.User_Accounts.RemoveRange(allUsers); // Remove all users
@@ -105,6 +152,7 @@ public class AdminController : Controller
     [HttpPost]
     public IActionResult EditUser(User_Account model)
     {
+        RefreshJwtCookies();
         // Remove the Password field from model validation
         ModelState.Remove("Password");
 
@@ -164,6 +212,7 @@ public class AdminController : Controller
     // Function to delete a specific user by ID
     public IActionResult DeleteUser(int id)
     {
+        RefreshJwtCookies();
         try
         {
             // Find the user by ID
@@ -190,6 +239,7 @@ public class AdminController : Controller
 
     public IActionResult BillPayment()
     {
+        RefreshJwtCookies();
         var role = HttpContext.Request.Cookies["UserRole"];
         if (string.IsNullOrEmpty(role) || role != "Admin")
         {
@@ -200,6 +250,7 @@ public class AdminController : Controller
 
     public IActionResult PaymentHistory()
     {
+        RefreshJwtCookies();
         var role = HttpContext.Request.Cookies["UserRole"];
         if (string.IsNullOrEmpty(role) || role != "Admin")
         {
@@ -210,6 +261,7 @@ public class AdminController : Controller
 
     public IActionResult Services()
     {
+        RefreshJwtCookies();
         var role = HttpContext.Request.Cookies["UserRole"];
         if (string.IsNullOrEmpty(role) || role != "Admin")
         {
@@ -220,6 +272,7 @@ public class AdminController : Controller
 
     public IActionResult Announcements()
     {
+        RefreshJwtCookies();
         var announcements = _context.Announcement
             .OrderByDescending(a => a.DatePosted)
             .ToList();
@@ -229,7 +282,8 @@ public class AdminController : Controller
     // Add a new announcement
     [HttpPost]
     public IActionResult AddAnnouncement(string title, string description)
-    {   
+    {
+        RefreshJwtCookies();
         var userId = Request.Cookies["Id"];
         try
         {
@@ -256,6 +310,7 @@ public class AdminController : Controller
     [HttpPost]
     public IActionResult EditAnnouncement(int id, string title, string description)
     {
+        RefreshJwtCookies();
         try
         {
             var announcement = _context.Announcement.Find(id);
@@ -282,6 +337,7 @@ public class AdminController : Controller
     [HttpPost]
     public IActionResult DeleteAnnouncement(int id)
     {
+        RefreshJwtCookies();
         try
         {
             var announcement = _context.Announcement.Find(id);

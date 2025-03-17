@@ -28,8 +28,47 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return jwtToken?.Claims.FirstOrDefault(c => c.Type == "Role")?.Value;
         }
 
+        //Resetting the cookies time
+        private void RefreshJwtCookies()
+        {
+            var token = Request.Cookies["jwt"];
+            var role = Request.Cookies["UserRole"];
+            var id = Request.Cookies["Id"];
+
+            if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(role) && !string.IsNullOrEmpty(id))
+            {
+                // Reset cookies with updated expiration
+                var expiryMinutes = 15;  // Reset to 15 minutes
+
+                var options = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+                };
+
+                Response.Cookies.Append("jwt", token, options);
+                Response.Cookies.Append("UserRole", role, new CookieOptions
+                {
+                    HttpOnly = false,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+                });
+                Response.Cookies.Append("Id", id, new CookieOptions
+                {
+                    HttpOnly = false,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+                });
+            }
+        }
+
         public IActionResult landing()
         {
+            RefreshJwtCookies();
             var role = GetUserRoleFromToken();
             if (!string.IsNullOrEmpty(role))
             {
@@ -50,6 +89,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         public IActionResult dashboard()
         {
+            RefreshJwtCookies();
             var role = GetUserRoleFromToken();
             if (role != "Homeowner")
             {
@@ -61,6 +101,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         private IActionResult RedirectToRoleDashboard(string role)
         {
+            RefreshJwtCookies();
             return role switch
             {
                 "Admin" => RedirectToAction("Dashboard", "Admin"),
@@ -72,36 +113,37 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         public IActionResult Calendar()
         {
+            RefreshJwtCookies();
             return View();
         }
 
         public IActionResult Facilities()
         {
+            RefreshJwtCookies();
             return View();
         }
 
         public IActionResult Bill()
         {
+            RefreshJwtCookies();
             return View();
         }
 
         public IActionResult Services()
         {
+            RefreshJwtCookies();
             return View();
         }
 
         public IActionResult Forums()
         {
+            RefreshJwtCookies();
             return View();
         }
 
         public IActionResult Feedbacks()
         {
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
+            RefreshJwtCookies();
             return View();
         }
 
