@@ -13,6 +13,7 @@
     string servicesController = "";
     string forumsController = "";
     string feedbacksController = "";
+    string resourcesController = "";
 
     // Default action values
     string homeAction = "";
@@ -22,6 +23,7 @@
     string servicesAction = "";
     string forumsAction = "";
     string feedbacksAction = "";
+    string resourcesAction = "";
 
      if (role == "Homeowner")
     {
@@ -32,24 +34,25 @@
         servicesController = "home"; servicesAction = "services";
         forumsController = "home"; forumsAction = "forums";
         feedbacksController = "home"; feedbacksAction = "feedbacks";
+        resourcesController = "home"; resourcesAction = "resources";
     }
 }
 
 @* Sidebar *@
-<div class="flex flex-row overflow-hidden pt-4 gap-2 flex-shrink-0">
+<div class="flex flex-row overflow-hidden pt-4 flex-shrink-0  min-h-screen">
     <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6">
         <ul class="space-y-4">
              <!-- Home -->
             <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item" asp-controller="@homeController" asp-action="@homeAction">
+                <a class="flex items-center space-x-4 p-3 rounded-l-full  sidebar-item active-item"
+                   asp-controller="home" asp-action="dashboard">
                     <i class="fas fa-home text-xl"></i>
                     <span class="font-semibold">Home</span>
                 </a>
             </li>
-
-            <!-- Calendar -->
             <li>
-                <a class="flex items-center space-x-4 p-3 sidebar-item hover:bg-gray-100 transition ease-in-out rounded-l-full" asp-controller="@calendarController" asp-action="@calendarAction">
+                <a class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item transition ease-in-out rounded-l-full"
+                   asp-controller="home" asp-action="calendar">
                     <i class="fas fa-calendar-alt text-xl"></i>
                     <span class="font-semibold">Calendar</span>
                 </a>
@@ -94,34 +97,262 @@
                     <span class="font-semibold">Feedbacks</span>
                 </a>
             </li>
+
+            <!-- Resources -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@resourcesController" asp-action="@resourcesAction">
+                    <i class="fas fa-folder text-xl"></i>
+                    <span class="font-semibold">Resources</span>
+                </a>
+            </li>
         </ul>
     </div>
 
-    <div class="bg-white shadow-md rounded-lg p-4 w-vw-3/4">
-        <div class="flex space-x-6 text-blue-800 font-semibold border-b">
-            <button class="pb-2 border-b-2 border-blue-800">Announcements</button>
-            <button class="pb-2 hover:text-blue-500">Polls</button>
-            <button class="pb-2 hover:text-blue-500">Surveys</button>
-        </div>
+    <div class="flex gap-4 p-2 w-full">
+        <!-- Left Side Content (Announcements, Polls, Surveys) - 75% -->
+        <div class="w-3/4 bg-white shadow-lg rounded-xl p-6">
+            <!-- Tab Navigation -->
+            <div class="space-x-4 text-center mb-4 border-b border-gray-200">
+                <button id="announcements-tab" class="tab-button px-6 py-3 rounded-t-lg font-semibold" onclick="showPanel('announcements')">
+                    Announcements
+                </button>
+                <button id="polls-tab" class="tab-button px-6 py-3 rounded-t-lg font-semibold" onclick="showPanel('polls')">
+                    Polls
+                </button>
+                <button id="surveys-tab" class="tab-button px-6 py-3 rounded-t-lg font-semibold" onclick="showPanel('surveys')">
+                    Surveys
+                </button>
+            </div>
 
-        <!-- Announcement Section -->
-        <div class="p-4 animate-pulse">
-            <div class="flex items-center space-x-4">
-                <img src="~/images/admin-avatar.png" class="h-10 w-10 rounded-full" alt="Admin">
-                <div>
-                    <h3 class="font-bold">Admin</h3>
-                    <p class="text-gray-500 text-sm">Description of the announcement goes here.</p>
+            <!-- Dynamic Panel Content -->
+            <div id="announcements-panel" class="panel-content space-y-6">
+                <!-- Loading Skeleton -->
+                <div class="animate-pulse space-y-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="h-10 w-10 rounded-full bg-gray-200"></div>
+                        <div class="flex-1 space-y-2">
+                            <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-4/5"></div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="h-10 w-10 rounded-full bg-gray-200"></div>
+                        <div class="flex-1 space-y-2">
+                            <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-4/5"></div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="h-10 w-10 rounded-full bg-gray-200"></div>
+                        <div class="flex-1 space-y-2">
+                            <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-4/5"></div>
+                    </div>
+                </div>
+
+                <!-- Loaded Content -->
+                <div class="announcement-list hidden space-y-6">
+                    <!-- Dynamic content will be inserted here -->
                 </div>
             </div>
-            <div class="mt-4 space-y-2">
-                <p class="bg-gray-200 h-4 rounded w-5/6"></p>
-                <p class="bg-gray-200 h-4 rounded w-3/4"></p>
-                <p class="bg-gray-200 h-4 rounded w-4/5"></p>
+
+            <div id="polls-panel" class="panel-content p-4 hidden">
+                <div class="text-center py-12">
+                    <i class="fas fa-chart-pie text-4xl text-blue-200 mb-4"></i>
+                    <p class="text-gray-500">No active polls available</p>
+                </div>
+            </div>
+
+            <div id="surveys-panel" class="panel-content p-4 hidden">
+                <div class="text-center py-12">
+                    <i class="fas fa-clipboard-list text-4xl text-blue-200 mb-4"></i>
+                    <p class="text-gray-500">No ongoing surveys</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side Content (Calendar + Events) - 25% -->
+        <div class="w-1/4 space-y-4">
+            <!-- Calendar Box -->
+            <div class="bg-white shadow-lg rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-blue-800 mb-2">Calendar</h3>
+                <div id="calendar-widget" class="mb-4"></div>
+            </div>
+
+            <!-- Event List Box -->
+            <div class="bg-white shadow-lg rounded-xl p-6">
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">Upcoming Events</h4>
+                <div id="calendar-list-content" class="space-y-3"></div>
             </div>
         </div>
     </div>
 
-    <aside>
-        Calendar
-    </aside>
+    <!-- JavaScript for panel switching and calendar -->
+    <script>
+        let currentDate = new Date();
+        let selectedDay = new Date().getDate();
+
+        function showPanel(panelName) {
+            // Hide all panels
+            document.querySelectorAll('.panel-content').forEach(panel => panel.classList.add('hidden'));
+
+            // Show the selected panel
+            document.getElementById(`${panelName}-panel`).classList.remove('hidden');
+
+            // Update tab styles
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('text-blue-800', 'bg-blue-200', 'border-blue-800', 'border-b-2');
+                btn.classList.add('text-gray-500', 'hover:text-blue-600', 'hover:bg-blue-100');
+            });
+
+            // Apply active styles to selected tab
+            const activeTab = document.getElementById(`${panelName}-tab`);
+            activeTab.classList.remove('text-gray-500', 'hover:text-blue-600', 'hover:bg-blue-100');
+            activeTab.classList.add('text-blue-800', 'bg-blue-200', 'border-blue-800', 'border-b-2');
+        }
+
+                function initializeCalendar() {
+            const calendarElement = document.getElementById("calendar-widget");
+            const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+
+            let calendarHTML = `
+                <div class="flex justify-between mb-4">
+                    <button class="text-xl text-blue-600" onclick="changeMonth(-1)">&#8592;</button>
+                    <span class="font-semibold text-lg">${currentDate.toLocaleString('default', { month: 'long' })} ${currentDate.getFullYear()}</span>
+                    <button class="text-xl text-blue-600" onclick="changeMonth(1)">&#8594;</button>
+                </div>
+                <div class='grid grid-cols-7 gap-1 text-sm'>
+                    <div class="font-semibold text-gray-600 text-center">Sun</div>
+                    <div class="font-semibold text-gray-600 text-center">Mon</div>
+                    <div class="font-semibold text-gray-600 text-center">Tue</div>
+                    <div class="font-semibold text-gray-600 text-center">Wed</div>
+                    <div class="font-semibold text-gray-600 text-center">Thu</div>
+                    <div class="font-semibold text-gray-600 text-center">Fri</div>
+                    <div class="font-semibold text-gray-600 text-center">Sat</div>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-sm">
+            `;
+
+            // Blank days before the first day of the month
+            for (let i = 0; i < firstDay; i++) {
+                calendarHTML += `<div></div>`;
+            }
+
+            // Add days of the current month
+            for (let i = 1; i <= daysInMonth; i++) {
+                const isToday = i === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+                const isSelected = i === selectedDay;
+
+                calendarHTML += `
+                    <div class="calendar-day rounded-xl p-2 transition-colors text-center cursor-pointer hover:bg-blue-200
+                        ${isToday ? 'bg-blue-800 text-white font-semibold' : ''}
+                        ${isSelected && !isToday ? 'border-2 border-blue-800' : ''}"
+                        onclick="selectDate(${i})">
+                        ${i}
+                    </div>
+                `;
+            }
+
+            calendarHTML += "</div>";
+            calendarElement.innerHTML = calendarHTML;
+        }
+
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            selectedDay = 1; // Reset selection to the 1st of the new month
+            initializeCalendar();
+            selectDate(selectedDay);
+        }
+
+        function selectDate(day) {
+            selectedDay = day;
+            initializeCalendar();  // Reinitialize to refresh the selected border
+
+            const selectedDate = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`;
+            loadCalendarData(selectedDate);
+        }
+
+        async function loadCalendarData(date) {
+            const eventList = `
+                <div class="h-22 p-2 border rounded-lg transition-colors bg-blue-50 border-blue-200 text-sm flex items-center gap-2">
+                    <i class="fas fa-circle text-xs text-blue-500"></i>
+                    <span>Sample Event</span>
+                    <span class="text-gray-500 ml-auto text-sm">${date}</span>
+                </div>
+            `;
+            document.getElementById('calendar-list-content').innerHTML = eventList;
+        }
+
+        // Function to load announcements dynamically
+        async function loadAnnouncements() {
+            try {
+                const response = await fetch('/api/announcement');
+                const data = await response.json();
+                console.log(data)
+
+                const announcementsContainer = document.querySelector('.announcement-list');
+                announcementsContainer.innerHTML = ''; // Clear existing content
+
+                if (data.length === 0) {
+                    announcementsContainer.innerHTML = '<p class="text-gray-500">No announcements found.</p>';
+                } else {
+                    data.forEach(announcement => {
+                        const announcementElement = document.createElement('div');
+                        announcementElement.classList.add('announcement-card', 'p-4', 'bg-white', 'rounded-xl', 'shadow-sm', 'border', 'border-gray-100', 'hover:shadow-md', 'transition-shadow');
+                        announcementElement.innerHTML = `
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <i class="fas fa-bullhorn text-blue-600"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-800">${announcement.title}</h3>
+                                    <p class="text-gray-600 text-sm mt-1">${announcement.description}</p>
+                                    <div class="flex items-center gap-2 mt-3 text-xs text-gray-400">
+                                        <i class="fas fa-user"></i>
+                                        <span>${announcement.postedBy}</span>
+                                        <i class="fas fa-clock ml-2"></i>
+                                        <span>${new Date(announcement.datePosted).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        announcementsContainer.appendChild(announcementElement);
+                    });
+                }
+
+                // Hide loading skeleton and show loaded content
+                document.querySelector('#announcements-panel .animate-pulse').classList.add('hidden');
+                announcementsContainer.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading announcements:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            showPanel('announcements');
+            initializeCalendar();
+            selectDate(selectedDay);
+            loadAnnouncements();
+        });
+    </script>
+
 </div>

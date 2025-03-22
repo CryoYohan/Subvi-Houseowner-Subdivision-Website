@@ -1,6 +1,6 @@
 @{
     Layout = "_HomeLayout";
-    ViewData["Title"] = "Subvi | Calendar";
+    ViewData["Title"] = "Subvi | Forums";
 
     // Retrieve the user's role from cookies
     string role = Context.Request.Cookies["UserRole"];
@@ -38,16 +38,9 @@
     }
 }
 
-<link rel="stylesheet" href="~/css/calendar.css" />
-
-@section Scripts {
-    <script src="~/js/calendar.js" asp-append-version="true"></script>
-}
-
-
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
-    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6">
+    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
         <ul class="space-y-4">
             <!-- Home (Dynamic) -->
             <li>
@@ -60,7 +53,7 @@
 
             <!-- Calendar -->
             <li>
-                <a class="flex items-center space-x-4 p-3 sidebar-item active-item rounded-l-full"
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
                    asp-controller="@calendarController" asp-action="@calendarAction">
                     <i class="fas fa-calendar-alt text-xl"></i>
                     <span class="font-semibold">Calendar</span>
@@ -114,47 +107,11 @@
 
             <!-- Resources -->
             <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@resourcesController" asp-action="@resourcesAction">
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item" asp-controller="@resourcesController" asp-action="@resourcesAction">
                     <i class="fas fa-folder text-xl"></i>
                     <span class="font-semibold">Resources</span>
                 </a>
             </li>
         </ul>
-    </div>
-
-    <!-- Main Content -->
-    <div class="flex flex-1 flex-col bg-gray-100 bg-white p-2 space-y-4">
-
-        <div class="flex space-x-4 bg-white">
-            <!-- Schedule List -->
-            <div class="bg-white shadow-md rounded-lg w-1/4 p-4">
-                <h2 class="text-lg font-semibold text-blue-800">Schedules</h2>
-                <ul id="schedule-list" class="mt-2 space-y-2"><!-- This is where the list of schedule list will show (do not remove guys) --></ul>
-            </div>
-
-            <!-- Calendar -->
-            <div class="bg-white shadow-md rounded-lg flex-1 p-6">
-                <div class="flex justify-between">
-                    <button id="prev-month" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <h1 id="current-month" class="text-xl font-semibold text-blue-800"></h1>
-                    <button id="next-month" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-7 gap-4 bg-white mt-4 text-center">
-                    <div class="font-semibold text-blue-800">Sun</div>
-                    <div class="font-semibold text-blue-800">Mon</div>
-                    <div class="font-semibold text-blue-800">Tue</div>
-                    <div class="font-semibold text-blue-800">Wed</div>
-                    <div class="font-semibold text-blue-800">Thu</div>
-                    <div class="font-semibold text-blue-800">Fri</div>
-                    <div class="font-semibold text-blue-800">Sat</div>
-                </div>
-                <div id="calendar-days" class="mt-2"></div>
-            </div>
-        </div>
     </div>
 </div>

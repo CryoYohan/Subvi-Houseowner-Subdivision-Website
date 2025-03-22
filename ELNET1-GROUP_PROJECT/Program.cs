@@ -19,6 +19,9 @@ builder.Services.AddDbContext<MyAppDBContext>(options =>
 
 builder.Services.AddControllersWithViews();
 
+var payMongoSecretKey = builder.Configuration["PayMongo:SecretKey"];
+builder.Services.AddSingleton<PayMongoService>(new PayMongoService(payMongoSecretKey));
+
 var app = builder.Build();
 
 app.Use(async (context, next) =>

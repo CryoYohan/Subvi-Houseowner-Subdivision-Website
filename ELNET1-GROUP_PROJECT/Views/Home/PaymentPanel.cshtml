@@ -1,0 +1,224 @@
+﻿@{
+    Layout = "_HomeLayout";
+    ViewData["Title"] = "Subvi | Bill & Payments";
+
+    string userId = Context.Request.Cookies["Id"];
+    string role = Context.Request.Cookies["UserRole"];
+
+    // Declare controller
+    string homeController = "";
+    string calendarController = "";
+    string facilitiesController = "";
+    string billController = "";
+    string servicesController = "";
+    string forumsController = "";
+    string feedbacksController = "";
+    string resourcesController = "";
+
+    // Default action values
+    string homeAction = "";
+    string calendarAction = "";
+    string facilitiesAction = "";
+    string billAction = "";
+    string servicesAction = "";
+    string forumsAction = "";
+    string feedbacksAction = "";
+    string resourcesAction = "";
+
+    // Assign controllers/actions based on role
+    if (role == "Homeowner")
+    {
+        homeController = "home"; homeAction = "dashboard";
+        calendarController = "home"; calendarAction = "calendar";
+        facilitiesController = "home"; facilitiesAction = "facilities";
+        billController = "home"; billAction = "bill";
+        servicesController = "home"; servicesAction = "services";
+        forumsController = "home"; forumsAction = "forums";
+        feedbacksController = "home"; feedbacksAction = "feedbacks";
+        resourcesController = "home"; resourcesAction = "resources";
+    }
+}
+
+<script>
+    function togglePaymentFields() {
+        const paymentMethod = document.querySelector('input[name="PaymentMethod"]:checked').value;
+        const gcashFields = document.getElementById('gcashFields');
+        const creditCardFields = document.getElementById('creditCardFields'); // For future credit card
+
+        if (paymentMethod === 'G-Cash') {
+            gcashFields.style.display = 'block';
+            creditCardFields.style.display = 'none';
+        } else if (paymentMethod === 'Credit Card') {
+            gcashFields.style.display = 'none';
+            creditCardFields.style.display = 'block';
+        }
+    }
+</script>
+
+<div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
+    @* Sidebar *@
+    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
+        <ul class="space-y-4">
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="home" asp-action="dashboard">
+                    <i class="fas fa-home text-xl"></i>
+                    <span class="font-semibold">Home</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item transition ease-in-out rounded-l-full"
+                   asp-controller="home" asp-action="calendar">
+                    <i class="fas fa-calendar-alt text-xl"></i>
+                    <span class="font-semibold">Calendar</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="home" asp-action="facilities">
+                    <i class="fas fa-building text-xl"></i>
+                    <span class="font-semibold">Facilities</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item"
+                   asp-controller="home" asp-action="bill">
+                    <i class="fas fa-file-invoice-dollar text-xl"></i>
+                    <span class="font-semibold">Bill Payment</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="home" asp-action="services">
+                    <i class="fas fa-tools text-xl"></i>
+                    <span class="font-semibold">Services</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="home" asp-action="forums">
+                    <i class="fas fa-comments text-xl"></i>
+                    <span class="font-semibold">Forums</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="home" asp-action="feedbacks">
+                    <i class="fas fa-bullhorn text-xl"></i>
+                    <span class="font-semibold">Feedbacks</span>
+                </a>
+            </li>
+            <!-- Resources -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@resourcesController" asp-action="@resourcesAction">
+                    <i class="fas fa-folder text-xl"></i>
+                    <span class="font-semibold">Resources</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="container mt-4">
+        <h2 class="text-primary">Make a Payment</h2>
+        <div class="card p-4">
+            <!-- Payment Steps -->
+            <div class="d-flex justify-content-around mb-4">
+                <span class="badge bg-primary">Payment Details</span>
+                <span class="badge bg-secondary">Review & Save</span>
+                <span class="badge bg-secondary">Confirmation</span>
+            </div>
+
+            <form method="post" action="@Url.Action("ConfirmPayment", "Home", new { billId = Model.BillId })">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">I want to pay for:</label>
+                    <input type="text" class="form-control" value="@(Model?.BillName ?? "N/A")" readonly>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Reference / Invoice #:</label>
+                        <input type="text" class="form-control" value="@Model.BillId" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Amount:</label>
+                        <input type="text" class="form-control" value="@(Model?.BillAmount?.ToString("0.00") ?? "0.00")" readonly>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Service Fee:</label>
+                        <input type="text" class="form-control" value="200.00" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Total:</label>
+                        <input type="text" class="form-control" value="@(Model?.BillAmount + 200 ?? 200)" readonly>
+                        <!-- Hidden input to send total amount with the form -->
+                        <input type="hidden" name="amountPaid" value="@(Model?.BillAmount + 200 ?? 200)" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Type of Payment:</label>
+                    <select class="form-select" required>
+                        <option value="One Time Payment" selected>One Time Payment</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Method of Payment:</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="PaymentMethod" value="Credit Card" checked onclick="togglePaymentFields()">
+                            <label class="form-check-label">Credit Card</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="PaymentMethod" value="G-Cash" onclick="togglePaymentFields()">
+                            <label class="form-check-label">G-Cash</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- GCash Fields -->
+                <div id="gcashFields" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">GCash Mobile Number:</label>
+                        <input type="text" class="form-control" name="GCashNumber" placeholder="09XXXXXXXXX">
+                    </div>
+                </div>
+
+                <!-- Credit Card Fields (Commented for now) -->
+                <div id="creditCardFields">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Card Number:</label>
+                        <input type="text" class="form-control" placeholder="1234 5678 9012 3456">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Expiry Date:</label>
+                            <input type="text" class="form-control" placeholder="MM/YY">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">CVV:</label>
+                            <input type="text" class="form-control" placeholder="123">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="@Url.Action("Bill", "Home")" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Confirm and Pay</button>
+                </div>
+            </form>
+        </div>
+        
+
+       
+    </div>
+</div>
+
+<script>
+    // Initialize on page load
+    window.onload = togglePaymentFields;
+</script>

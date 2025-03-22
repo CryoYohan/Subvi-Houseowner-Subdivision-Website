@@ -284,7 +284,8 @@ public class AdminController : Controller
     public IActionResult AddAnnouncement(string title, string description)
     {
         RefreshJwtCookies();
-        var userId = Request.Cookies["Id"];
+        var userIdStr = Request.Cookies["Id"];
+        int userId = int.Parse(userIdStr);
         try
         {
             var newAnnouncement = new Announcement

@@ -1,3 +1,5 @@
+@model List<ForumPost>
+
 @{
     Layout = "_HomeLayout";
     ViewData["Title"] = "Subvi | Forums";
@@ -13,6 +15,7 @@
     string servicesController = "";
     string forumsController = "";
     string feedbacksController = "";
+    string resourcesController = "";
 
     // Default action values
     string homeAction = "";
@@ -22,6 +25,7 @@
     string servicesAction = "";
     string forumsAction = "";
     string feedbacksAction = "";
+    string resourcesAction = "";
 
     if (role == "Homeowner")
     {
@@ -32,16 +36,30 @@
         servicesController = "home"; servicesAction = "services";
         forumsController = "home"; forumsAction = "forums";
         feedbacksController = "home"; feedbacksAction = "feedbacks";
+        resourcesController = "home"; resourcesAction = "resources";
     }
 }
 
+@functions {
+    public string GetTruncatedTitle(string title)
+    {
+        var words = title.Split(' ');
+        if (words.Length >= 5)  
+        {
+            return string.Join(" ", words.Take(5)) + "...";
+        }
+        return title;
+    }
+}
+
+
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
-    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
+    <div class="bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col sidebar">
         <ul class="space-y-4">
-            <!-- Home (Dynamic) -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+            <!-- Home -->
+            <li class="nav-item">
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item"
                    asp-controller="@homeController" asp-action="@homeAction">
                     <i class="fas fa-home text-xl"></i>
                     <span class="font-semibold">Home</span>
@@ -49,8 +67,8 @@
             </li>
 
             <!-- Calendar -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+            <li class="nav-item">
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item"
                    asp-controller="@calendarController" asp-action="@calendarAction">
                     <i class="fas fa-calendar-alt text-xl"></i>
                     <span class="font-semibold">Calendar</span>
@@ -101,6 +119,212 @@
                     <span class="font-semibold">Feedbacks</span>
                 </a>
             </li>
+
+            <!-- Resources -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@resourcesController" asp-action="@resourcesAction">
+                    <i class="fas fa-folder text-xl"></i>
+                    <span class="font-semibold">Resources</span>
+                </a>
+            </li>
         </ul>
     </div>
+
+    <div id="forum-container" class="container mt-2">
+        <div id="header" class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+            <i class="bi bi-chat-left-dots"></i>
+            <h1 class="text-2xl font-bold">Community Forum</h1>
+
+            <!-- Tooltip Text (Hidden by default, shown on hover) -->
+            <div class="tooltip-text absolute left-1/2 transform -translate-x-1/2 bottom-0 mb-6 p-2 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Go to Community Forum Home
+            </div>
+
+            <!-- Redirect link on click -->
+            <a href="/home/forums" class="absolute inset-0"></a>
+        </div>
+
+        <!-- Search and Add Discussion Button -->
+        <div class="d-flex justify-content-between mb-4">
+            <input id="searchInput" type="text" class="form-control w-75 shadow-sm" placeholder="Search discussions...">
+            <button id="searchBtn" class="btn btn-primary shadow-sm">
+                <i class="bi bi-search"></i> Search
+            </button>
+            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addDiscussionModal">
+                <i class="bi bi-plus-circle"></i> Add Discussion
+            </button>
+        </div>
+
+        <!-- Loading Animation -->
+        <div id="loading-placeholder" class="animate-pulse">
+            <div class="card mb-4 shadow-sm rounded-lg border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-light" style="width: 50px; height: 50px;"></div>
+                        <div class="ms-3">
+                            <div class="bg-light mb-1" style="width: 120px; height: 10px;"></div>
+                            <div class="bg-light" style="width: 80px; height: 10px;"></div>
+                        </div>
+                    </div>
+                    <div class="bg-light mb-2" style="width: 100%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 90%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 60%; height: 15px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forum Posts -->
+        <div id="forum-posts" style="display: none;">
+            @foreach (var post in Model)
+            {
+                <div class="card mb-3 post-item">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <img src="/images/user-placeholder.png" class="rounded-circle me-3" alt="@post.FullName" width="50" height="50">
+                            <div class="w-100">
+                                <h5 class="card-title">@post.Title</h5>
+                                <p class="text-muted">Posted by @post.FullName on @post.DatePosted.ToString("MMMM dd, yyyy")</p>
+                                <p class="card-text">@post.Content</p>
+                                <div class="d-flex justify-content-end gap-3">
+                                    <!-- Like Button -->
+                                    <button onclick="toggleLike(@post.PostId)" class="btn btn-outline-gray btn-sm d-flex align-items-center gap-1">
+                                        <i id="like-icon-@post.PostId" class="bi @(post.IsLiked ? "bi-hand-thumbs-up-fill text-primary" : "bi-hand-thumbs-up text-secondary")"></i>
+                                        <span id="like-count-@post.PostId">@post.LikeDisplay</span>
+                                    </button>
+
+                                    <!-- Comment Button -->
+                                    <a href="@Url.Action("Comments", "Home", new { id = post.PostId, title = GetTruncatedTitle(post.Title) })" class="btn btn-outline-gray btn-sm d-flex align-items-center gap-1">
+                                        <i class="bi bi-chat"></i>
+                                        <span>@post.RepliesDisplay</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Add Discussion Modal -->
+        <div class="modal fade" id="addDiscussionModal" tabindex="-1" aria-labelledby="addDiscussionModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-primary" id="addDiscussionModalLabel">New Discussion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="post" asp-action="AddPost" asp-controller="Home">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="content" class="form-label">Content</label>
+                                <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Post</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+    // Simulate loading
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            document.getElementById('loading-placeholder').style.display = 'none';
+            document.getElementById('forum-posts').style.display = 'block';
+        }, 1000);
+    });
+
+        // Toggle Like/Unlike
+    async function toggleLike(postId) {
+        try {
+            const response = await fetch(`/home/ToggleLike?postId=${postId}`, { method: 'POST' });
+            if (!response.ok) {
+                console.error('Failed to toggle like');
+                return;
+            }
+
+            // Get the elements
+            const likeIcon = document.getElementById(`like-icon-${postId}`);
+            const likeCount = document.getElementById(`like-count-${postId}`);
+
+            // Read current likes from data-likes (fallback to displayed number if missing)
+            let currentLikes = parseInt(likeCount.getAttribute('data-likes')) || parseInt(likeCount.textContent) || 0;
+
+            // Toggle the icon and color
+            if (likeIcon.classList.contains('bi-hand-thumbs-up')) {
+                likeIcon.classList.remove('bi-hand-thumbs-up', 'text-secondary');
+                likeIcon.classList.add('bi-hand-thumbs-up-fill', 'text-primary');
+                currentLikes++;
+            } else {
+                likeIcon.classList.remove('bi-hand-thumbs-up-fill', 'text-primary');
+                likeIcon.classList.add('bi-hand-thumbs-up', 'text-secondary');
+                if (currentLikes > 0) currentLikes--; // Prevent negative numbers
+            }
+
+            // Update like count and display with 'K' format
+            likeCount.setAttribute('data-likes', currentLikes);
+            likeCount.textContent = formatLikes(currentLikes);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    // Format likes to display 'K' for thousands
+    function formatLikes(likes) {
+        if (likes >= 1000) {
+            return (likes / 1000).toFixed(likes % 1000 !== 0 ? 1 : 0) + 'K';
+        }
+        return likes;
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', function () {
+        var searchTerm = document.getElementById('searchInput').value.trim();
+
+        if (searchTerm.length > 0) {
+            fetch(`/Home/SearchDiscussions?query=${searchTerm}`)
+                .then(response => response.json())
+                .then(data => {
+                    var forumPosts = document.getElementById('forum-posts');
+                    var loadingPlaceholder = document.getElementById('loading-placeholder');
+                    var resultsDiv = document.getElementById('forum-posts');
+                    resultsDiv.innerHTML = ''; // Clear previous posts
+                    loadingPlaceholder.style.display = 'none';
+                    forumPosts.style.display = 'block';
+
+                    if (data.length > 0) {
+                        data.forEach(post => {
+                            var postElement = document.createElement('div');
+                            postElement.classList.add('card', 'mb-3');
+                            postElement.innerHTML = `
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <img src="/images/user-placeholder.png" class="rounded-circle me-3" alt="${post.FullName}" width="50" height="50">
+                                        <div class="w-100">
+                                            <h5 class="card-title">${post.Title}</h5>
+                                            <p class="text-muted">Posted by ${post.Firstname} ${post.Lastname} on ${post.DatePosted}</p>
+                                            <p class="card-text">${post.Content}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            resultsDiv.appendChild(postElement);
+                        });
+                    } else {
+                        resultsDiv.innerHTML = '<p>No results found.</p>';
+                    }
+                });
+        } else {
+            document.getElementById('forum-posts').innerHTML = '<p>Please enter a search term.</p>';
+        }
+    });
+</script>

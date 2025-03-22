@@ -1,10 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore; 
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using ELNET1_GROUP_PROJECT.Models;
 using System;
 using System.Linq;
 using ELNET1_GROUP_PROJECT.Data;
 
-public class AnnouncementController : Controller
+[Route("api/[controller]")]
+[ApiController]
+public class AnnouncementController : ControllerBase
 {
     private readonly MyAppDBContext _context;
 
@@ -13,53 +19,20 @@ public class AnnouncementController : Controller
         _context = context;
     }
 
-    //Resetting the cookies time
-    private void RefreshJwtCookies()
+    [HttpGet]
+    public async Task<IActionResult> GetAnnouncements()
     {
-        var token = Request.Cookies["jwt"];
-        var role = Request.Cookies["UserRole"];
-        var id = Request.Cookies["Id"];
+        var announcements = await (from announcement in _context.Announcement
+                                   join user in _context.User_Accounts on announcement.UserId equals user.Id
+                                   select new
+                                   {
+                                       announcement.AnnouncementId,
+                                       announcement.Title,
+                                       announcement.Description,
+                                       announcement.DatePosted,
+                                       PostedBy = user.Firstname + " " + user.Lastname // Combine First and Last Name
+                                   }).ToListAsync();
 
-        if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(role) && !string.IsNullOrEmpty(id))
-        {
-            // Reset cookies with updated expiration
-            var expiryMinutes = 15;  // Reset to 15 minutes
-
-            var options = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
-            };
-
-            Response.Cookies.Append("jwt", token, options);
-            Response.Cookies.Append("UserRole", role, new CookieOptions
-            {
-                HttpOnly = false,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
-            });
-            Response.Cookies.Append("Id", id, new CookieOptions
-            {
-                HttpOnly = false,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
-            });
-        }
+        return Ok(announcements);
     }
-
-    // Fetch all announcements
-    public IActionResult Announcements()
-    {
-        RefreshJwtCookies();
-        var announcements = _context.Announcement
-            .OrderByDescending(a => a.DatePosted)
-            .ToList();
-        return View(announcements);
-    }
-
-    
 }

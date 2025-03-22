@@ -20,6 +20,6 @@ namespace ELNET1_GROUP_PROJECT.Models
         public string DatePosted { get; set; }
 
         [Column("USER_ID")]
-        public string UserId { get; set; }
+        public int UserId { get; set; }
     }
 }
