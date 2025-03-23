@@ -5,7 +5,7 @@ namespace ELNET1_GROUP_PROJECT.Models
 {
     public class CommentsViewModel
     {
-        public dynamic Post { get; set; } // Replace dynamic with the actual type of the Post if needed
+        public dynamic Post { get; set; } 
         public List<ReplyViewModel> Replies { get; set; }
     }
 }

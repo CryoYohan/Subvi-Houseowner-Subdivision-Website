@@ -53,8 +53,7 @@ namespace ELNET1_GROUP_PROJECT.Data
         public DbSet<ELNET1_GROUP_PROJECT.Models.Replies> Replies { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Like> Like { get; set; }
 
-
-        //public DbSet<ELNET1_GROUP_PROJECT.Models.Feedback> Feedback { get; set; }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.Feedback> Feedback { get; set; }
         
 
         //public DbSet<ELNET1_GROUP_PROJECT.Models.Poll> Poll { get; set; }

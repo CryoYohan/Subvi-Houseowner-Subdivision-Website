@@ -268,11 +268,13 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 .Select(f => new ForumPost
                 {
                     PostId = f.PostId,
-                    Title = f.Title,
+                    Title = char.ToUpper(f.Title[0]) + f.Title.Substring(1),
                     Content = f.Content,
                     DatePosted = f.DatePosted,
                     UserId = f.UserId,
-                    FullName = f.Firstname + " " + f.Lastname,
+                    Firstname = char.ToUpper(f.Firstname[0]) + f.Firstname.Substring(1),
+                    Lastname = char.ToUpper(f.Lastname[0]) + f.Lastname.Substring(1),
+                    FullName = char.ToUpper(f.Firstname[0]) + f.Firstname.Substring(1) + " " + char.ToUpper(f.Lastname[0]) + f.Lastname.Substring(1),
                     Likes = _context.Like.Count(l => l.PostId == f.PostId),
                     RepliesCount = _context.Replies.Count(r => r.PostId == f.PostId),
                     IsLiked = _context.Like.Any(l => l.PostId == f.PostId && l.UserId == userId)
@@ -291,12 +293,12 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 .Join(_context.User_Accounts, f => f.UserId, u => u.Id, (f, u) => new
                 {
                     f.PostId,
-                    f.Title,
+                    Title = char.ToUpper(f.Title[0]) + f.Title.Substring(1),
                     f.Content,
                     f.DatePosted,
-                    u.Firstname,
-                    u.Lastname,
-                    FullName = u.Firstname + " " + u.Lastname
+                    Firstname = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
+                    Lastname = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                    FullName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
                 })
                 .ToList();
 
@@ -323,7 +325,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             {
                 var newPost = new Forum
                 {
-                    Title = title,
+                    Title = char.ToUpper(title[0]) + title.Substring(1),
                     Content = content,
                     DatePosted = DateTime.Now,
                     UserId = userId  // Now properly converted to int
@@ -460,10 +462,118 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return View();
         }
 
+        public IActionResult GetFeedbacks(string feedbackType = "")
+        {
+            var feedbacks = string.IsNullOrEmpty(feedbackType)
+                ? _context.Feedback
+                    .Select(f => new {
+                        f.FeedbackId,
+                        FeedbackType = f.FeedbackType ?? "", // Handle NULL
+                        Description = f.Description ?? string.Empty, // Handle NULL
+                        f.Status,
+                        f.DateSubmitted,
+                        f.UserId,
+                        Rating = f.Rating ?? 0 // Handle NULL
+                    })
+                    .ToList()
+                : _context.Feedback
+                    .Where(f => f.FeedbackType == feedbackType)
+                    .Select(f => new {
+                        f.FeedbackId,
+                        FeedbackType = f.FeedbackType ?? "Unknown", // Handle NULL
+                        Description = f.Description ?? string.Empty,
+                        f.Status,
+                        f.DateSubmitted,
+                        f.UserId,
+                        Rating = f.Rating ?? 0
+                    })
+                    .ToList();
+
+            return Json(feedbacks);
+        }
+
+        [HttpPost]
+        public IActionResult AddFeedback([FromBody] FeedbackRequest request)
+        {
+            var Iduser = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(Iduser, out int userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.FeedbackType) || string.IsNullOrWhiteSpace(request.Description))
+            {
+                return BadRequest("Feedback Type and Description are required.");
+            }
+
+            var feedback = new Feedback
+            {
+                FeedbackType = request.FeedbackType,
+                Description = request.Description,
+                Rating = request.FeedbackType == "Compliment" ? request.Rating : null,
+                Status = true,
+                DateSubmitted = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                UserId = userId
+            };
+
+            _context.Feedback.Add(feedback);
+            _context.SaveChanges();
+
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult ToggleFeedbackStatus(int feedbackId)
+        {
+            var feedback = _context.Feedback.FirstOrDefault(f => f.FeedbackId == feedbackId);
+            if (feedback != null)
+            {
+                feedback.Status = !feedback.Status;
+                _context.SaveChanges();
+            }
+            return Ok();
+        }
+
         public IActionResult Resources()
         {
             RefreshJwtCookies();
             return View();
+        }
+
+        [HttpGet]
+        public IActionResult GetTodayAnnouncements()
+        {
+            var today = DateTime.Now.Date;
+            var todayString = today.ToString("yyyy-MM-dd");
+
+            var announcements = _context.Announcement
+                .Where(a => a.DatePosted.StartsWith(todayString))
+                .Select(a => new
+                {
+                    a.Title,
+                    Time = DateTime.Parse(a.DatePosted).ToString("hh:mm tt")
+                })
+                .ToList();
+
+            return Json(announcements);
+        }
+
+        [HttpGet]
+        public IActionResult GetCommunityStats()
+        {
+            var IduserStr = HttpContext.Request.Cookies["Id"];
+
+            using (var context = _context)
+            {
+                // Count Homeowners
+                var memberCount = context.User_Accounts.Count(u => u.Role == "Homeowner");
+
+                // Count Resolved Issues for the logged-in user
+                var resolvedIssuesCount = context.Service_Request
+                    .Count(r => r.UserId == IduserStr && r.Status == "Resolved");
+
+                return Json(new { memberCount, resolvedIssuesCount });
+            }
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

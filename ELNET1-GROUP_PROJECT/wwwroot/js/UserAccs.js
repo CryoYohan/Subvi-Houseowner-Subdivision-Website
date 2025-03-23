@@ -110,7 +110,17 @@ function deleteUser(userId, event) {
                 .then(response => {
                     if (response.ok) {
                         closeUserInfoBox();
-                        Swal.fire('Deleted!', 'The user has been deleted.', 'success');
+                        Swal.fire({
+                            title: 'Deleted!',
+                            text: 'The user has been deleted.',
+                            icon: 'success',
+                            timer: 5000, // Close after 5 seconds
+                            timerProgressBar: true,
+                            didClose: () => {
+                                // Redirect after the 5-second delay
+                                window.location.href = '/Admin/HomeownerStaffAccounts';
+                            }
+                        });
                     } else {
                         Swal.fire('Error', 'Failed to delete the user.', 'error');
                     }

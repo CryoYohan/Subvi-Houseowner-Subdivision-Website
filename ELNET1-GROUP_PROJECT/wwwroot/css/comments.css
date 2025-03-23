@@ -4,32 +4,6 @@
     min-height: 100vh;
 }
 
-.sidebar {
-    background: white;
-    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
-    width: 240px;
-    transition: all 0.3s ease;
-}
-
-.sidebar-item {
-    color: #64748b;
-    padding: 14px 24px;
-    margin: 0 12px;
-    border-radius: 12px;
-    transition: all 0.2s ease;
-}
-
-    .sidebar-item:hover {
-        background: #f1f5f9;
-        transform: translateX(4px);
-    }
-
-.active-item {
-    background: #e0f2fe;
-    color: #0369a1;
-    font-weight: 600;
-}
-
 .post-details {
     background: white;
     border-radius: 16px;

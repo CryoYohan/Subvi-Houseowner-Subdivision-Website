@@ -10,9 +10,11 @@ namespace ELNET1_GROUP_PROJECT.Models
         public string Content { get; set; }
         public DateTime DatePosted { get; set; }
         public int UserId { get; set; }
-        public string FullName { get; set; }  // Combines FIRSTNAME and LASTNAME
-        public int Likes { get; set; }  // Count of likes for the post
-        public int RepliesCount { get; set; }  // Count of replies for the post
+        public string Firstname { get; set; }  
+        public string Lastname { get; set; }  
+        public string FullName { get; set; }  
+        public int Likes { get; set; }  
+        public int RepliesCount { get; set; }  
 
         // Indicates if the current user has liked this post
         [NotMapped]

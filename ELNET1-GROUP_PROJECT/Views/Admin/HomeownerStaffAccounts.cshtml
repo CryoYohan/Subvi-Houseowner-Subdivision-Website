@@ -79,8 +79,8 @@
         <div class="grid grid-cols-2 gap-6">
             <!-- Left Side: Sign Up Form -->
             <div class="bg-white shadow-lg rounded-lg p-6">
-                <h2 class="text-2xl font-bold text-blue-600 mb-4">Add Homeowner</h2>
-                <h3 class="text-sm text-gray-600 mb-6">Enter homeowner details to register</h3> 
+                <h2 class="text-2xl font-bold text-blue-600 mb-4">Add Homeowner or Staff</h2>
+                <h3 class="text-sm text-gray-600 mb-6">Enter details to register</h3> 
 
                 <form asp-action="AddUserAccount" method="post">
                     <div class="space-y-4">
@@ -106,8 +106,18 @@
                             <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Address" id="Address" placeholder="Address" required>
                         </div>
                         <div>
-                            <label for="PhoneNumber" class="block text-sm font-medium text-gray-700">Phone Number <span class="text-red-500">*</span></label>
-                            <input type="tel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="PhoneNumber" id="PhoneNumber" placeholder="Phone Number" required>
+                            <label for="PhoneNumber" class="block text-sm font-medium text-gray-700">
+                                Phone Number <span class="text-red-500">*</span>
+                            </label>
+                            <input type="tel"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                   name="PhoneNumber"
+                                   id="PhoneNumber"
+                                   placeholder="Phone Number"
+                                   required
+                                   pattern="[0-9\-]*"
+                                   title="Phone number can only contain numbers and hyphens"
+                                   oninput="this.value = this.value.replace(/[^0-9\-]/g, '')">
                         </div>
                         <div>
                             <label for="Email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
@@ -226,11 +236,11 @@
                 <div class="space-y-4">
                     <div>
                         <label for="editFirstName" class="block text-sm font-medium text-gray-700">First Name</label>
-                        <input type="text" style="text-transform: capitalize;"  class="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Firstname" id="editFirstName" placeholder="First Name">
+                        <input type="text" style="text-transform: capitalize;"  class="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Firstname" id="editFirstName" placeholder="Enter First Name">
                     </div>
                     <div>
                         <label for="editLastName" class="block text-sm font-medium text-gray-700">Last Name</label>
-                        <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Lastname" id="editLastName" placeholder="Last Name">
+                        <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Lastname" id="editLastName" placeholder="Enter Last Name">
                     </div>
                     <div>
                         <label for="editRole" class="block text-sm font-medium text-gray-700">Role</label>
@@ -243,15 +253,21 @@
                     </div>
                     <div>
                         <label for="editAddress" class="block text-sm font-medium text-gray-700">Address</label>
-                        <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Address" id="editAddress" placeholder="Address">
+                        <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Address" id="editAddress" placeholder="Enter Address">
                     </div>
                     <div>
                         <label for="editPhoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                        <input type="tel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="PhoneNumber" id="editPhoneNumber" placeholder="Phone Number">
+                        <input type="tel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                               name="PhoneNumber"
+                               id="editPhoneNumber"
+                               placeholder="Enter Phone Number"
+                               pattern="[0-9\-]*"
+                               title="Phone number can only contain numbers and hyphens"
+                               oninput="this.value = this.value.replace(/[^0-9\-]/g, '')">
                     </div>
                     <div>
                         <label for="editEmail" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Email" id="editEmail" placeholder="name@example.com">
+                        <input type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Email" id="editEmail" placeholder="Enter Email ex. name@example.com">
                     </div>
                     <div>
                         <label for="editPassword" class="block text-sm font-medium text-gray-700">Password</label>

@@ -93,10 +93,10 @@
 
             <!-- Forums -->
             <li>
-                <a class="sidebar-item @(ViewContext.RouteData.Values["Action"].ToString() == "Forums" ? "active-item" : "")" 
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item"
                    asp-controller="@forumsController" asp-action="@forumsAction">
                     <i class="fas fa-comments mr-3"></i>
-                    Forum Discussions
+                    <span class="font-semibold">Forums Discussion</span>
                 </a>
             </li>
 
@@ -111,7 +111,8 @@
 
             <!-- Resources -->
             <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@resourcesController" asp-action="@resourcesAction">
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" 
+                    asp-controller="@resourcesController" asp-action="@resourcesAction">
                     <i class="fas fa-folder text-xl"></i>
                     <span class="font-semibold">Resources</span>
                 </a>

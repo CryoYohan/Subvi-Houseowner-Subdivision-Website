@@ -60,6 +60,7 @@ body {
 
 .active-item {
     background-color: var(--active-bg) !important;
+    font-weight: 600;
 }
 
 .bg-white {

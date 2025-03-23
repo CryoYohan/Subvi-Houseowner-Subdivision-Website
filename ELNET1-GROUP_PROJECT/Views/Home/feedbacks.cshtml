@@ -1,4 +1,4 @@
-@{
+﻿@{
     Layout = "_HomeLayout";
     ViewData["Title"] = "Subvi | Feedbacks";
 
@@ -93,7 +93,7 @@
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
                    asp-controller="@forumsController" asp-action="@forumsAction">
                     <i class="fas fa-comments text-xl"></i>
-                    <span class="font-semibold">Forums</span>
+                    <span class="font-semibold">Forums Discussion</span>
                 </a>
             </li>
 
@@ -115,4 +115,140 @@
             </li>
         </ul>
     </div>
-</div>
+
+        <div class="container mx-auto mt-8 p-4 bg-white rounded-xl shadow-md">
+            <h1 class="text-2xl font-bold mb-4 text-blue-600">Feedback Management</h1>
+            <div class="mb-4 flex items-center space-x-2">
+                <select id="filterType" class="border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All</option>
+                    <option value="Compliment">Compliment</option>
+                    <option value="Complaint">Complaint</option>
+                    <option value="Suggestion">Suggestion</option>
+                </select>
+                <button onclick="loadFeedbacks()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">Filter</button>
+                <button onclick="openFeedbackModal()" class="ml-auto bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition">Add Feedback</button>
+            </div>
+
+            <div id="feedbackList" class="space-y-3"></div>
+        </div>
+
+        <div id="feedbackModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center">
+            <div class="p-6 rounded-xl shadow-lg w-96" style="background-color: white">
+                <h2 class="text-xl font-bold mb-4 text-blue-600">Add Feedback</h2>
+                <label for="feedbackType" class="block mb-2 font-medium">Type</label>
+                <select id="feedbackType" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-4" onchange="toggleRating()">
+                    <option value="Compliment">Compliment</option>
+                    <option value="Complaint">Complaint</option>
+                    <option value="Suggestion">Suggestion</option>
+                </select>
+
+                <div id="ratingSection" class="hidden mb-4">
+                    <label class="block mb-2 font-medium">Rating</label>
+                    <div class="flex space-x-1" id="stars">
+                        <span class="cursor-pointer text-gray-400 text-2xl" onclick="setRating(1)">★</span>
+                        <span class="cursor-pointer text-gray-400 text-2xl" onclick="setRating(2)">★</span>
+                        <span class="cursor-pointer text-gray-400 text-2xl" onclick="setRating(3)">★</span>
+                        <span class="cursor-pointer text-gray-400 text-2xl" onclick="setRating(4)">★</span>
+                        <span class="cursor-pointer text-gray-400 text-2xl" onclick="setRating(5)">★</span>
+                    </div>
+                </div>
+
+                <label for="feedbackDescription" class="block mb-2 font-medium">Description</label>
+                <textarea id="feedbackDescription" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-4"></textarea>
+
+                <div class="flex justify-end space-x-2">
+                    <button onclick="closeFeedbackModal()" class="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500 transition">Cancel</button>
+                    <button onclick="submitFeedback()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRating = 0;
+
+        function loadFeedbacks() {
+            const feedbackType = document.getElementById("filterType").value;
+            fetch(`/Home/GetFeedbacks?feedbackType=${feedbackType}`)
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById("feedbackList");
+                    list.innerHTML = "";
+                    if (data.length === 0) {
+                        list.innerHTML = '<p class="text-gray-500 font-semibold text-base text-center">No feedback yet.</p>';
+                        return;
+                    }
+
+                    data.forEach(feedback => {
+                        list.innerHTML += `
+                            <div class="p-4 border rounded-lg shadow-sm hover:shadow-md transition hover:blue-600" style="background-color:white">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="text-lg font-semibold">${feedback.feedbackType}</h3>
+                                    <button onclick="toggleStatus(${feedback.feedbackId})" class="text-sm px-3 py-1 rounded-md ${feedback.status ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}">
+                                        ${feedback.status ? 'Active' : 'Inactive'}
+                                    </button>
+                                </div>
+                                <p class="text-gray-700 mt-2">${feedback.description}</p>
+                                <p class="text-sm text-gray-500 mt-1">${new Date(feedback.dateSubmitted).toLocaleString()}</p>
+                            </div>
+                        `;
+                    });
+                })
+                .catch(error => console.error(error));
+        }
+
+        function openFeedbackModal() {
+            document.getElementById("feedbackModal").classList.remove("hidden");
+            toggleRating();  // Ensures rating visibility is correct when opening
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById("feedbackModal").classList.add("hidden");
+            document.getElementById("feedbackType").value = "Compliment";
+            document.getElementById("feedbackDescription").value = "";
+            currentRating = 0;
+            toggleRating();
+        }
+
+        function toggleRating() {
+            const type = document.getElementById("feedbackType").value;
+            document.getElementById("ratingSection").classList.toggle("hidden", type !== "Compliment");
+        }
+
+        function setRating(rating) {
+            currentRating = rating;
+            const stars = document.querySelectorAll("#ratingSection span");
+            stars.forEach((star, index) => {
+                star.classList.toggle("text-yellow-400", index < rating);
+            });
+        }
+
+        function submitFeedback() {
+            const feedbackType = document.getElementById("feedbackType").value;
+            const description = document.getElementById("feedbackDescription").value;
+            if (!description.trim()) {
+                alert("Please enter a description.");
+                return;
+            }
+
+            fetch('/Home/AddFeedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ feedbackType, description, rating: currentRating })
+            })
+            .then(() => {
+                closeFeedbackModal();
+                loadFeedbacks();
+            })
+            .catch(error => console.error(error));
+        }
+
+        function toggleStatus(feedbackId) {
+            fetch(`/Home/ToggleFeedbackStatus?feedbackId=${feedbackId}`, { method: 'POST' })
+                .then(() => loadFeedbacks())
+                .catch(error => console.error(error));
+        }
+
+        document.addEventListener('DOMContentLoaded', loadFeedbacks);
+    </script>
+

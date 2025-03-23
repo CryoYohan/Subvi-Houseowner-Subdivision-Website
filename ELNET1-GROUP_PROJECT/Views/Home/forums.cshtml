@@ -55,11 +55,11 @@
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
-    <div class="bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col sidebar">
+    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
         <ul class="space-y-4">
             <!-- Home -->
-            <li class="nav-item">
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item"
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
                    asp-controller="@homeController" asp-action="@homeAction">
                     <i class="fas fa-home text-xl"></i>
                     <span class="font-semibold">Home</span>
@@ -68,7 +68,7 @@
 
             <!-- Calendar -->
             <li class="nav-item">
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item"
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
                    asp-controller="@calendarController" asp-action="@calendarAction">
                     <i class="fas fa-calendar-alt text-xl"></i>
                     <span class="font-semibold">Calendar</span>
@@ -107,7 +107,7 @@
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item"
                    asp-controller="@forumsController" asp-action="@forumsAction">
                     <i class="fas fa-comments text-xl"></i>
-                    <span class="font-semibold">Forums</span>
+                    <span class="font-semibold">Forums Discussion</span>
                 </a>
             </li>
 
@@ -171,6 +171,48 @@
                     <div class="bg-light mb-2" style="width: 60%; height: 15px;"></div>
                 </div>
             </div>
+            <div class="card mb-4 shadow-sm rounded-lg border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-light" style="width: 50px; height: 50px;"></div>
+                        <div class="ms-3">
+                            <div class="bg-light mb-1" style="width: 120px; height: 10px;"></div>
+                            <div class="bg-light" style="width: 80px; height: 10px;"></div>
+                        </div>
+                    </div>
+                    <div class="bg-light mb-2" style="width: 100%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 90%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 60%; height: 15px;"></div>
+                </div>
+            </div>
+            <div class="card mb-4 shadow-sm rounded-lg border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-light" style="width: 50px; height: 50px;"></div>
+                        <div class="ms-3">
+                            <div class="bg-light mb-1" style="width: 120px; height: 10px;"></div>
+                            <div class="bg-light" style="width: 80px; height: 10px;"></div>
+                        </div>
+                    </div>
+                    <div class="bg-light mb-2" style="width: 100%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 90%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 60%; height: 15px;"></div>
+                </div>
+            </div>
+            <div class="card mb-4 shadow-sm rounded-lg border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-light" style="width: 50px; height: 50px;"></div>
+                        <div class="ms-3">
+                            <div class="bg-light mb-1" style="width: 120px; height: 10px;"></div>
+                            <div class="bg-light" style="width: 80px; height: 10px;"></div>
+                        </div>
+                    </div>
+                    <div class="bg-light mb-2" style="width: 100%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 90%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 60%; height: 15px;"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Forum Posts -->
@@ -180,8 +222,10 @@
                 <div class="card mb-3 post-item">
                     <div class="card-body">
                         <div class="d-flex align-items-start">
-                            <img src="/images/user-placeholder.png" class="rounded-circle me-3" alt="@post.FullName" width="50" height="50">
-                            <div class="w-100">
+                            <div class="user-avatar p-4">
+                                @post.Firstname[0]@post.Lastname[0]
+                            </div>
+                            <div class="w-100 pd-4">
                                 <h5 class="card-title">@post.Title</h5>
                                 <p class="text-muted">Posted by @post.FullName on @post.DatePosted.ToString("MMMM dd, yyyy")</p>
                                 <p class="card-text">@post.Content</p>
@@ -210,7 +254,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title text-primary" id="addDiscussionModalLabel">New Discussion</h5>
+                        <h3 class="modal-title font-semibold text-primary" id="addDiscussionModalLabel">New Discussion</h3>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form method="post" asp-action="AddPost" asp-controller="Home">

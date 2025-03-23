@@ -49,19 +49,84 @@ function showSessionWarning(secondsLeft) {
 
     if (!document.getElementById("session-warning")) {
         Swal.fire({
-            title: 'Session Expiring Soon',
-            html: `<p>Your session will expire in <strong id="countdown"></strong>.</p>`,
+            title: 'You still there?',
+            html: `<p>Your session is about to expire in <strong id="countdown">${minutes}m ${seconds}s</strong>.</p>`,
             icon: 'warning',
-            showCancelButton: false,
-            showConfirmButton: false,
+            showCancelButton: true,
+            cancelButtonText: 'Logout',
+            confirmButtonText: 'Stay Logged In',
             allowOutsideClick: false,
             backdrop: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                refreshSession();  // Reset session expiry
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                logoutUser();
+            }
         });
+
+        // Countdown Timer Update
+        const countdownInterval = setInterval(() => {
+            secondsLeft--;
+            const updatedMinutes = Math.floor(secondsLeft / 60);
+            const updatedSeconds = secondsLeft % 60;
+            const countdownElement = document.getElementById("countdown");
+
+            if (countdownElement) {
+                countdownElement.textContent = `${updatedMinutes}m ${updatedSeconds}s`;
+            }
+
+            if (secondsLeft <= 0) {
+                clearInterval(countdownInterval);
+                logoutUser();
+            }
+        }, 1000);
     }
-    document.getElementById("countdown").textContent = `${minutes}m ${seconds}s`;
+}
+
+function refreshSession() {
+    fetch('/api/auth/refresh-session', { method: 'POST' })
+        .then(response => {
+            if (!response.ok) throw new Error('Session refresh failed');
+            console.log('Session refreshed');
+        })
+        .catch(error => console.error(error));
 }
 
 // Auto logout when session expires
+async function logoutUser() {
+    try {
+        const response = await fetch("/api/auth/logout", {
+            method: "POST",
+            credentials: "include",
+        });
+
+        if (response.ok) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Logged Out',
+                text: 'You have been successfully logged out!',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            window.location.href = "/home";
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to log out. Please try again.',
+            });
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An unexpected error occurred. Please try again.',
+        });
+    }
+}
+
 function autoLogout() {
     Swal.fire({
         icon: 'error',
@@ -69,23 +134,7 @@ function autoLogout() {
         text: 'You have been logged out due to inactivity.',
         timer: 5000,
         showConfirmButton: false
-    }).then(() => window.location.href = '/home');
-}
-
-// Manual Logout Button Function
-async function logoutUser() {
-    await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-    });
-
-    Swal.fire({
-        icon: 'success',
-        title: 'Logged Out',
-        text: 'You have been successfully logged out.',
-        timer: 3000,
-        showConfirmButton: false
-    }).then(() => window.location.href = "/home");
+    }).then(() => window.location.href = '/home');  // Redirect to home page
 }
 
 // Start countdown when page loads

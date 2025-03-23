@@ -1,4 +1,4 @@
-@{
+﻿@{
     Layout = "_HomeLayout";
     ViewData["Title"] = "Subvi | Forums";
 
@@ -38,9 +38,10 @@
     }
 }
 
+<link rel="stylesheet" href="~/css/resources.css" />
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
-    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
+    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6">
         <ul class="space-y-4">
             <!-- Home (Dynamic) -->
             <li>
@@ -92,7 +93,7 @@
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
                    asp-controller="@forumsController" asp-action="@forumsAction">
                     <i class="fas fa-comments text-xl"></i>
-                    <span class="font-semibold">Forums</span>
+                    <span class="font-semibold">Forums Discussion</span>
                 </a>
             </li>
 
@@ -114,4 +115,260 @@
             </li>
         </ul>
     </div>
+    <div class="bg-white p-6 rounded-2xl shadow-md">
+        <h1 class="text-3xl font-bold text-center text-blue-900 mb-8">Community Resources & Services</h1>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Left Section: Resource Cards -->
+            <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-3">
+                <!-- Resource Cards -->
+                <div onclick="openModal('homeowner')" class="resource-card group">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="p-3 bg-blue-100 rounded-lg">
+                            <span class="text-2xl">🏡</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Homeowner Guidelines</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">Community rules, architectural policies, move-in procedures</p>
+                    <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Guidelines →</button>
+                </div>
+
+                <div onclick="openModal('events')" class="resource-card group">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-orange-100 rounded-lg">
+                            <span class="text-2xl">📅</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Community Events</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">Upcoming meetings, activities, and announcements</p>
+                    <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Calendar →</button>
+                </div>
+                <div onclick="openModal('documents')" class="resource-card group">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-gray-100 rounded-lg">
+                            <span class="text-2xl">📄</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Documents & Forms</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">Lot Ownership, construction permits, payment forms</p>
+                    <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Documents & Forms →</button>
+                </div>
+                <div onclick="openModal('payments')" class="resource-card group">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-green-100 rounded-lg">
+                            <span class="text-2xl">💸</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Payment & Due</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">HOA fees, due dates, payment options</p>
+                    <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Payment & Due →</button>
+                </div>
+                <div onclick="openModal('maintenance')" class="resource-card group">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-gray-200 rounded-lg">
+                            <span class="text-2xl">🛠️</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Maintenance Requests</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">Submit and track maintenance issues</p>
+                    <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Maintenance Requests →</button>
+                </div>
+                <div onclick="openModal('emergency')" class="resource-card group">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-3 bg-red-100 rounded-lg">
+                            <span class="text-2xl">🚨</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Emergency Contacts</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">Security, fire department, medical services</p>
+                    <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Emergency Contacts →</button>
+                </div>
+            </div>
+
+            <!-- Right Section -->
+            <div class="space-y-4 lg:pl-4">
+                <!-- Event Today -->
+                <div class="p-4 rounded-xl shadow-sm border border-gray-100" style="background-color: white">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span class="text-blue-600">📢</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800">Event Today</h3>
+                    </div>
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <span class="text-base text-blue-700 font-semibold mt-1" id="todayDate"></span>
+                            <div class="max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-gray-100">
+                                <ul id="todayAnnouncements" class="space-y-4"></ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Quick Statistics -->
+                <div class="p-4 rounded-xl shadow-sm border border-gray-100" style="background-color: white">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <span class="text-green-600">📊</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800">Community Stats</h3>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-3 bg-blue-100 rounded-lg">
+                            <p id="memberCount" class="text-3xl font-bold text-gray-800">0</p>
+                            <p class="text-xs text-gray-500">Members</p>
+                        </div>
+                        <div class="text-center p-3 bg-blue-100 rounded-lg">
+                            <p id="resolvedIssuesCount" class="text-3xl font-bold text-gray-800">0</p>
+                            <p class="text-xs text-gray-500">Resolved Issues</p>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Emergency Contacts -->
+                <div class="p-6 rounded-xl shadow-sm border border-gray-100" style="background-color: white">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                            <span class="text-red-600">🚨</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800">Emergency Contacts</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-6 text-center">👮</div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-700">Security</p>
+                                <p class="text-sm text-gray-500">(123) 456-7890</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-700 mt-2"><strong>Contact Security:</strong> (123) 456-7890</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+        <div id="modalOverlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+            <div class="p-8 rounded-2xl shadow-2xl w-1/2 animate-modalIn relative transform transition-all" style="background-color: floralwhite">
+                <!-- Close Button -->
+                <button class="absolute -top-10 -right-10 hover:scale-110 transition-all duration-200" onclick="closeModal()">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <!-- Modal Content -->
+                <div class="text-center space-y-4">
+                    <!-- Decorative Icon -->
+                    <div class="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                
+
+                    <h2 id="modalTitle" class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"></h2>
+                    <p id="modalContent" class="text-gray-600 text-lg leading-relaxed"></p>
+
+                    <!-- Action Button -->
+                    <button onclick="closeModal()"
+                            class="mt-6 w-full py-3 px-6 bg-gradient-to-r from-blue-200 to-green-600 rounded-xl
+                               shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+                        Got It!
+                    </button>
+                </div>
+            </div>
+        </div>
 </div>
+
+    <script>
+        const modalData = {
+            homeowner: {
+                title: "Homeowner Guidelines",
+                content: "Here you can find all the community rules, architectural policies, and move-in procedures to ensure smooth integration into our community."
+            },
+            events: {
+                title: "Community Events",
+                content: "Stay updated on upcoming community meetings, activities, and exciting announcements. Don't miss out on events that bring the neighborhood together!"
+            },
+            documents: {
+                title: "Documents & Forms",
+                content: "Access essential forms related to lot ownership, construction permits, and payment documentation."
+            },
+            payments: {
+                title: "Payment & Dues",
+                content: "Learn about HOA fees, due dates, and convenient payment options tailored to your needs."
+            },
+            maintenance: {
+                title: "Maintenance Requests",
+                content: "Report and track maintenance issues with ease. Our dedicated team is ready to keep the community in top shape."
+            },
+            emergency: {
+                title: "Emergency Contacts",
+                content: "Quick access to security, fire department, and medical services contacts for immediate assistance."
+            }
+        };
+
+        function openModal(type) {
+            document.getElementById("modalTitle").textContent = modalData[type].title;
+            document.getElementById("modalContent").textContent = modalData[type].content;
+            document.getElementById("modalOverlay").classList.remove("hidden");
+        }
+
+        function closeModal() {
+            document.getElementById("modalOverlay").classList.add("hidden");
+        }
+
+        async function loadTodayAnnouncements() {
+            const response = await fetch('/Home/GetTodayAnnouncements');
+            const announcements = await response.json();
+            const list = document.getElementById('todayAnnouncements');
+            const todayDateElement = document.getElementById('todayDate');
+
+            // Format today's date as "Mar 23"
+            const today = new Date();
+            const formattedToday = today.toLocaleString('en-US', { month: 'short', day: 'numeric' });
+            todayDateElement.textContent = formattedToday;
+
+            list.innerHTML = '';
+
+            if (announcements.length === 0) {
+                list.innerHTML = '<p class="text-gray-500 text-sm">No events today.</p>';
+                return;
+            }
+
+            announcements.forEach(announcement => {
+                // Extract time from the "YYYY-MM-DD HH:MM:SS" format
+                const dateTime = new Date(announcement.datePosted);
+                const time = dateTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+                const li = document.createElement('li');
+                li.className = 'flex items-start gap-3';
+                li.innerHTML = `
+                    <span class="text-sm text-gray-400 mt-1">${formattedToday}</span>
+                    <div>
+                        <p class="font-medium text-blue-800">${announcement.title}</p>
+                        <p class="text-sm text-gray-500">${time}</p>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+    function loadCommunityStats() {
+        fetch('/Home/GetCommunityStats')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('memberCount').textContent = data.memberCount;
+                document.getElementById('resolvedIssuesCount').textContent = data.resolvedIssuesCount;
+            })
+            .catch(error => console.error('Error fetching community stats:', error));
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTodayAnnouncements();
+        loadCommunityStats();
+    });
+    </script>

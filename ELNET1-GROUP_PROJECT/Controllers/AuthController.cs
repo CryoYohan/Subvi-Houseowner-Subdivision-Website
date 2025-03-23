@@ -29,6 +29,13 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             _configuration = configuration;
         }
 
+        [HttpPost("refresh-session")]
+        public IActionResult RefreshSession()
+        {
+            RefreshJwtCookies();
+            return Ok(new { message = "Session refreshed successfully!" });
+        }
+
         [HttpPost("signup")]
         public async Task<IActionResult> SignUp([FromBody] User_Account user)
         {

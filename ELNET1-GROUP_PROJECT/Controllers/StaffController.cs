@@ -92,7 +92,7 @@ public class StaffController : Controller
     public IActionResult VisitorsPass()
     {
         RefreshJwtCookies();
-        var role = HttpContext.Request.Cookies["UserRole"];
+        var role = GetUserRoleFromToken();
         if (string.IsNullOrEmpty(role) || role != "Staff")
         {
             return RedirectToAction("landing", "Home");
@@ -105,7 +105,7 @@ public class StaffController : Controller
     {
         RefreshJwtCookies();
         var role = HttpContext.Request.Cookies["UserRole"];
-        if (string.IsNullOrEmpty(role) || role != "Admin")
+        if (string.IsNullOrEmpty(role) || role != "Staff")
         {
             return RedirectToAction("landing", "Home");
         }
