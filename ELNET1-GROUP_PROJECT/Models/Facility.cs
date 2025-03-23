@@ -9,6 +9,9 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("FACILITY_ID")]
         public int FacilityId { get; set; } // Primary Key
 
+        [Column("FACILITY_NAME")]
+        public string FacilityName { get; set; }
+
         [Column("SCHEDULE")]
         public string Schedule { get; set; }
 

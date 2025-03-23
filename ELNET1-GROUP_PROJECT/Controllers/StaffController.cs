@@ -5,6 +5,7 @@ using ELNET1_GROUP_PROJECT.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 [Route("staff")]
 public class StaffController : Controller
@@ -122,6 +123,45 @@ public class StaffController : Controller
             return RedirectToAction("Landing");
         }
         return View();
+    }
+
+    [HttpGet("Reservations")]
+    public IActionResult Reservations(string status = "Pending")
+    {
+        var reservations = (from r in _context.Reservations
+                            join f in _context.Facility on r.FacilityId equals f.FacilityId
+                            join u in _context.User_Accounts on r.UserId equals u.Id
+                            where r.Status == status
+                            select new ReservationViewModel
+                            {
+                                Id = r.ReservationId,
+                                FacilityName = char.ToUpper(f.FacilityName[0]) + f.FacilityName.Substring(1),
+                                RequestedBy = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                                DateTime = r.DateTime,
+                                Status = r.Status
+                            }).ToList();
+
+        return Json(reservations);
+    }
+
+    [HttpPut("reservations/{id}")]
+    public async Task<IActionResult> UpdateReservationStatus(int id, [FromBody] ReservationUpdateStatusDTO request)
+    {
+        var reservation = await _context.Reservations.FindAsync(id);
+        if (reservation == null)
+        {
+            return NotFound(new { message = "Reservation not found" });
+        }
+
+        if (request.Status != "Approved" && request.Status != "Declined")
+        {
+            return BadRequest(new { message = "Invalid status" });
+        }
+
+        reservation.Status = request.Status;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = $"Reservation {id} has been {request.Status.ToLower()}." });
     }
 
     [HttpGet("requests/services")]

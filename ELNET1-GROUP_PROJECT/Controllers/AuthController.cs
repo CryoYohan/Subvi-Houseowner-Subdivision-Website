@@ -36,6 +36,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return Ok(new { message = "Session refreshed successfully!" });
         }
 
+        // This is the sign up in landing page remove this if everything is now good, also the signup.js
         [HttpPost("signup")]
         public async Task<IActionResult> SignUp([FromBody] User_Account user)
         {

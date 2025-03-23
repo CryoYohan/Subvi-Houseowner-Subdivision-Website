@@ -7,6 +7,7 @@ using System.Data;
 using System.Linq;
 using System.Net.Mime;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 public class AdminController : Controller
 {
@@ -84,6 +85,31 @@ public class AdminController : Controller
             return RedirectToAction("landing", "Home");
         }
         return View();
+    }
+
+    [HttpGet("/admin/reservations/schedule")]
+    public async Task<IActionResult> GetAdminReservations([FromQuery] string status = "Approved")
+    {
+        var query = from r in _context.Reservations
+                    join f in _context.Facility on r.FacilityId equals f.FacilityId
+                    join u in _context.User_Accounts on r.UserId equals u.Id
+                    where r.Status == "Approved" || r.Status == "Declined"
+                    select new ReservationViewModel
+                    {
+                        Id = r.ReservationId,
+                        FacilityName = char.ToUpper(f.FacilityName[0]) + f.FacilityName.Substring(1),
+                        RequestedBy = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                        DateTime = r.DateTime,
+                        Status = r.Status
+                    };
+
+        if (status != "All")
+        {
+            query = query.Where(r => r.Status == status);
+        }
+
+        var reservations = await query.ToListAsync();
+        return Json(reservations);
     }
 
     public IActionResult HomeownerStaffAccounts()
@@ -277,6 +303,7 @@ public class AdminController : Controller
         return false;
     }
 
+    /*
     // Function to delete all users
     public IActionResult DeleteAllUsers()
     {
@@ -289,6 +316,7 @@ public class AdminController : Controller
         // Optionally, you can add a success message here or redirect
         return RedirectToAction("HomeownerStaffAccounts"); // Or display a confirmation
     }
+    */
 
     // POST: /Admin/EditUser
     [HttpPost]
@@ -415,6 +443,11 @@ public class AdminController : Controller
     public IActionResult Announcements()
     {
         RefreshJwtCookies();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Home");
+        }
         var announcements = _context.Announcement
             .OrderByDescending(a => a.DatePosted)
             .ToList();
@@ -501,5 +534,14 @@ public class AdminController : Controller
         }
         return RedirectToAction("Announcements");
     }
-
+    public IActionResult Reports()
+    {
+        RefreshJwtCookies();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View();
+    }
 }

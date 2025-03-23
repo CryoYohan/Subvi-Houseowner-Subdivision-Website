@@ -44,18 +44,18 @@
     public string GetTruncatedTitle(string title)
     {
         var words = title.Split(' ');
-        if (words.Length >= 5)  
+        if (words.Length >= 5)
         {
-            return string.Join(" ", words.Take(5)) + "...";
+            return string.Join("-", words.Take(5)) + "...";
         }
-        return title;
+        return string.Join("-", words);
     }
 }
 
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
-    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
+    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6">
         <ul class="space-y-4">
             <!-- Home -->
             <li>
@@ -216,28 +216,28 @@
         </div>
 
         <!-- Forum Posts -->
-        <div id="forum-posts" style="display: none;">
+        <div id="forum-posts">
             @foreach (var post in Model)
             {
                 <div class="card mb-3 post-item">
                     <div class="card-body">
                         <div class="d-flex align-items-start">
-                            <div class="user-avatar p-4">
+                            <div class="user-avatar p-4 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold;">
                                 @post.Firstname[0]@post.Lastname[0]
                             </div>
-                            <div class="w-100 pd-4">
-                                <h5 class="card-title">@post.Title</h5>
+                            <div class="w-100 ps-3">
+                                <h5 class="card-title font-semibold">@post.Title</h5>
                                 <p class="text-muted">Posted by @post.FullName on @post.DatePosted.ToString("MMMM dd, yyyy")</p>
                                 <p class="card-text">@post.Content</p>
                                 <div class="d-flex justify-content-end gap-3">
                                     <!-- Like Button -->
-                                    <button onclick="toggleLike(@post.PostId)" class="btn btn-outline-gray btn-sm d-flex align-items-center gap-1">
-                                        <i id="like-icon-@post.PostId" class="bi @(post.IsLiked ? "bi-hand-thumbs-up-fill text-primary" : "bi-hand-thumbs-up text-secondary")"></i>
+                                    <button onclick="toggleLike(@post.PostId)" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1">
+                                        <i id="like-icon-@post.PostId" class="bi @(post.IsLiked ? "bi-hand-thumbs-up-fill" : "bi-hand-thumbs-up ")"></i>
                                         <span id="like-count-@post.PostId">@post.LikeDisplay</span>
                                     </button>
 
                                     <!-- Comment Button -->
-                                    <a href="@Url.Action("Comments", "Home", new { id = post.PostId, title = GetTruncatedTitle(post.Title) })" class="btn btn-outline-gray btn-sm d-flex align-items-center gap-1">
+                                    <a href="@Url.Action("Comments", "Home", new { id = post.PostId, title = GetTruncatedTitle(post.Title) })" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
                                         <i class="bi bi-chat"></i>
                                         <span>@post.RepliesDisplay</span>
                                     </a>

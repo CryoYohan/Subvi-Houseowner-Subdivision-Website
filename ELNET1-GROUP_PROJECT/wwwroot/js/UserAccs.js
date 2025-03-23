@@ -32,13 +32,13 @@ function openUserInfoBox(user) {
 
     // Show info box and shrink table height
     document.getElementById("userInfoBox").classList.remove("hidden");
-    document.getElementById("userTableContainer").style.maxHeight = "190px";
+    document.getElementById("userTableContainer").style.maxHeight = "170px";
 }
 
 function closeUserInfoBox() {
     // Hide info box and restore table height
     document.getElementById("userInfoBox").classList.add("hidden");
-    document.getElementById("userTableContainer").style.maxHeight = "545px";
+    document.getElementById("userTableContainer").style.maxHeight = "520px";
 }
 
 function openEditModalFromBox() {

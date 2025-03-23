@@ -4,6 +4,7 @@
 let expiryTime;
 const countdownWarningMinutes = 3;
 const refreshInterval = 1000; // 1 second
+let countdownShown = false; // Prevent multiple warnings
 
 // Fetch expiry from headers once on page load
 async function fetchSessionExpiry() {
@@ -35,60 +36,64 @@ function startSessionCountdown() {
             return;
         }
 
-        // Show warning before expiry
-        if (timeLeft <= countdownWarningMinutes * 60 * 1000) {
-            showSessionWarning(Math.ceil(timeLeft / 1000));
+        // Show warning before expiry (only once)
+        if (timeLeft <= countdownWarningMinutes * 60 * 1000 && !countdownShown) {
+            countdownShown = true;
+            showSessionWarning(Math.ceil(timeLeft / 1000), () => {
+                countdownShown = false; // Reset when user stays logged in
+            });
         }
     }, refreshInterval);
 }
 
 // Show session expiration warning
-function showSessionWarning(secondsLeft) {
+function showSessionWarning(secondsLeft, onRefresh) {
     const minutes = Math.floor(secondsLeft / 60);
     const seconds = secondsLeft % 60;
 
-    if (!document.getElementById("session-warning")) {
-        Swal.fire({
-            title: 'You still there?',
-            html: `<p>Your session is about to expire in <strong id="countdown">${minutes}m ${seconds}s</strong>.</p>`,
-            icon: 'warning',
-            showCancelButton: true,
-            cancelButtonText: 'Logout',
-            confirmButtonText: 'Stay Logged In',
-            allowOutsideClick: false,
-            backdrop: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                refreshSession();  // Reset session expiry
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-                logoutUser();
-            }
-        });
+    Swal.fire({
+        title: 'You still there?',
+        html: `<p>Your session is about to expire in <strong id="countdown">${minutes}m ${seconds}s</strong>.</p>`,
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonText: 'Logout',
+        confirmButtonText: 'Stay Logged In',
+        allowOutsideClick: false,
+        backdrop: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            refreshSession(onRefresh);  // Reset session expiry
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            logoutUser();
+        }
+    });
 
-        // Countdown Timer Update
-        const countdownInterval = setInterval(() => {
-            secondsLeft--;
-            const updatedMinutes = Math.floor(secondsLeft / 60);
-            const updatedSeconds = secondsLeft % 60;
-            const countdownElement = document.getElementById("countdown");
+    // Countdown Timer Update
+    const countdownInterval = setInterval(() => {
+        secondsLeft--;
+        const updatedMinutes = Math.floor(secondsLeft / 60);
+        const updatedSeconds = secondsLeft % 60;
+        const countdownElement = document.getElementById("countdown");
 
-            if (countdownElement) {
-                countdownElement.textContent = `${updatedMinutes}m ${updatedSeconds}s`;
-            }
+        if (countdownElement) {
+            countdownElement.textContent = `${updatedMinutes}m ${updatedSeconds}s`;
+        }
 
-            if (secondsLeft <= 0) {
-                clearInterval(countdownInterval);
-                logoutUser();
-            }
-        }, 1000);
-    }
+        if (secondsLeft <= 0) {
+            clearInterval(countdownInterval);
+            logoutUser();
+        }
+    }, 1000);
 }
 
-function refreshSession() {
+// Refresh session expiry time
+function refreshSession(onRefresh) {
     fetch('/api/auth/refresh-session', { method: 'POST' })
         .then(response => {
             if (!response.ok) throw new Error('Session refresh failed');
             console.log('Session refreshed');
+            fetchSessionExpiry();  // Fetch new expiry after refresh
+            if (onRefresh) onRefresh();
         })
         .catch(error => console.error(error));
 }

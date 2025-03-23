@@ -425,11 +425,11 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         private string GetTruncatedTitle(string title)
         {
             var words = title.Split(' ');
-            if (words.Length >= 5)  
+            if (words.Length >= 5)
             {
-                return string.Join(" ", words.Take(5)) + "...";
+                return string.Join("-", words.Take(5)) + "...";
             }
-            return title;
+            return string.Join("-", words);
         }
 
         // Add a reply

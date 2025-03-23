@@ -20,7 +20,6 @@
     .btn-outline-gray:hover {
         border-color: #0d6efd;
         color: #0d6efd;
-        background-color: #8cdbff;
     }
 
 .user-avatar {
@@ -60,3 +59,34 @@
         opacity: 0.5;
     }
 }
+
+#forum-posts {
+    display: none;
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #e0e0e0;
+}
+
+    /* For Chrome, Edge, and Safari */
+    #forum-posts::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #forum-posts::-webkit-scrollbar-track {
+        background: #e0e0e0;
+        border-radius: 10px;
+    }
+
+    #forum-posts::-webkit-scrollbar-thumb {
+        background: #007bff;
+        border-radius: 10px;
+        transition: background 0.3s;
+    }
+
+        #forum-posts::-webkit-scrollbar-thumb:hover {
+            background: #0056b3;
+        }

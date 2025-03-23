@@ -133,7 +133,7 @@
                 </div>
 
                 <div onclick="openModal('events')" class="resource-card group">
-                    <div class="flex items-center gap-3 mb-4">
+                    <div class="flex items-center gap-3 mb-2">
                         <div class="p-3 bg-orange-100 rounded-lg">
                             <span class="text-2xl">📅</span>
                         </div>
@@ -143,7 +143,7 @@
                     <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Calendar →</button>
                 </div>
                 <div onclick="openModal('documents')" class="resource-card group">
-                    <div class="flex items-center gap-3 mb-4">
+                    <div class="flex items-center gap-3 mb-2">
                         <div class="p-3 bg-gray-100 rounded-lg">
                             <span class="text-2xl">📄</span>
                         </div>
@@ -153,7 +153,7 @@
                     <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Documents & Forms →</button>
                 </div>
                 <div onclick="openModal('payments')" class="resource-card group">
-                    <div class="flex items-center gap-3 mb-4">
+                    <div class="flex items-center gap-3 mb-2">
                         <div class="p-3 bg-green-100 rounded-lg">
                             <span class="text-2xl">💸</span>
                         </div>
@@ -163,7 +163,7 @@
                     <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Payment & Due →</button>
                 </div>
                 <div onclick="openModal('maintenance')" class="resource-card group">
-                    <div class="flex items-center gap-3 mb-4">
+                    <div class="flex items-center gap-3 mb-2">
                         <div class="p-3 bg-gray-200 rounded-lg">
                             <span class="text-2xl">🛠️</span>
                         </div>
@@ -173,7 +173,7 @@
                     <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Maintenance Requests →</button>
                 </div>
                 <div onclick="openModal('emergency')" class="resource-card group">
-                    <div class="flex items-center gap-3 mb-4">
+                    <div class="flex items-center gap-3 mb-2">
                         <div class="p-3 bg-red-100 rounded-lg">
                             <span class="text-2xl">🚨</span>
                         </div>
@@ -249,37 +249,36 @@
     </div>
 
     <!-- Modals -->
-        <div id="modalOverlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-            <div class="p-8 rounded-2xl shadow-2xl w-1/2 animate-modalIn relative transform transition-all" style="background-color: floralwhite">
-                <!-- Close Button -->
-                <button class="absolute -top-10 -right-10 hover:scale-110 transition-all duration-200" onclick="closeModal()">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    <div id="modalOverlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="p-8 rounded-2xl shadow-2xl w-full max-w-lg animate-modalIn relative transform transition-all" style="background-color: floralwhite">
+            <!-- Close Button -->
+            <button class="absolute -top-5 -right-5 hover:scale-110 transition-all duration-200" onclick="closeModal()">
+                <svg class="w-8 h-8 text-gray-800 hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- Modal Content -->
+            <div class="text-center space-y-4">
+                <!-- Decorative Icon -->
+                <div class="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                </button>
-
-                <!-- Modal Content -->
-                <div class="text-center space-y-4">
-                    <!-- Decorative Icon -->
-                    <div class="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mb-4">
-                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                    </div>
-                
-
-                    <h2 id="modalTitle" class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"></h2>
-                    <p id="modalContent" class="text-gray-600 text-lg leading-relaxed"></p>
-
-                    <!-- Action Button -->
-                    <button onclick="closeModal()"
-                            class="mt-6 w-full py-3 px-6 bg-gradient-to-r from-blue-200 to-green-600 rounded-xl
-                               shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-                        Got It!
-                    </button>
                 </div>
+
+                <h2 id="modalTitle" class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"></h2>
+                <p id="modalContent" class="text-gray-600 text-lg leading-relaxed"></p>
+
+                <!-- Action Button -->
+                <button onclick="closeModal()"
+                        class="mt-6 w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-green-500 text-white font-medium rounded-xl
+                       shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+                    Got It!
+                </button>
             </div>
         </div>
+    </div>
 </div>
 
     <script>
