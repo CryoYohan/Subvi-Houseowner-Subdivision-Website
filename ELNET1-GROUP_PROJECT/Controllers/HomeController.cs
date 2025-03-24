@@ -236,51 +236,40 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             {
                 return RedirectToAction("Login");
             }
-            var bills = _context.Bill.Where(b => b.UserId == userId).ToList();
-            var payments = _context.Payment.Where(p => p.UserId == userId).ToList();
 
-            foreach (var bill in bills)
+            var bill = _context.Bill.FirstOrDefault(b => b.BillId == billId && b.UserId == userId);
+            if (bill == null)
             {
-                if (bill.Status != "Paid")
-                {
-                    var dueDate = DateTime.Parse(bill.DueDate);
-                    var today = DateTime.Today;
-                    var totalPaid = payments.Where(p => p.BillId == bill.BillId).Sum(p => p.AmountPaid);
-                    var remainingAmount = bill.BillAmount - totalPaid;
+                return RedirectToAction("Bill"); // Redirect to a general bill page if not found
+            }
 
-                    if (remainingAmount <= 0)
-                    {
-                        bill.Status = "Paid";
-                    }
-                    else if (dueDate < today)
-                    {
-                        bill.Status = "Overdue";
-                    }
-                    else if (dueDate == today)
-                    {
-                        bill.Status = "Due Now";
-                    }
-                    else
-                    {
-                        bill.Status = "Upcoming";
-                    }
-                }
+            var payments = _context.Payment.Where(p => p.UserId == userId && p.BillId == bill.BillId).ToList();
+
+            var totalPaid = payments.Sum(p => p.AmountPaid);
+            var remainingAmount = bill.BillAmount - totalPaid;
+
+            if (remainingAmount <= 0)
+            {
+                bill.Status = "Paid";
+            }
+            else if (DateTime.Parse(bill.DueDate) < DateTime.Today)
+            {
+                bill.Status = "Overdue";
+            }
+            else if (DateTime.Parse(bill.DueDate) == DateTime.Today)
+            {
+                bill.Status = "Due Now";
+            }
+            else
+            {
+                bill.Status = "Upcoming";
             }
 
             _context.SaveChanges();
 
-            var overdueBills = bills.Where(b => b.Status == "Overdue").ToList();
-            var outstandingBills = bills.Where(b => b.Status != "Paid" && b.Status != "Overdue").Select(b => new {
-                b.BillId,
-                b.BillName,
-                b.DueDate,
-                RemainingAmount = b.BillAmount - payments.Where(p => p.BillId == b.BillId).Sum(p => p.AmountPaid)
-            }).ToList();
+            ViewBag.Bill = bill;  
 
-            ViewBag.OverdueBills = overdueBills;
-            ViewBag.OutstandingBills = outstandingBills;
-
-            return View(bills);
+            return View();
         }
 
 

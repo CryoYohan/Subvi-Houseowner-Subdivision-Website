@@ -128,20 +128,20 @@
                 <span class="badge bg-secondary">Confirmation</span>
             </div>
 
-            <form method="post" action="@Url.Action("ConfirmPayment", "Home", new { billId = Model.BillId })">
+            <form method="post" action="@Url.Action("ConfirmPayment", "Home", new { billId = ViewBag.Bill.BillId })">
                 <div class="mb-3">
                     <label class="form-label fw-bold">I want to pay for:</label>
-                    <input type="text" class="form-control" value="@(Model?.BillName ?? "N/A")" readonly>
+                    <input type="text" class="form-control" value="@(ViewBag.Bill?.BillName ?? "N/A")" readonly>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Reference / Invoice #:</label>
-                        <input type="text" class="form-control" value="@Model.BillId" readonly>
+                        <input type="text" class="form-control" value="@ViewBag.Bill.BillId" readonly>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Amount:</label>
-                        <input type="text" class="form-control" value="@(Model?.BillAmount?.ToString("0.00") ?? "0.00")" readonly>
+                        <input type="text" class="form-control" value="@(ViewBag.Bill?.BillAmount?.ToString("0.00") ?? "0.00")" readonly>
                     </div>
                 </div>
 
@@ -152,9 +152,9 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">Total:</label>
-                        <input type="text" class="form-control" value="@(Model?.BillAmount + 200 ?? 200)" readonly>
+                        <input type="text" class="form-control" value="@(ViewBag.Bill?.BillAmount + 200 ?? 200)" readonly>
                         <!-- Hidden input to send total amount with the form -->
-                        <input type="hidden" name="amountPaid" value="@(Model?.BillAmount + 200 ?? 200)" />
+                        <input type="hidden" name="amountPaid" value="@(ViewBag.Bill?.BillAmount + 200 ?? 200)" />
                     </div>
                 </div>
 
@@ -178,7 +178,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- GCash Fields -->
                 <div id="gcashFields" style="display: none;">
                     <div class="mb-3">
@@ -212,9 +212,6 @@
                 </div>
             </form>
         </div>
-        
-
-       
     </div>
 </div>
 
