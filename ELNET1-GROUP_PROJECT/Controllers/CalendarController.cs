@@ -51,9 +51,8 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     schedules[dateKey].Events.Add(ev.Description);
                 }
 
-                // Fetch Reservations for the specific user where status is "approved"
                 var reservations = await _context.Reservations
-                    .Where(r => r.UserId == userId && r.Status == "Approved") // Filter only Reservations
+                    .Where(r => r.UserId == userId && r.Status == "Approved")
                     .Select(r => new { Date = r.DateTime.Date, Time = r.DateTime.ToString("HH:mm:ss") })
                     .ToListAsync();
 

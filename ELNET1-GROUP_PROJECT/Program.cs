@@ -19,8 +19,18 @@ builder.Services.AddDbContext<MyAppDBContext>(options =>
 
 builder.Services.AddControllersWithViews();
 
-var payMongoSecretKey = builder.Configuration["PayMongo:SecretKey"];
-builder.Services.AddSingleton<PayMongoService>(new PayMongoService(payMongoSecretKey));
+// Add to your services
+// Add HttpClientFactory
+builder.Services.AddHttpClient();
+
+// Register PayMongo service
+builder.Services.AddSingleton<PayMongoServices>(provider =>
+    new PayMongoServices(
+        provider.GetRequiredService<IHttpClientFactory>().CreateClient(),
+        builder.Configuration["PayMongo:SecretKey"],
+        builder.Configuration.GetValue<bool>("PayMongo:UseSandbox")
+    )
+);
 
 var app = builder.Build();
 

@@ -1,0 +1,25 @@
+.animate-fadeIn {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.payment-method-card {
+    transition: all 0.3s ease;
+}
+
+.payment-method-option input:checked + .payment-method-card {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+    background-color: #f8fafc;
+}

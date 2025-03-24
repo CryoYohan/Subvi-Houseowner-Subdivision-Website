@@ -9,6 +9,7 @@ using ELNET1_GROUP_PROJECT.Data;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Net.Http;
 
 namespace ELNET1_GROUP_PROJECT.Controllers
 {
@@ -17,14 +18,18 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         private readonly ILogger<HomeController> _logger;
         private readonly MyAppDBContext _context;
-        private readonly PayMongoService _payMongoService;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
+        private readonly PayMongoServices _payMongoServices;
 
-        public HomeController(MyAppDBContext context, ILogger<HomeController> logger, PayMongoService payMongoService)
+        public HomeController(MyAppDBContext context, ILogger<HomeController> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration, PayMongoServices payMongoServices)
         {
             _context = context;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
             ViewData["Layout"] = "_AdminLayout";
-            _payMongoService = payMongoService;
+            _payMongoServices = payMongoServices;
         }
 
         private string GetUserRoleFromToken()
@@ -272,47 +277,99 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return View();
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ConfirmPayment(int billId, decimal amountPaid, string paymentMethod)
+        {
+            try
+            {
+                // Create Payment Intent
+                var paymentIntent = await _payMongoServices.CreatePaymentIntent(
+                    amount: amountPaid,
+                    description: $"Bill Payment #{billId}",
+                    paymentMethods: new[] { paymentMethod.ToLower() }
+                );
+
+                // Log the raw response for debugging
+                _logger.LogInformation("Payment Intent Response: {@PaymentIntent}", paymentIntent);
+
+                if (paymentIntent?.Data?.Attributes == null)
+                {
+                    TempData["ErrorMessage"] = "Failed to create payment intent. Please try again.";
+                    return RedirectToAction("Bill", new { id = billId });
+                }
+
+                var status = paymentIntent.Data.Attributes.Status;
+                var paymentUrl = paymentIntent.Data.Attributes.NextAction?.Redirect?.Url;
+
+                if (status == "awaiting_next_action" && !string.IsNullOrEmpty(paymentUrl))
+                {
+                    // Redirect to PayMongo for payment
+                    return Redirect(paymentUrl);
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Payment could not be processed. Please try again.";
+                    return RedirectToAction("Bill", new { id = billId });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Payment processing failed");
+                TempData["ErrorMessage"] = "Payment processing failed. Please try again later.";
+                return RedirectToAction("Bill", new { id = billId });
+            }
+        }
 
         [HttpPost]
-        public async Task<IActionResult> ConfirmPayment(int billId, decimal amountPaid, string paymentMethod, string GCashNumber = null)
+        public async Task<IActionResult> PaymentCallback(int billId, decimal amountPaid, int userId)
         {
-            var bill = _context.Bill.FirstOrDefault(b => b.BillId == billId);
-            if (bill == null)
+            try
             {
-                TempData["Error"] = "Bill not found.";
-                return RedirectToAction("Bill");
-            }
+                // Get the total payments made for this bill by this user
+                var totalPaid = _context.Payment
+                    .Where(p => p.BillId == billId && p.UserId == userId)
+                    .Sum(p => p.AmountPaid);
 
-            var totalPaid = _context.Payment.Where(p => p.BillId == billId).Sum(p => p.AmountPaid);
-            var remainingAmount = bill.BillAmount - totalPaid - amountPaid;
+                // Get Bill Amount
+                var bill = await _context.Bill.FirstOrDefaultAsync(b => b.BillId == billId);
 
-            if (paymentMethod == "G-Cash")
-            {
-                if (string.IsNullOrEmpty(GCashNumber))
+                if (bill == null)
                 {
-                    TempData["Error"] = "GCash number is required for GCash payments.";
-                    return RedirectToAction("Bill");
+                    TempData["ErrorMessage"] = "Bill not found.";
+                    return RedirectToAction("Bill", new { id = billId });
                 }
 
-                var checkoutUrl = await _payMongoService.CreatePaymentIntent(amountPaid, "PHP");
-
-                if (string.IsNullOrEmpty(checkoutUrl))
+                // Insert the new payment
+                var newPayment = new Payment
                 {
-                    TempData["Error"] = "Failed to create GCash payment intent.";
-                    return RedirectToAction("Bill");
-                }
+                    BillId = billId,
+                    UserId = userId,
+                    AmountPaid = amountPaid,
+                    DatePaid = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                };
 
-                if (remainingAmount <= 0)
+                _context.Payment.Add(newPayment);
+                await _context.SaveChangesAsync();
+
+                // Calculate new total paid
+                totalPaid += amountPaid;
+
+                // Check if the bill is fully paid
+                if (totalPaid >= bill.BillAmount)
                 {
                     bill.Status = "Paid";
+                    await _context.SaveChangesAsync();
                 }
-                _context.SaveChanges();
 
-                return Redirect(checkoutUrl);
+                TempData["SuccessMessage"] = "Payment successful.";
+                return RedirectToAction("Bill", new { id = billId });
             }
-
-            TempData["Error"] = "Invalid payment method.";
-            return RedirectToAction("Bill");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing payment callback");
+                TempData["ErrorMessage"] = "Error processing payment.";
+                return RedirectToAction("Bill", new { id = billId });
+            }
         }
 
         /*

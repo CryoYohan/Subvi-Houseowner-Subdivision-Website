@@ -1,66 +1,53 @@
-using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-public class PayMongoService
+public class PayMongoServices
 {
-    private readonly string _secretKey;
     private readonly HttpClient _httpClient;
+    private readonly string _secretKey;
+    private readonly string _baseUrl;
 
-    public PayMongoService(string secretKey)
+    public PayMongoServices(HttpClient httpClient, string secretKey, bool useSandbox = true)
     {
-        _secretKey = secretKey ?? throw new ArgumentNullException(nameof(secretKey));
-        _httpClient = new HttpClient();
-        _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes(secretKey)));
+        _httpClient = httpClient;
+        _secretKey = secretKey;
+        _baseUrl = useSandbox ? "https://api.paymongo.com/v1" : "https://api.paymongo.com/v1";
+
+        // Set Auth Header
+        var encodedKey = Convert.ToBase64String(Encoding.UTF8.GetBytes(_secretKey));
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encodedKey);
     }
 
-    public async Task<string> CreatePaymentIntent(decimal amount, string gcashNumber, string currency = "PHP")
+    // Create Payment Intent
+    public async Task<PayMongoPaymentIntentResponse> CreatePaymentIntent(decimal amount, string description, string[] paymentMethods)
     {
-        if (amount <= 0)
-        {
-            throw new ArgumentException("Amount must be greater than zero.", nameof(amount));
-        }
-
-        if (string.IsNullOrEmpty(gcashNumber))
-        {
-            throw new ArgumentException("GCash number is required for GCash payments.", nameof(gcashNumber));
-        }
-
         var requestBody = new
         {
             data = new
             {
                 attributes = new
                 {
-                    amount = (int)(amount * 100), // Convert to cents
-                    currency = currency,
-                    payment_method_allowed = new[] { "gcash" },
-                    description = "Payment for Bill"
+                    amount = (int)(amount * 100),  // Convert PHP to centavos
+                    currency = "PHP",
+                    description = description,
+                    payment_method_allowed = paymentMethods,
+                    payment_method_options = new { card = new { request_three_d_secure = "automatic" } }
                 }
             }
         };
 
-        var json = JsonSerializer.Serialize(requestBody);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        var response = await _httpClient.PostAsync("https://api.paymongo.com/v1/payment_intents", content);
+        var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync($"{_baseUrl}/payment_intents", content);
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            throw new Exception($"Failed to create payment intent: {response.StatusCode}\n{errorContent}");
+            throw new Exception($"Failed to create payment intent: {response.StatusCode}");
         }
 
-        var responseContent = await response.Content.ReadAsStringAsync();
-        var responseData = JsonSerializer.Deserialize<JsonElement>(responseContent);
-
-        // Extract checkout URL from response
-        var clientKey = responseData.GetProperty("data").GetProperty("attributes").GetProperty("client_key").GetString();
-        var paymentIntentId = responseData.GetProperty("data").GetProperty("id").GetString();
-        var checkoutUrl = $"https://paymongo.page/checkout/{paymentIntentId}/{clientKey}";
-
-        return checkoutUrl;
+        var jsonResponse = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<PayMongoPaymentIntentResponse>(jsonResponse, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
     }
 }
