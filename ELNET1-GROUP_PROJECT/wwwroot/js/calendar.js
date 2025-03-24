@@ -151,7 +151,7 @@ function showSchedule(date) {
                                 </li>
                             `).join('')}
                         </ul>
-                    ` : `<div class="text-gray-600 text-center">No Event</div>`}
+                    ` : `<div class="text-gray-600 text-center p-2">No Event</div>`}
                 </div>
             </div>
 
@@ -177,7 +177,7 @@ function showSchedule(date) {
                                 </li>`;
                             }).join('')}
                         </ul>
-                    ` : `<div class="text-gray-600 text-center">No Reservation</div>`}
+                    ` : `<div class="text-gray-600 text-center p-2">No Reservation</div>`}
                 </div>
             </div>
         `;

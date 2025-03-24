@@ -27,9 +27,17 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             try
             {
                 RefreshJwtCookies();
+
+                // Retrieve User ID from Cookies
+                var Iduser = HttpContext.Request.Cookies["Id"];
+                if (!int.TryParse(Iduser, out int userId))
+                {
+                    return RedirectToAction("Login");
+                }
+
                 var schedules = new Dictionary<string, ScheduleData>();
 
-                // Fetch Events
+                // Fetch ALL Events (no UserId filter)
                 var events = await _context.Event_Calendar
                     .Select(e => new { Date = e.DateTime.Date, e.Description })
                     .ToListAsync();
@@ -43,9 +51,10 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     schedules[dateKey].Events.Add(ev.Description);
                 }
 
-                // Fetch Reservations
+                // Fetch Reservations for the specific user where status is "approved"
                 var reservations = await _context.Reservations
-                    .Select(r => new { Date = r.DateTime.Date, Time = r.DateTime.ToString("HH:mm:ss") }) // Fetch Time
+                    .Where(r => r.UserId == userId && r.Status == "Approved") // Filter only Reservations
+                    .Select(r => new { Date = r.DateTime.Date, Time = r.DateTime.ToString("HH:mm:ss") })
                     .ToListAsync();
 
                 foreach (var res in reservations)
