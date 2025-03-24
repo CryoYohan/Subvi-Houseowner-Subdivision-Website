@@ -1,4 +1,4 @@
-﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.Bill>
+﻿
 
 @{
     Layout = "_HomeLayout";
@@ -112,44 +112,61 @@
             <!-- Outstanding Bills -->
             <div class="col-lg-8">
                 <div class="card p-4 shadow">
-                    <h4 class="text-primary fw-bold">Outstanding Bills</h4>
+                    <h2 class="text-primary"><i class="fas fa-file-invoice"></i> Bills and Payments</h2>
 
-                    @if (Model.Any())
-                    {
-                        foreach (var bill in Model)
+                    <div class="card p-4 shadow mt-4" style="max-height: 600px; overflow-y: auto;">
+                        <h4 class="text-warning fw-bold">Outstanding Bills</h4>
+
+                        @if (ViewBag.OutstandingBills != null && ViewBag.OutstandingBills.Count > 0)
                         {
-                            <div class="card mb-3 p-3 @((bill.Status == "Pending") ? "border-warning" : "border-success")">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        @if (bill.Status == "Pending")
-                                        {
-                                            <span class="badge bg-warning text-dark">PENDING</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-success">PAID</span>
-                                        }
-                                        <h5 class="fw-bold mt-2">@bill.BillName</h5>
-                                        <p class="mb-1 text-muted">Due: @bill.DueDate</p>
-                                        <h3 class="text-success fw-bold">$@bill.BillAmount.ToString("0.00")</h3>
+                            @foreach (var bill in ViewBag.OutstandingBills)
+                            {
+                                <div class="card mb-3 p-3 border-warning">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge bg-warning text-dark">OUTSTANDING</span>
+                                            <h5 class="fw-bold mt-2">@bill.BillName</h5>
+                                            <p class="mb-1 text-muted">Due: @bill.DUE_DATE</p>
+                                            <h3 class="text-warning fw-bold">P @bill.RemainingAmount.ToString("0.00")</h3>
+                                        </div>
+                                        <a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BILL_ID })" class="btn btn-primary">Pay Now</a>
                                     </div>
-
-                                    @if (bill.Status == "Pending")
-                                    {
-                                        <a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BillId })" class="btn btn-primary">Pay Now</a>
-                                    }
-                                    else
-                                    {
-                                        <a href="@Url.Action("ViewReceipt", "Home", new { billId = bill.BillId })" class="btn btn-outline-primary">View Receipt</a>
-                                    }
                                 </div>
-                            </div>
+                            }
                         }
-                    }
-                    else
-                    {
-                        <p class="text-center text-muted">No outstanding bills at the moment.</p>
-                    }
+                        else
+                        {
+                            <p class="text-center text-muted">No outstanding bills at the moment.</p>
+                        }
+
+
+                        <hr class="my-4">
+
+                        <h4 class="text-danger fw-bold">Overdue Bills</h4>
+
+                        @if (ViewBag.OverdueBills != null && ViewBag.OverdueBills.Count > 0)
+                        {
+                            @foreach (var bill in ViewBag.OverdueBills)
+                            {
+                                <div class="card mb-3 p-3 border-danger">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge bg-danger">OVERDUE</span>
+                                            <h5 class="fw-bold mt-2">@bill.BillName</h5>
+                                            <p class="mb-1 text-muted">Due: @bill.DueDate</p>
+                                            <h3 class="text-danger fw-bold">P @bill.BillAmount.ToString("0.00")</h3>
+                                        </div>
+                                        <a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BillId })" class="btn btn-primary">Pay Now</a>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-center text-muted">No overdue bills at the moment.</p>
+                        }
+
+                    </div>
                 </div>
             </div>
 
@@ -157,6 +174,8 @@
             <div class="col-lg-4">
                 <div class="card mb-3 p-3 shadow">
                     <h5 class="fw-bold">Payment History</h5>
+                    @if (ViewBag.PaymentHistory != null && ViewBag.PaymentHistory.Count > 0)
+                    {
                     <table class="table table-striped">
                         <thead>
                             <tr>
@@ -168,33 +187,57 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (ViewBag.PaymentHistory != null)
-                            {
-                                int count = 1;
-                                foreach (var payment in ViewBag.PaymentHistory)
-                                {
-                                    <tr>
-                                        <td>@count</td>
-                                        <td>@payment.BillName</td>
-                                        <td>@payment.DatePaid</td>
-                                        <td><span class="badge bg-info">@payment.PaymentMethod</span></td>
-                                        <td class="text-success fw-bold">$@payment.AmountPaid.ToString("0.00")</td>
-                                    </tr>
-                                    count++;
-                                }
-                            }
-                            else
-                            {
-                                <tr><td colspan="5" class="text-center text-muted">No payment history yet.</td></tr>
-                            }
+                            @foreach (var payment in ViewBag.PaymentHistory)
+                             {
+                                <tr>
+                                    <td>@payment.PaymentId</td>
+                                    <td>@payment.BillName</td>
+                                    <td>@payment.DatePaid</td>
+                                    <td><span class="badge bg-info">@payment.PaymentMethod</span></td>
+                                    <td class="text-success fw-bold">P @payment.AmountPaid.ToString("0.00")</td>
+                                </tr>
+                             }             
                         </tbody>
                     </table>
+                    }
+                    else
+                    {
+                        <tr><td colspan="5" class="text-center text-muted">No payment history yet.</td></tr>
+                    }
                 </div>
 
                 <div class="card p-3 shadow">
                     <h5 class="fw-bold">Upcoming Payment</h5>
-                    <p class="text-muted">No upcoming payments.</p>
+                    @if (ViewBag.UpcomingBills != null && ViewBag.UpcomingBills.Count > 0)
+                    {
+                        @foreach (var bill in ViewBag.UpcomingBills)
+                        {
+                            <div class="card mb-3 p-3 border-info">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge bg-info text-dark">UPCOMING</span>
+                                        <h5 class="fw-bold mt-2">@bill.BillName</h5>
+                                        <p class="mb-1 text-muted">Due: @bill.DueDate</p>
+                                        @if (bill.RemainingAmount != bill.BillAmount)
+                                        {
+                                            <h3 class="text-info fw-bold">Remaining Balance: P @bill.RemainingAmount.ToString("0.00")</h3>
+                                        }
+                                        else
+                                        {
+                                            <h3 class="text-info fw-bold">P @bill.RemainingAmount.ToString("0.00")</h3>
+                                        }
+                                    </div>
+                                    <a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BillId })" class="btn btn-primary">Pay Early</a>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-center text-muted">No upcoming bills at the moment.</p>
+                    }
                 </div>
+
             </div>
         </div>
     </div>

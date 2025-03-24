@@ -127,7 +127,7 @@
       // Fetch reservations from backend
       async function fetchReservations(status = "Pending") {
         try {
-          const response = await fetch(`/staff/Reservations?status=${status}`);
+          const response = await fetch(`/staff/Reservations?status=P{status}`);
           const data = await response.json();
           renderReservations(data);
         } catch (error) {
@@ -143,7 +143,7 @@
           reservationTable.innerHTML = `
             <tr>
               <td colspan="6" class="text-center p-4 text-gray-500">
-                No ${statusFilter.value.charAt(0).toUpperCase() + statusFilter.value.slice(1)} Requests
+                No P{statusFilter.value.charAt(0).toUpperCase() + statusFilter.value.slice(1)} Requests
               </td>
             </tr>`;
           return;
@@ -153,10 +153,10 @@
           const row = document.createElement("tr");
           row.className = "hover:bg-gray-100 text-base transition";
           row.innerHTML = `
-            <td class="p-3 text-center">${r.id}</td>
-            <td class="p-3 text-center">${r.facilityName}</td>
-            <td class="p-3 text-center">${r.requestedBy}</td>
-            <td class="p-3 text-center">${new Date(r.dateTime).toLocaleString('en-US', {
+            <td class="p-3 text-center">P{r.id}</td>
+            <td class="p-3 text-center">P{r.facilityName}</td>
+            <td class="p-3 text-center">P{r.requestedBy}</td>
+            <td class="p-3 text-center">P{new Date(r.dateTime).toLocaleString('en-US', {
               month: '2-digit',
               day: '2-digit',
               year: 'numeric',
@@ -165,22 +165,22 @@
               hour12: true
             })}</td>
             <td class="p-3 text-center">
-              <span class="px-2 py-1 text-xs font-semibold rounded ${
+              <span class="px-2 py-1 text-xs font-semibold rounded P{
                 r.status === "Pending"
                   ? "bg-yellow-500 text-white"
                   : r.status === "Approved"
                   ? "bg-green-500 text-white"
                   : "bg-red-500 text-white"
               }">
-                ${r.status.toUpperCase()}
+                P{r.status.toUpperCase()}
               </span>
             </td>
             <td class="p-3 text-center space-x-2">
-              ${
+              P{
                 r.status === "Pending"
                   ? `
-                <button class="approveBtn px-4 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition" data-id="${r.id}">Approve</button>
-                <button class="declineBtn px-4 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition" data-id="${r.id}">Decline</button>
+                <button class="approveBtn px-4 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition" data-id="P{r.id}">Approve</button>
+                <button class="declineBtn px-4 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition" data-id="P{r.id}">Decline</button>
                 `
                   : `<span class="text-gray-500 text-sm">No Actions</span>`
               }
@@ -208,7 +208,7 @@
             selectedReservationId = reservationId;
             selectedAction = action;
             const modalMessage = document.getElementById("modalMessage");
-            modalMessage.textContent = `Are you sure you want to ${action.toLowerCase()} this reservation?`;
+            modalMessage.textContent = `Are you sure you want to P{action.toLowerCase()} this reservation?`;
             confirmationModal.classList.remove("hidden");
         }
 
@@ -218,7 +218,7 @@
       confirmBtn.addEventListener("click", async () => {
         if (selectedReservationId && selectedAction) {
           try {
-            await fetch(`/staff/reservations/${selectedReservationId}`, {
+            await fetch(`/staff/reservations/P{selectedReservationId}`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ status: selectedAction === "Approve" ? "Approved" : "Declined" }),

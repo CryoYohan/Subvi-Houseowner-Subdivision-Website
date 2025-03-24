@@ -135,31 +135,154 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         public IActionResult Bill()
         {
-            string userIdStr = Request.Cookies["Id"];
-            int userId = int.Parse(userIdStr);  // Converts the string to int
+            var Iduser = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(Iduser, out int userId))
+            {
+                return RedirectToAction("Login");
+            }
 
             var bills = _context.Bill.Where(b => b.UserId == userId).ToList();
+            var payments = _context.Payment.Where(p => p.UserId == userId).ToList();
+
+            if (!bills.Any())
+            {
+                ViewBag.Message = "No bills found.";
+                return View();
+            }
+
+            foreach (var bill in bills)
+            {
+                if (bill.Status != "Paid")
+                {
+                    if (!DateTime.TryParse(bill.DueDate, out var dueDate))
+                    {
+                        // Handle invalid date format
+                        bill.Status = "Invalid Date";
+                        continue;
+                    }
+
+                    var today = DateTime.Today;
+                    var totalPaid = payments.Where(p => p.BillId == bill.BillId).Sum(p => p.AmountPaid);
+                    var remainingAmount = bill.BillAmount - totalPaid;
+
+                    if (remainingAmount <= 0)
+                    {
+                        bill.Status = "Paid";
+                    }
+                    else if (dueDate < today)
+                    {
+                        bill.Status = "Overdue";
+                    }
+                    else if (dueDate == today)
+                    {
+                        bill.Status = "Due Now";
+                    }
+                    else
+                    {
+                        bill.Status = "Upcoming";
+                    }
+                }
+            }
+
+            _context.SaveChanges();
+
+            var outstandingBills = bills
+                .Where(b => b.Status == "Overdue" || b.Status == "Due Now")
+                .Select(b => new
+                {
+                    b.BillId,
+                    b.BillName,
+                    b.DueDate,
+                    RemainingAmount = b.BillAmount - payments.Where(p => p.BillId == b.BillId).Sum(p => p.AmountPaid)
+                })
+                .ToList();
+            var overdueBills = bills.Where(b => b.Status == "Overdue").ToList();
+            var upcomingBills = bills
+                .Where(b => b.Status == "Upcoming")
+                .Select(b => new
+                {
+                    b.BillId,
+                    b.BillName,
+                    b.DueDate,
+                    b.BillAmount,
+                    RemainingAmount = b.BillAmount - payments.Where(p => p.BillId == b.BillId).Sum(p => p.AmountPaid)
+                })
+                .ToList();
+
+            var paymentHistory = (from p in payments
+                                  join b in bills on p.BillId equals b.BillId
+                                  select new
+                                  {
+                                      p.PaymentId,
+                                      b.BillName,
+                                      p.DatePaid,
+                                      p.PaymentMethod,
+                                      p.AmountPaid
+                                  })
+                      .ToList();
+
+            ViewBag.OutstandingBills = outstandingBills;
+            ViewBag.PaymentHistory = paymentHistory;
+            ViewBag.OverdueBills = overdueBills;
+            ViewBag.UpcomingBills = upcomingBills;
+
             return View(bills);
         }
 
         public IActionResult PaymentPanel(int billId)
         {
-            try
+            var Iduser = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(Iduser, out int userId))
             {
-                var bill = _context.Bill.FirstOrDefault(b => b.BillId == billId);
-                if (bill == null)
+                return RedirectToAction("Login");
+            }
+            var bills = _context.Bill.Where(b => b.UserId == userId).ToList();
+            var payments = _context.Payment.Where(p => p.UserId == userId).ToList();
+
+            foreach (var bill in bills)
+            {
+                if (bill.Status != "Paid")
                 {
-                    return NotFound();
+                    var dueDate = DateTime.Parse(bill.DueDate);
+                    var today = DateTime.Today;
+                    var totalPaid = payments.Where(p => p.BillId == bill.BillId).Sum(p => p.AmountPaid);
+                    var remainingAmount = bill.BillAmount - totalPaid;
+
+                    if (remainingAmount <= 0)
+                    {
+                        bill.Status = "Paid";
+                    }
+                    else if (dueDate < today)
+                    {
+                        bill.Status = "Overdue";
+                    }
+                    else if (dueDate == today)
+                    {
+                        bill.Status = "Due Now";
+                    }
+                    else
+                    {
+                        bill.Status = "Upcoming";
+                    }
                 }
-                return View(bill);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-                TempData["Error"] = "Something went wrong while loading the payment panel.";
-                return RedirectToAction("Bill");
-            }
+
+            _context.SaveChanges();
+
+            var overdueBills = bills.Where(b => b.Status == "Overdue").ToList();
+            var outstandingBills = bills.Where(b => b.Status != "Paid" && b.Status != "Overdue").Select(b => new {
+                b.BillId,
+                b.BillName,
+                b.DueDate,
+                RemainingAmount = b.BillAmount - payments.Where(p => p.BillId == b.BillId).Sum(p => p.AmountPaid)
+            }).ToList();
+
+            ViewBag.OverdueBills = overdueBills;
+            ViewBag.OutstandingBills = outstandingBills;
+
+            return View(bills);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> ConfirmPayment(int billId, decimal amountPaid, string paymentMethod, string GCashNumber = null)
@@ -171,7 +294,9 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 return RedirectToAction("Bill");
             }
 
-            // PayMongo GCash Integration
+            var totalPaid = _context.Payment.Where(p => p.BillId == billId).Sum(p => p.AmountPaid);
+            var remainingAmount = bill.BillAmount - totalPaid - amountPaid;
+
             if (paymentMethod == "G-Cash")
             {
                 if (string.IsNullOrEmpty(GCashNumber))
@@ -180,7 +305,6 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     return RedirectToAction("Bill");
                 }
 
-                // Call CreatePaymentIntent with the correct parameters
                 var checkoutUrl = await _payMongoService.CreatePaymentIntent(amountPaid, "PHP");
 
                 if (string.IsNullOrEmpty(checkoutUrl))
@@ -189,7 +313,12 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     return RedirectToAction("Bill");
                 }
 
-                // Redirect user to GCash checkout URL
+                if (remainingAmount <= 0)
+                {
+                    bill.Status = "Paid";
+                }
+                _context.SaveChanges();
+
                 return Redirect(checkoutUrl);
             }
 
