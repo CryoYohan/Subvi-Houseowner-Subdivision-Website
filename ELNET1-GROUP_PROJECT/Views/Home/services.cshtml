@@ -36,6 +36,10 @@
         feedbacksController = "home"; feedbacksAction = "feedbacks";
         resourcesController = "home"; resourcesAction = "resources";
     }
+
+}
+@section Scripts {
+    <script src="~/js/services.js"></script>
 }
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0 min-h-screen">
@@ -147,7 +151,13 @@
                         <h3 class="text-lg font-semibold text-[#1E3A8A] mb-2">Maintenance Services</h3>
                         <p class="text-gray-600 mb-4">Maintaining and repairing essential infrastructure, including lighting, plumbing, and communal amenities, to keep the subdivision in top condition.</p>
                         <div class="flex space-x-3">
-                            <button class="px-6 py-2 bg-white text-[#1E3A8A] border border-[#1E3A8A] rounded-lg hover:bg-gray-50">View</button>
+                            <button class="px-6 py-2 bg-white text-[#1E3A8A] border border-[#1E3A8A] rounded-lg hover:bg-gray-50"
+                                    data-service-view
+                                    data-service-name="Clean-up Service"
+                                    data-service-desc="Ensuring a tidy and well-maintained community through regular street sweeping, garbage collection, and landscaping upkeep."
+                                    data-service-img="/images/admin-resources/services/cleanup.png">
+                                View
+                            </button>
                             <button class="px-6 py-2 bg-[#60A5FA] text-white rounded-lg hover:bg-blue-400">Request</button>
                         </div>
                     </div>
@@ -235,4 +245,16 @@
             </div>
         </div>
     </div>
+    <!-- Modal Structure -->
+    <div id="service-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg backdrop-blur-none">
+            <div class="flex justify-between items-center border-b pb-2 mb-4">
+                <h2 id="modal-service-title" class="text-xl font-bold text-[#1E3A8A]"></h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <img id="modal-service-img" src="" alt="Service Image" class="w-full h-48 object-cover rounded-lg mb-4">
+            <p id="modal-service-desc" class="text-gray-600"></p>
+        </div>
+    </div>
 </div>
+
