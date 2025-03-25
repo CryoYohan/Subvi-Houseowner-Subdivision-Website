@@ -62,8 +62,524 @@
 
     <!-- Main Content -->
     <div class="flex-1 p-8 overflow-y-auto fade-in">
-         <div class="container">
-            <!-- Put your code here guys -->
-          </div>
+        <div class="flex-1 p-8 overflow-y-auto">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-800">Service Requests Management</h1>
+                    <p class="text-gray-600 mt-2">Review and manage all service requests from homeowners</p>
+                </div>
+
+                <!-- Status Filter Tabs -->
+                <div class="mb-8 border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-8">
+                        <button class="status-tab active" data-status="Pending">
+                            <span class="flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Pending
+                            </span>
+                            <span id="pendingCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
+                        </button>
+                        <button class="status-tab" data-status="Scheduled">
+                            <span class="flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Scheduled
+                            </span>
+                            <span id="scheduledCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
+                        </button>
+                        <button class="status-tab" data-status="Ongoing">
+                            <span class="flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                Ongoing
+                            </span>
+                            <span id="ongoingCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
+                        </button>
+                        <button class="status-tab" data-status="Finished">
+                            <span class="flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Completed
+                            </span>
+                            <span id="finishedCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
+                        </button>
+                        <button class="status-tab" data-status="Rejected">
+                            <span class="flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Rejected
+                            </span>
+                            <span id="rejectedCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Requests Container -->
+                <div id="requestContainer" class="grid grid-cols-1 gap-6">
+                    <!-- Requests will be loaded here dynamically -->
+                    <div class="text-center py-12 text-gray-500" id="loadingIndicator">
+                        <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="mt-2">Loading requests...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Confirmation Modal -->
+        <div id="approvalModal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Approve Request</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">Are you sure you want to approve this service request?</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="button" id="confirmApprove" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Approve
+                        </button>
+                        <button type="button" id="cancelApprove" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rejection Modal -->
+        <div id="rejectionModal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Reject Request</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">Please provide a reason for rejecting this request:</p>
+                                    <textarea id="rejectionReason" rows="4" class="mt-2 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="button" id="confirmReject" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Submit Rejection
+                        </button>
+                        <button type="button" id="cancelReject" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- CSS for Modal -->
+    <style>
+        /* Status Tabs */
+        .status-tab {
+            white-space: nowrap;
+            padding: 12px 16px;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            color: #6b7280;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+            .status-tab:hover {
+                color: #374151;
+                border-color: #d1d5db;
+            }
+
+            .status-tab.active {
+                border-color: #3b82f6;
+                color: #2563eb;
+            }
+
+        /* Status Badge */
+        .status-badge {
+            margin-left: 0.5rem;
+            padding: 2px 4px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Request Card */
+        .request-card {
+            background: #ffffff;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            transition: box-shadow 0.2s;
+            border: 1px solid #e5e7eb;
+        }
+
+            .request-card:hover {
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            }
+
+        /* Request Card Sections */
+        .request-card-header,
+        .request-card-body,
+        .request-card-footer {
+            padding: 8px;
+        }
+
+        /* Card Footer */
+        .request-card-footer {
+            background: #f9fafb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Status Colors */
+        .badge-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-scheduled {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-ongoing {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .badge-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const statusTabs = document.querySelectorAll(".status-tab");
+        const requestContainer = document.getElementById("requestContainer");
+        const loadingIndicator = document.getElementById("loadingIndicator");
+
+        // Modal elements
+        const approvalModal = document.getElementById("approvalModal");
+        const rejectionModal = document.getElementById("rejectionModal");
+        const confirmApprove = document.getElementById("confirmApprove");
+        const cancelApprove = document.getElementById("cancelApprove");
+        const confirmReject = document.getElementById("confirmReject");
+        const cancelReject = document.getElementById("cancelReject");
+        const rejectionReason = document.getElementById("rejectionReason");
+
+        let currentStatus = "Pending";
+        let selectedRequestId = null;
+
+        // Load requests by status
+        function loadRequests(status) {
+            currentStatus = status;
+            requestContainer.innerHTML = '';
+            loadingIndicator.classList.remove("hidden");
+            const pendingBadge = document.getElementById('pendingCountBadge');
+            const scheduledBadge = document.getElementById('scheduledCountBadge');
+            const ongoingBadge = document.getElementById('ongoingCountBadge');
+            const finishedBadge = document.getElementById('finishedCountBadge');
+            const rejectedBadge = document.getElementById('rejectedCountBadge');
+
+            fetch(`/staff/getservicerequests?status=${status}`)
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error("Failed to fetch service requests");
+                }
+                return res.json();
+            })
+            .then((data) => {
+                loadingIndicator.classList.add("hidden");
+                const { pendingCount, scheduledCount, ongoingCount, finishedCount, rejectedCount, requests } = data;
+                
+                    if (pendingBadge) {
+                        pendingBadge.textContent = pendingCount || 0;  
+                    }
+                    if (scheduledBadge) {
+                        scheduledBadge.textContent = scheduledCount || 0;
+                    }
+                    if (ongoingBadge) {
+                        ongoingBadge.textContent = ongoingCount || 0;
+                    }
+                    if (finishedBadge) {
+                        finishedBadge.textContent = finishedCount || 0;
+                    }
+                    if (rejectedBadge) {
+                        rejectedBadge.textContent = rejectedCount || 0;
+                    }
+
+                // Render requests as before
+                renderRequests(requests);
+            })
+            .catch((err) => {
+                console.error("Error fetching requests:", err);
+                loadingIndicator.classList.add("hidden");
+                requestContainer.innerHTML = `
+                    <div class="bg-white shadow rounded-lg p-6 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Error loading requests</h3>
+                        <p class="mt-1 text-sm text-gray-500">Failed to fetch service requests. Please try again.</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Render requests in the container
+        function renderRequests(requests) {
+            if (requests.length === 0) {
+                requestContainer.innerHTML = `
+                    <div class="bg-white shadow rounded-lg p-6 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No service requests found</h3>
+                        <p class="mt-1 text-sm text-gray-500">There are no ${currentStatus.toLowerCase()} requests at this time.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Wrap everything in a scrollable container
+            requestContainer.innerHTML = `
+                <div class="scrollable-requests-container" style="
+                    max-height: 520px;
+                    overflow-y: auto;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                    background: #fff;
+                    scrollbar-width: none; /* Hide scrollbar by default */
+                ">
+                </div>
+            `;
+            const scrollableContainer = requestContainer.querySelector(".scrollable-requests-container");
+
+            // Apply custom scrollbar styling (WebKit browsers) — show on hover
+            const style = document.createElement("style");
+            style.innerHTML = `
+                .scrollable-requests-container::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .scrollable-requests-container::-webkit-scrollbar-thumb {
+                    background-color: #4A90E2;
+                    border-radius: 8px;
+                }
+                .scrollable-requests-container::-webkit-scrollbar-track {
+                    background: #f0f0f0;
+                    border-radius: 8px;
+                }
+
+                /* Hide scrollbar by default */
+                .scrollable-requests-container {
+                    scrollbar-width: none;
+                }
+
+                /* Show scrollbar on hover */
+                .scrollable-requests-container:hover {
+                    scrollbar-width: thin;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Render requests inside the scrollable container
+            requests.forEach((request) => {
+                const requestCard = document.createElement("div");
+                requestCard.className = "request-card";
+                requestCard.style.marginBottom = "10px";
+
+                let statusBadge = '';
+                let actionButtons = '';
+                let additionalInfo = '';
+
+                // Status badge based on current status
+                switch (currentStatus) {
+                    case 'Pending':
+                        statusBadge = `<span class="badge badge-pending p-3">Pending Review</span>`;
+                        actionButtons = `
+                            <button type="button" class="approve-btn inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" data-id="${request.serviceRequestId}">
+                                Approve
+                            </button>
+                            <button type="button" class="decline-btn inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" data-id="${request.serviceRequestId}">
+                                Decline
+                            </button>
+                        `;
+                        break;
+                    case 'Scheduled':
+                        statusBadge = `<span class="badge badge-scheduled p-3 text-base">Scheduled</span>`;
+                        additionalInfo = `<p class="mt-2 text-sm text-gray-500"><strong>Scheduled Date:</strong> ${new Date(request.scheduleDate).toLocaleString()}</p>`;
+                        break;
+                    case 'Ongoing':
+                        statusBadge = `<span class="badge badge-ongoing p-3 text-base">In Progress</span>`;
+                        break;
+                    case 'Finished':
+                        statusBadge = `<span class="badge badge-completed p-3 text-base">Completed</span>`;
+                        break;
+                    case 'Rejected':
+                        statusBadge = `<span class="badge badge-rejected p-3 text-base">Rejected</span>`;
+                        additionalInfo = `<div class="mt-2 p-3 bg-red-50 rounded-md">
+                            <p class="text-sm text-red-700"><strong>Reason:</strong> ${request.rejectedReason || "No reason provided"}</p>
+                        </div>`;
+                        break;
+                }
+
+                requestCard.innerHTML = `
+                    <div class="request-card-header">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">${request.reqType}</h3>
+                            <p class="mt-1 text-sm text-gray-500">Requested by: ${request.homeownerName}</p>
+                        </div>
+                        ${statusBadge}
+                    </div>
+                    <div class="request-card-body">
+                        <p class="text-sm text-gray-700">${request.description}</p>
+                        ${additionalInfo}
+                        <div class="mt-4 flex items-center text-sm text-gray-500">
+                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Submitted on ${new Date(request.dateSubmitted).toLocaleDateString()}
+                        </div>
+                    </div>
+                    ${actionButtons ? `
+                    <div class="request-card-footer p-4">
+                        ${actionButtons}
+                    </div>
+                    ` : ''}
+                `;
+
+                scrollableContainer.appendChild(requestCard);
+            });
+        }
+
+        // Handle tab changes
+        statusTabs.forEach((tab) => {
+            tab.addEventListener("click", () => {
+                statusTabs.forEach((t) => t.classList.remove("active"));
+                tab.classList.add("active");
+                loadRequests(tab.dataset.status);
+            });
+        });
+
+        // Handle approve/decline actions
+        requestContainer.addEventListener("click", (e) => {
+            if (e.target.classList.contains("approve-btn")) {
+                selectedRequestId = e.target.dataset.id;
+                approvalModal.classList.remove("hidden");
+            } else if (e.target.classList.contains("decline-btn")) {
+                selectedRequestId = e.target.dataset.id;
+                rejectionModal.classList.remove("hidden");
+                rejectionReason.value = "";
+            }
+        });
+
+        // Modal actions
+        cancelApprove.addEventListener("click", () => approvalModal.classList.add("hidden"));
+        cancelReject.addEventListener("click", () => rejectionModal.classList.add("hidden"));
+
+        confirmApprove.addEventListener("click", () => {
+            fetch(`/staff/updaterequeststatus`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    requestId: selectedRequestId,
+                    status: "Scheduled",
+                    scheduleDate: new Date().toISOString() // You might want to set a proper schedule date
+                }),
+            })
+            .then((response) => {
+                if (!response.ok) throw new Error("Failed to update status");
+                approvalModal.classList.add("hidden");
+                loadRequests(currentStatus);
+            })
+            .catch((err) => {
+                console.error("Error updating request:", err);
+                approvalModal.classList.add("hidden");
+                alert("Failed to approve request. Please try again.");
+            });
+        });
+
+        confirmReject.addEventListener("click", () => {
+            const reason = rejectionReason.value.trim();
+            if (!reason) {
+                alert("Please provide a reason for rejecting this request.");
+                return;
+            }
+
+            fetch(`/staff/updaterequeststatus`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    requestId: selectedRequestId,
+                    status: "Rejected",
+                    rejectedReason: reason
+                }),
+            })
+            .then((response) => {
+                if (!response.ok) throw new Error("Failed to update status");
+                rejectionModal.classList.add("hidden");
+                loadRequests(currentStatus);
+            })
+            .catch((err) => {
+                console.error("Error rejecting request:", err);
+                rejectionModal.classList.add("hidden");
+                alert("Failed to reject request. Please try again.");
+            });
+        });
+
+        // Initial load
+        loadRequests(currentStatus);
+    });
+</script>

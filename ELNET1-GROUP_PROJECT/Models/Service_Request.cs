@@ -10,7 +10,7 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("REQUEST_ID")]
         public int ServiceRequestId { get; set; } // Primary Key
 
-        [Column("REQTYPE")]
+        [Column("REQ_TYPE")]
         public string ReqType { get; set; }
 
         [Column("DESCRIPTION")]
@@ -22,10 +22,14 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("DATE_SUBMITTED")]
         public string DateSubmitted { get; set; }
 
-        [Column("ASSIGNED_STAFF_ID")]
-        public string AssignedStaffId { get; set; }
-
         [Column("USER_ID")]
-        public string UserId { get; set; }
+        public int UserId { get; set; }
+
+        [Column("REJECTED_REASON")]
+        public string? RejectedReason { get; set; }
+
+        [Column("SCHEDULE_DATE")]
+        public DateTime? ScheduleDate { get; set; }
+
     }
 }

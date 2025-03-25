@@ -737,6 +737,10 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         public IActionResult GetCommunityStats()
         {
             var IduserStr = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(IduserStr, out int userId))
+            {
+                return RedirectToAction("Login");
+            }
 
             using (var context = _context)
             {
@@ -745,7 +749,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
                 // Count Resolved Issues for the logged-in user
                 var resolvedIssuesCount = context.Service_Request
-                    .Count(r => r.UserId == IduserStr && r.Status == "Resolved");
+                    .Count(r => r.UserId == userId && r.Status == "Resolved");
 
                 return Json(new { memberCount, resolvedIssuesCount });
             }

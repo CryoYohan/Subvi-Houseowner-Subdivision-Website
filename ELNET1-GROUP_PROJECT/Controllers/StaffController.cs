@@ -153,7 +153,7 @@ public class StaffController : Controller
             return NotFound(new { message = "Reservation not found" });
         }
 
-        if (request.Status != "Approved" && request.Status != "Declined")
+        if (request.Status != "Scheduled" && request.Status != "Declined")
         {
             return BadRequest(new { message = "Invalid status" });
         }
@@ -174,6 +174,97 @@ public class StaffController : Controller
             return RedirectToAction("Landing");
         }
         return View();
+    }
+
+    // Get service requests by status
+    [HttpGet("getservicerequests")]
+    public async Task<IActionResult> GetServiceRequests(string status)
+    {
+        try
+        {
+            // Fetch service requests with user info
+            var requests = await _context.Service_Request
+                .Where(r => r.Status == status)
+                .Join(
+                    _context.User_Accounts,
+                    sr => sr.UserId,
+                    ua => ua.Id,
+                    (sr, ua) => new
+                    {
+                        sr.ServiceRequestId,
+                        sr.ReqType,
+                        sr.Description,
+                        sr.Status,
+                        sr.DateSubmitted,
+                        RejectedReason = sr.RejectedReason ?? string.Empty,
+                        ScheduleDate = sr.ScheduleDate != null ? sr.ScheduleDate.Value.ToString("yyyy-MM-dd HH:mm") : null,
+                        homeownerName = char.ToUpper(ua.Firstname[0]) + ua.Firstname.Substring(1) + " " +
+                                   char.ToUpper(ua.Lastname[0]) + ua.Lastname.Substring(1)
+                    }
+                )
+                .ToListAsync();
+
+            // Count service requests by status
+            var pendingCount = await _context.Service_Request.CountAsync(r => r.Status == "Pending");
+            var scheduledCount = await _context.Service_Request.CountAsync(r => r.Status == "Scheduled");
+            var ongoingCount = await _context.Service_Request.CountAsync(r => r.Status == "Ongoing");
+            var finishedCount = await _context.Service_Request.CountAsync(r => r.Status == "Finished");
+            var rejectedCount = await _context.Service_Request.CountAsync(r => r.Status == "Rejected");
+
+            return Json(new
+            {
+                pendingCount,
+                scheduledCount,
+                ongoingCount,
+                finishedCount,
+                rejectedCount,
+                requests
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error fetching service requests.", error = ex.Message });
+        }
+    }
+
+    // Update request status (Approve or Reject)
+    [HttpPost("updaterequeststatus")]
+    public async Task<IActionResult> UpdateRequestStatus([FromBody] UpdateRequestStatusDto request)
+    {
+        if (request == null)
+        {
+            return BadRequest(new { message = "Invalid request data." });
+        }
+
+        try
+        {
+            var serviceRequest = await _context.Service_Request
+                .FirstOrDefaultAsync(r => r.ServiceRequestId == request.RequestId);
+
+            if (serviceRequest == null)
+            {
+                return NotFound(new { message = "Service request not found." });
+            }
+
+            serviceRequest.Status = request.Status;
+
+            if (request.Status == "Rejected" && !string.IsNullOrEmpty(request.RejectedReason))
+            {
+                serviceRequest.RejectedReason = request.RejectedReason;
+            }
+            else if (request.Status == "Scheduled")
+            {
+                serviceRequest.ScheduleDate = DateTime.Now;  // Set schedule date if needed
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Request updated successfully." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error updating service request.", error = ex.Message });
+        }
     }
 
     [HttpGet("bills_and_payments")]
