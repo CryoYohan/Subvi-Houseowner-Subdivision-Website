@@ -6,15 +6,18 @@ using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using ELNET1_GROUP_PROJECT.Controllers;
 
 [Route("staff")]
 public class StaffController : Controller
 {
     private readonly MyAppDBContext _context;
+    private readonly ILogger<HomeController> _logger;
 
-    public StaffController(MyAppDBContext context)
+    public StaffController(MyAppDBContext context, ILogger<HomeController> logger)
     {
         _context = context;
+        _logger = logger;
         ViewData["Layout"] = "_StaffLayout";
     }
 
@@ -99,6 +102,151 @@ public class StaffController : Controller
             return RedirectToAction("landing", "Home");
         }
         return View();
+    }
+
+    [HttpGet("getvisitors")]
+    public IActionResult GetVisitors(string status)
+    {
+        var visitors = _context.Visitor_Pass
+            .Where(v => status == null || v.Status == status)
+            .OrderByDescending(v => v.DateTime)
+            .Select(v => new
+            {
+                v.VisitorId,
+                v.VisitorName,
+                v.DateTime,
+                v.Relationship,
+                v.Status
+            })
+            .ToList();
+
+        if (visitors == null || !visitors.Any())
+        {
+            return Json(new { message = "No visitors found." });
+        }
+
+        return Json(visitors);
+    }
+
+    [HttpGet("gethomeowners")]
+    public IActionResult GetHomeowners()
+    {
+        var homeowners = _context.User_Accounts
+            .Where(u => u.Role == "Homeowner")
+            .Select(u => new
+            {
+                UserId = u.Id,
+                FirstName = u.Firstname,
+                LastName = u.Lastname
+            })
+            .ToList();
+
+        return Json(homeowners);
+    }
+
+    [HttpGet("getvisitor/{id}")]
+    public IActionResult GetVisitor(int id)
+    {
+        var visitor = _context.Visitor_Pass
+            .Where(v => v.VisitorId == id)
+            .Select(v => new
+            {
+                VisitorId = v.VisitorId,
+                UserId = v.UserId,
+                HomeownerName = _context.User_Accounts
+                    .Where(u => u.Id == v.UserId)
+                    .Select(u => u.Firstname + " " + u.Lastname)
+                    .FirstOrDefault(),
+                VisitorName = v.VisitorName,
+                Relationship = v.Relationship
+            })
+            .FirstOrDefault();
+
+        if (visitor == null)
+        {
+            return NotFound();
+        }
+
+        return Json(visitor);
+    }
+    [HttpPost("addvisitor")]
+    public IActionResult AddVisitor(int? visitorId, int userId, string visitorName, string relationship)
+    {
+        _logger.LogInformation("AddVisitor called with VisitorId: {VisitorId}, UserId: {UserId}, VisitorName: '{VisitorName}', Relationship: '{Relationship}'",
+        visitorId, userId, visitorName, relationship);
+        if (string.IsNullOrWhiteSpace(visitorName))
+        {
+            return Json(new { success = false, message = "Visitor name is required!" });
+        }
+
+        var trimmedVisitorName = visitorName.Trim();
+
+        // Check for existing visitor name
+        bool visitorExists = _context.Visitor_Pass
+            .Any(v => v.VisitorName == trimmedVisitorName);
+
+        if (visitorExists)
+        {
+            return Json(new { success = false, message = "Visitor name already exists!" });
+        }
+
+        var newVisitor = new Visitor_Pass
+        {
+            UserId = userId,
+            VisitorName = trimmedVisitorName,
+            DateTime = DateTime.Now,
+            Status = "Active",
+            Relationship = relationship
+        };
+
+        _context.Visitor_Pass.Add(newVisitor);
+        _context.SaveChanges();
+
+        return Json(new { success = true });
+    }
+
+    [HttpPost("editvisitor")]
+    public IActionResult EditVisitor(int visitorId, int userId, string visitorName, string relationship)
+    {
+        var visitor = _context.Visitor_Pass.Find(visitorId);
+        if (visitor == null)
+        {
+            return Json(new { success = false, message = "Visitor not found!" });
+        }
+
+        if (string.IsNullOrWhiteSpace(visitorName))
+        {
+            return Json(new { success = false, message = "Visitor name is required!" });
+        }
+
+        // Check if another visitor already has the same name
+        var trimmedVisitorName = visitorName.Trim();
+        bool visitorExists = _context.Visitor_Pass
+            .Any(v => v.VisitorId != visitorId && v.VisitorName == trimmedVisitorName);
+
+        if (visitorExists)
+        {
+            return Json(new { success = false, message = "Visitor name already exists!" });
+        }
+
+        visitor.UserId = userId;
+        visitor.VisitorName = trimmedVisitorName;
+        visitor.Relationship = relationship;
+        _context.SaveChanges();
+
+        return Json(new { success = true });
+    }
+
+    [HttpPost("deletevisitor")]
+    public IActionResult DeleteVisitor(int id)
+    {
+        var visitor = _context.Visitor_Pass.Find(id);
+        if (visitor != null)
+        {
+            visitor.Status = "Deleted";
+            _context.SaveChanges();
+        }
+        return Json(new { success = true });
     }
 
     [HttpGet("vehicle/registration")]

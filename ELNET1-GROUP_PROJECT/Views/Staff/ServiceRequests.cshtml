@@ -396,18 +396,15 @@
             // Wrap everything in a scrollable container
             requestContainer.innerHTML = `
                 <div class="scrollable-requests-container" style="
-                    max-height: 520px;
+                    max-height: 450px;
                     overflow-y: auto;
                     border: 1px solid #e5e7eb;
                     border-radius: 8px;
-                    background: #fff;
-                    scrollbar-width: none; /* Hide scrollbar by default */
                 ">
                 </div>
             `;
             const scrollableContainer = requestContainer.querySelector(".scrollable-requests-container");
 
-            // Apply custom scrollbar styling (WebKit browsers) — show on hover
             const style = document.createElement("style");
             style.innerHTML = `
                 .scrollable-requests-container::-webkit-scrollbar {
@@ -437,7 +434,7 @@
             // Render requests inside the scrollable container
             requests.forEach((request) => {
                 const requestCard = document.createElement("div");
-                requestCard.className = "request-card";
+                requestCard.className = "request-card p-4";
                 requestCard.style.marginBottom = "10px";
 
                 let statusBadge = '';
