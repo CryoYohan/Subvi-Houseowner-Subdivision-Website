@@ -697,18 +697,6 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return Ok();
         }
 
-        [HttpPost]
-        public IActionResult ToggleFeedbackStatus(int feedbackId)
-        {
-            var feedback = _context.Feedback.FirstOrDefault(f => f.FeedbackId == feedbackId);
-            if (feedback != null)
-            {
-                feedback.Status = !feedback.Status;
-                _context.SaveChanges();
-            }
-            return Ok();
-        }
-
         public IActionResult Resources()
         {
             RefreshJwtCookies();

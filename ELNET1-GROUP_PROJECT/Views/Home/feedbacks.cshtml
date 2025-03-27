@@ -184,9 +184,9 @@
                             <div class="p-4 border rounded-lg shadow-sm hover:shadow-md transition hover:blue-600" style="background-color:white">
                                 <div class="flex justify-between items-center">
                                     <h3 class="text-lg font-semibold">${feedback.feedbackType}</h3>
-                                    <button onclick="toggleStatus(${feedback.feedbackId})" class="text-sm px-3 py-1 rounded-md ${feedback.status ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}">
+                                    <p class="text-sm px-3 py-1 rounded-md ${feedback.status ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}">
                                         ${feedback.status ? 'Active' : 'Inactive'}
-                                    </button>
+                                    </p>
                                 </div>
                                 <p class="text-gray-700 mt-2">${feedback.description}</p>
                                 <p class="text-sm text-gray-500 mt-1">${new Date(feedback.dateSubmitted).toLocaleString()}</p>
@@ -241,12 +241,6 @@
                 loadFeedbacks();
             })
             .catch(error => console.error(error));
-        }
-
-        function toggleStatus(feedbackId) {
-            fetch(`/Home/ToggleFeedbackStatus?feedbackId=${feedbackId}`, { method: 'POST' })
-                .then(() => loadFeedbacks())
-                .catch(error => console.error(error));
         }
 
         document.addEventListener('DOMContentLoaded', loadFeedbacks);
