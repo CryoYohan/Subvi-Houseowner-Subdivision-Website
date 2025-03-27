@@ -140,8 +140,14 @@
                         <h3 class="text-lg font-semibold text-[#1E3A8A] mb-2">Clean-up Service</h3>
                         <p class="text-gray-600 mb-4">Ensuring a tidy and well-maintained community through regular street sweeping, garbage collection, and landscaping upkeep.</p>
                         <div class="flex space-x-3">
-                            <button class="px-6 py-2 bg-white text-[#1E3A8A] border border-[#1E3A8A] rounded-lg hover:bg-gray-50">View</button>
-                            <button class="px-6 py-2 bg-[#60A5FA] text-white rounded-lg hover:bg-blue-400">Request</button>
+                            <button onclick="showServiceModal('/images/admin-resources/services/cleanup.png', 'Clean-up Service', 'Ensuring a tidy and well-maintained community through regular street sweeping, garbage collection, and landscaping upkeep.')"
+                                    class="px-6 py-2 bg-white text-[#1E3A8A] border border-[#1E3A8A] rounded-lg hover:bg-gray-50">
+                                View
+                            </button>
+                            <button onclick="confirmRequest('Clean-up Service')"
+                                    class="px-6 py-2 bg-[#60A5FA] text-white rounded-lg hover:bg-blue-400">
+                                Request
+                            </button>
                         </div>
                     </div>
 
@@ -151,14 +157,14 @@
                         <h3 class="text-lg font-semibold text-[#1E3A8A] mb-2">Maintenance Services</h3>
                         <p class="text-gray-600 mb-4">Maintaining and repairing essential infrastructure, including lighting, plumbing, and communal amenities, to keep the subdivision in top condition.</p>
                         <div class="flex space-x-3">
-                            <button class="px-6 py-2 bg-white text-[#1E3A8A] border border-[#1E3A8A] rounded-lg hover:bg-gray-50"
-                                    data-service-view
-                                    data-service-name="Clean-up Service"
-                                    data-service-desc="Ensuring a tidy and well-maintained community through regular street sweeping, garbage collection, and landscaping upkeep."
-                                    data-service-img="/images/admin-resources/services/cleanup.png">
+                            <button onclick="showServiceModal('/images/admin-resources/services/maintenance.png', 'Maintenance Services', 'Maintaining and repairing essential infrastructure, including lighting, plumbing, and communal amenities, to keep the subdivision in top condition.')"
+                                    class="px-6 py-2 bg-white text-[#1E3A8A] border border-[#1E3A8A] rounded-lg hover:bg-gray-50">
                                 View
                             </button>
-                            <button class="px-6 py-2 bg-[#60A5FA] text-white rounded-lg hover:bg-blue-400">Request</button>
+                            <button onclick="confirmRequest('Maintenance Services')"
+                                    class="px-6 py-2 bg-[#60A5FA] text-white rounded-lg hover:bg-blue-400">
+                                Request
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -170,8 +176,14 @@
                         <h3 class="text-lg font-semibold text-[#1E3A8A] mb-2">Security Services</h3>
                         <p class="text-gray-600 mb-4">Ensuring a safe and well-maintained community through regular access monitoring, garbage collection and landscaping upkeep.</p>
                         <div class="flex space-x-3">
-                            <button class="px-6 py-2 bg-white text-[#1E3A8A] border border-[#1E3A8A] rounded-lg hover:bg-gray-50">View</button>
-                            <button class="px-6 py-2 bg-[#60A5FA] text-white rounded-lg hover:bg-blue-400">Request</button>
+                            <button onclick="showServiceModal('/images/admin-resources/services/security.png', 'Security Services', 'Ensuring a safe and well-maintained community through regular access monitoring, garbage collection and landscaping upkeep.')"
+                                    class="px-6 py-2 bg-white text-[#1E3A8A] border border-[#1E3A8A] rounded-lg hover:bg-gray-50">
+                                View
+                            </button>
+                            <button onclick="confirmRequest('Security Services')"
+                                    class="px-6 py-2 bg-[#60A5FA] text-white rounded-lg hover:bg-blue-400">
+                                Request
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -246,14 +258,17 @@
         </div>
     </div>
     <!-- Modal Structure -->
-    <div id="service-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-        <div class="bg-white p-6 rounded-lg shadow-lg backdrop-blur-none">
-            <div class="flex justify-between items-center border-b pb-2 mb-4">
-                <h2 id="modal-service-title" class="text-xl font-bold text-[#1E3A8A]"></h2>
-                <button id="close-modal" class="text-gray-500 hover:text-gray-700">&times;</button>
+    <div id="serviceModal" class="hidden fixed inset-0 z-[9999] overflow-y-auto">
+        <div class="fixed inset-0 bg-black/50 transition-opacity duration-300 opacity-0" id="modalOverlay"></div>
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="modal-content transform transition-all duration-300 scale-95 opacity-0 bg-white rounded-xl shadow-xl mx-4 max-w-md w-full">
+                <img id="modalImage" alt="Service Image" class="w-full h-64 object-cover rounded-t-xl">
+                <div class="p-6">
+                    <button class="w-full bg-[#60A5FA] hover:bg-blue-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
+                        REQUEST SERVICE
+                    </button>
+                </div>
             </div>
-            <img id="modal-service-img" src="" alt="Service Image" class="w-full h-48 object-cover rounded-lg mb-4">
-            <p id="modal-service-desc" class="text-gray-600"></p>
         </div>
     </div>
 </div>
