@@ -1,7 +1,10 @@
+﻿
+
 @{
+    Layout = "_HomeLayout";
     ViewData["Title"] = "Subvi | Bill & Payments";
 
-    // Retrieve the user's role from cookies
+    string userId = Context.Request.Cookies["Id"];
     string role = Context.Request.Cookies["UserRole"];
 
     // Declare controller
@@ -12,46 +15,29 @@
     string servicesController = "";
     string forumsController = "";
     string feedbacksController = "";
+    string resourcesController = "";
 
     // Default action values
-    string homeAction = "Landing";
-    string calendarAction = "Calendar";
-    string facilitiesAction = "Facilities";
-    string billAction = "Bill";
-    string servicesAction = "Services";
-    string forumsAction = "Forums";
-    string feedbacksAction = "Feedbacks";
+    string homeAction = "";
+    string calendarAction = "";
+    string facilitiesAction = "";
+    string billAction = "";
+    string servicesAction = "";
+    string forumsAction = "";
+    string feedbacksAction = "";
+    string resourcesAction = "";
 
     // Assign controllers/actions based on role
-    if (role == "Admin")
-    {
-        homeController = "admin"; homeAction = "Index";
-        calendarController = "admin"; calendarAction = "Calendar";
-        facilitiesController = "admin"; facilitiesAction = "Facilities";
-        billController = "admin"; billAction = "BillManagement";
-        servicesController = "admin"; servicesAction = "ServicesManagement";
-        forumsController = "admin"; forumsAction = "Forums";
-        feedbacksController = "admin"; feedbacksAction = "Feedbacks";
-    }
-    else if (role == "Homeowner")
+    if (role == "Homeowner")
     {
         homeController = "home"; homeAction = "dashboard";
-        calendarController = "home"; calendarAction = "Calendar";
-        facilitiesController = "home"; facilitiesAction = "Facilities";
-        billController = "home"; billAction = "Bill";
-        servicesController = "home"; servicesAction = "Services";
-        forumsController = "home"; forumsAction = "Forums";
-        feedbacksController = "home"; feedbacksAction = "Feedbacks";
-    }
-    else if (role == "Staff")
-    {
-        homeController = "staff"; homeAction = "Dashboard";
-        calendarController = "staff"; calendarAction = "Calendar";
-        facilitiesController = "staff"; facilitiesAction = "Facilities";
-        billController = "staff"; billAction = "Bill";
-        servicesController = "staff"; servicesAction = "Services";
-        forumsController = "staff"; forumsAction = "Forums";
-        feedbacksController = "staff"; feedbacksAction = "Feedbacks";
+        calendarController = "home"; calendarAction = "calendar";
+        facilitiesController = "home"; facilitiesAction = "facilities";
+        billController = "home"; billAction = "bill";
+        servicesController = "home"; servicesAction = "services";
+        forumsController = "home"; forumsAction = "forums";
+        feedbacksController = "home"; feedbacksAction = "feedbacks";
+        resourcesController = "home"; resourcesAction = "resources";
     }
 }
 
@@ -59,68 +45,202 @@
     @* Sidebar *@
     <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
         <ul class="space-y-4">
-            <!-- Home (Dynamic) -->
             <li>
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@homeController" asp-action="@homeAction">
+                   asp-controller="home" asp-action="dashboard">
                     <i class="fas fa-home text-xl"></i>
                     <span class="font-semibold">Home</span>
                 </a>
             </li>
-
-            <!-- Calendar -->
             <li>
                 <a class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item transition ease-in-out rounded-l-full"
-                   asp-controller="@calendarController" asp-action="@calendarAction">
+                   asp-controller="home" asp-action="calendar">
                     <i class="fas fa-calendar-alt text-xl"></i>
                     <span class="font-semibold">Calendar</span>
                 </a>
             </li>
-
-            <!-- Facilities -->
             <li>
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@facilitiesController" asp-action="@facilitiesAction">
+                   asp-controller="home" asp-action="facilities">
                     <i class="fas fa-building text-xl"></i>
                     <span class="font-semibold">Facilities</span>
                 </a>
             </li>
-
-            <!-- Bill Payment -->
             <li>
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item"
-                   asp-controller="@billController" asp-action="@billAction">
+                   asp-controller="home" asp-action="bill">
                     <i class="fas fa-file-invoice-dollar text-xl"></i>
                     <span class="font-semibold">Bill Payment</span>
                 </a>
             </li>
-
-            <!-- Services -->
             <li>
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@servicesController" asp-action="@servicesAction">
+                   asp-controller="home" asp-action="services">
                     <i class="fas fa-tools text-xl"></i>
                     <span class="font-semibold">Services</span>
                 </a>
             </li>
-
-            <!-- Forums -->
             <li>
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@forumsController" asp-action="@forumsAction">
+                   asp-controller="home" asp-action="forums">
                     <i class="fas fa-comments text-xl"></i>
-                    <span class="font-semibold">Forums</span>
+                    <span class="font-semibold">Forums Discussion</span>
                 </a>
             </li>
-
-            <!-- Feedbacks -->
             <li>
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@feedbacksController" asp-action="@feedbacksAction">
+                   asp-controller="home" asp-action="feedbacks">
                     <i class="fas fa-bullhorn text-xl"></i>
                     <span class="font-semibold">Feedbacks</span>
                 </a>
             </li>
+            <!-- Resources -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@resourcesController" asp-action="@resourcesAction">
+                    <i class="fas fa-folder text-xl"></i>
+                    <span class="font-semibold">Resources</span>
+                </a>
+            </li>
         </ul>
+    </div>
+
+    @* Bill & Payments UI *@
+    <div class="container w-full">
+        <div class="row">
+            <!-- Outstanding Bills -->
+            <div class="w-1/2">
+                <div>
+                    <div class="card p-4 shadow">
+                        <h2 class="text-primary text-2xl font-bold"><i class="fas fa-file-invoice-dollar"></i> Bills and Payments</h2>
+
+                        <div class="card p-4 shadow mt-4" style="max-height: 600px; overflow-y: auto;">
+                            <h4 class="text-warning fw-bold p-2">Outstanding Bills</h4>
+
+                            @if (ViewBag.OutstandingBills != null && ViewBag.OutstandingBills.Count > 0)
+                            {
+                                @foreach (var bill in ViewBag.OutstandingBills)
+                                {
+                                    <div class="card mb-3 p-3 border-warning">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="badge bg-warning text-dark">OUTSTANDING</span>
+                                                <h5 class="fw-bold mt-2">@bill.BillName</h5>
+                                                <p class="mb-1 text-muted">Due: @bill.DueDate</p>
+                                                <h3 class="text-warning fw-bold">P @bill.RemainingAmount.ToString("0.00")</h3>
+                                            </div>
+                                            <a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BillId })" class="btn btn-primary">Pay Now</a>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-center text-muted">No outstanding bills at the moment.</p>
+                            }
+
+
+                            <hr class="my-4">
+
+                            <h4 class="text-danger fw-bold p-2">Overdue Bills</h4>
+
+                            @if (ViewBag.OverdueBills != null && ViewBag.OverdueBills.Count > 0)
+                            {
+                                @foreach (var bill in ViewBag.OverdueBills)
+                                {
+                                    <div class="card mb-3 p-3 border-danger">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="badge bg-danger">OVERDUE</span>
+                                                <h5 class="fw-bold mt-2">@bill.BillName</h5>
+                                                <p class="mb-1 text-muted">Due: @bill.DueDate</p>
+                                                <h3 class="text-danger fw-bold">P @bill.BillAmount.ToString("0.00")</h3>
+                                            </div>
+                                            <a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BillId })" class="btn btn-primary">Pay Now</a>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-center text-muted">No overdue bills at the moment.</p>
+                            }
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="w-1/2">
+				<div>
+					<div class="card mb-3 p-3 shadow">
+						<h5 class="fw-bold">Payment History</h5>
+						@if (ViewBag.PaymentHistory != null && ViewBag.PaymentHistory.Count > 0)
+						{
+							<table class="table table-striped">
+								<thead>
+									<tr>
+										<th>#</th>
+										<th>Reference</th>
+										<th>Date Paid</th>
+										<th>Method</th>
+										<th>Amount</th>
+									</tr>
+								</thead>
+								<tbody>
+									@foreach (var payment in ViewBag.PaymentHistory)
+									{
+										<tr>
+											<td>@payment.PaymentId</td>
+											<td>@payment.BillName</td>
+											<td>@payment.DatePaid</td>
+											<td><span class="badge bg-info">@payment.PaymentMethod</span></td>
+											<td class="text-success fw-bold">P @payment.AmountPaid.ToString("0.00")</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						}
+						else
+						{
+							<tr><td colspan="5" class="text-center text-muted">No payment history yet.</td></tr>
+						}
+					</div>
+
+					<div class="card p-3 shadow">
+						<h5 class="fw-bold p-2">Upcoming Payment</h5>
+						@if (ViewBag.UpcomingBills != null && ViewBag.UpcomingBills.Count > 0)
+						{
+							@foreach (var bill in ViewBag.UpcomingBills)
+							{
+								<div class="card mb-3 p-3 border-info">
+									<div class="d-flex justify-content-between align-items-center">
+										<div>
+											<span class="badge bg-info text-dark">UPCOMING</span>
+											<h5 class="fw-bold mt-2">@bill.BillName</h5>
+											<p class="mb-1 text-muted">Due: @bill.DueDate</p>
+											@if (bill.RemainingAmount != bill.BillAmount)
+											{
+												<h3 class="text-info fw-bold">Remaining Balance: P @bill.RemainingAmount.ToString("0.00")</h3>
+											}
+											else
+											{
+												<h3 class="text-info fw-bold">P @bill.RemainingAmount.ToString("0.00")</h3>
+											}
+										</div>
+										<a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BillId })" class="btn btn-primary">Pay Early</a>
+									</div>
+								</div>
+							}
+						}
+						else
+						{
+							<p class="text-center text-muted">No upcoming bills at the moment.</p>
+						}
+					</div>
+
+				</div>
+            </div>
+            <!-- Payment History & Upcoming Payments -->
+            
+        </div>
     </div>
 </div>

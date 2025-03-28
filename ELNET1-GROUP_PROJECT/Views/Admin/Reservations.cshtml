@@ -5,46 +5,154 @@
     Layout = "_AdminLayout";
     ViewData["Title"] = "Reservations";
 }
-<div class="flex overflow-hidden bg-gray-100">
+<div class="flex overflow-hidden">
     <!-- Sidebar -->
-    <aside class="bg-white shadow-xl w-72 p-4 flex flex-col border-r border-gray-200">
+    <aside class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-72 p-4 py-6">
         <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
         <nav class="flex-1 space-y-3">
             <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-home w-6"></i>
                 <span class="ml-3">Dashboard</span>
             </a>
             <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-calendar-check w-6"></i>
                 <span class="ml-3">Reservations</span>
             </a>
             <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-users w-6"></i>
                 <span class="ml-3">Homeowners & Staff Accounts</span>
             </a>
             <a asp-controller="admin" asp-action="billpayment" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-file-invoice-dollar w-6"></i>
                 <span class="ml-3">Bill Payment</span>
             </a>
             <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-history w-6"></i>
                 <span class="ml-3">Payment History</span>
             </a>
             <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-tools w-6"></i>
                 <span class="ml-3">Services</span>
             </a>
             <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-bullhorn w-6"></i>
                 <span class="ml-3">Announcements</span>
             </a>
+            <a asp-controller="admin" asp-action="reports" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-chart-line w-6"></i>
+                <span class="ml-3">Reports</span>
+            </a>
         </nav>
     </aside>
+    <div class="container mx-auto p-3">
+        <div class="bg-white shadow-md rounded-xl p-3 mb-3 flex items-center space-x-3">
+            <span><i class="fas fa-calendar-check text-blue-700 text-xl"></i></span>
+            <h1 class="text-blue-700 font-bold text-lg">Reservations</h1>
+        </div>
+        <!-- Filter Section -->
+        <div class="flex justify-start mb-2">
+            <span class="p-2 font-semibold text-blue-900">Filtered: </span>
+            <select id="adminStatusFilter"
+                    style="cursor: pointer; transition: background-color 0.2s, color 0.2s;"
+                    class="p-2 border rounded-md text-gray-800">
+                <option value="Approved">Approved</option>
+                <option value="Declined">Declined</option>
+            </select>
+        </div>
+
+        <!-- Reservations Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-base text-white uppercase bg-gray-200">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 bg-blue-600 text-center">ID</th>
+                        <th scope="col" class="px-6 py-3 bg-blue-600 text-center">Facility Name</th>
+                        <th scope="col" class="px-6 py-3 bg-blue-600 text-center">Requested By</th>
+                        <th scope="col" class="px-6 py-3 bg-blue-600 text-center">DateTime</th>
+                        <th scope="col" class="px-6 py-3 bg-blue-600 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="adminReservationTable"></tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+<script>
+        document.addEventListener("DOMContentLoaded", () => {
+      const adminReservationTable = document.getElementById("adminReservationTable");
+      const adminStatusFilter = document.getElementById("adminStatusFilter");
+
+      function updateFilterColor() {
+        if (adminStatusFilter.value === "Approved") {
+          adminStatusFilter.className = "p-2 border rounded-md text-white bg-green-500 transition-colors duration-200";
+        } else if (adminStatusFilter.value === "Declined") {
+          adminStatusFilter.className = "p-2 border rounded-md text-white bg-red-500 transition-colors duration-200";
+        }
+      }
+
+      async function fetchAdminReservations(status = "Approved") {
+        try {
+          const response = await fetch(`/admin/reservations/schedule?status=${status}`);
+          const data = await response.json();
+          renderAdminReservations(data);
+          updateFilterColor();  // Update color after fetching data
+        } catch (error) {
+          console.error("Error fetching reservations:", error);
+        }
+      }
+
+      function renderAdminReservations(reservations) {
+        adminReservationTable.innerHTML = "";
+
+        if (reservations.length === 0) {
+          adminReservationTable.innerHTML = `
+            <tr>
+              <td colspan="5" class="text-center p-4 text-gray-500">No reservations found</td>
+            </tr>`;
+          return;
+        }
+
+        reservations.forEach((r) => {
+          const row = document.createElement("tr");
+          row.className = "hover:bg-gray-100 transition text-base";
+          row.innerHTML = `
+            <td class="p-3 text-center">${r.id}</td>
+            <td class="p-3 text-center">${r.facilityName}</td>
+            <td class="p-3 text-center">${r.requestedBy}</td>
+            <td class="p-3 text-center">${new Date(r.dateTime).toLocaleString('en-US', {
+              month: '2-digit',
+              day: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            })}</td>
+            <td class="p-3 text-center">
+              <span class="px-2 py-1 text-xs font-semibold rounded ${
+                r.status === "Approved"
+                  ? "bg-green-500 text-white"
+                  : "bg-red-500 text-white"
+              }">
+                ${r.status.toUpperCase()}
+              </span>
+            </td>
+          `;
+          adminReservationTable.appendChild(row);
+        });
+      }
+
+      adminStatusFilter.addEventListener("change", () => fetchAdminReservations(adminStatusFilter.value));
+
+      // Initial load
+      fetchAdminReservations();
+    });
+</script>

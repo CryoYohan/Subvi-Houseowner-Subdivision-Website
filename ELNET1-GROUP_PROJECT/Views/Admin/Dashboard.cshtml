@@ -1,4 +1,4 @@
-﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.User_Account>
+﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.Announcement>
 
 @{
     Layout = "_AdminLayout";
@@ -25,51 +25,56 @@
     } 
 }
 
-<div class="flex overflow-hidden bg-gray-100">
+<div class="flex overflow-hidden">
     <!-- Sidebar -->
-    <aside class="bg-white shadow-xl w-72 p-4 flex flex-col border-r border-gray-200">
+    <aside class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-72 p-4 py-6">
         <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
         <nav class="flex-1 space-y-3">
             <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-home w-6"></i>
                 <span class="ml-3">Dashboard</span>
             </a>
             <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-calendar-check w-6"></i>
                 <span class="ml-3">Reservations</span>
             </a>
             <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-users w-6"></i>
                 <span class="ml-3">Homeowners & Staff Accounts</span>
             </a>
             <a asp-controller="admin" asp-action="billpayment" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-file-invoice-dollar w-6"></i>
                 <span class="ml-3">Bill Payment</span>
             </a>
             <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-history w-6"></i>
                 <span class="ml-3">Payment History</span>
             </a>
             <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-tools w-6"></i>
                 <span class="ml-3">Services</span>
             </a>
             <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-bullhorn w-6"></i>
                 <span class="ml-3">Announcements</span>
+            </a>
+            <a asp-controller="admin" asp-action="reports" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-chart-line w-6"></i>
+                <span class="ml-3">Reports</span>
             </a>
         </nav>
     </aside>
 
     <!-- Main Content -->
-    <main class="p-4">
+    <main class="p-3">
         <div class="flex gap-4">
 
             <!-- Left Section (Greeting & Announcements) -->
@@ -87,19 +92,30 @@
                 <!-- Latest Announcements -->
                 <div class="bg-white shadow-md rounded-xl p-4">
                     <h2 class="text-lg font-bold flex items-center">
-                        <span class="text-blue-600 mr-2">🔔</span> Latest Announcements
+                        <span class="text-blue-600 mr-2">🔔</span> Announcements
                     </h2>
-                    <div class="space-y-3 mt-4">
-                        <div class="bg-gray-100 p-3 rounded-lg">
-                            <p>Good morning. We have a meeting this coming Friday. See you at the convention center.</p>
-                            <p class="text-right text-xs text-gray-500">Posted March 8, 2025</p>
-                        </div>
-                        <div class="bg-gray-100 p-3 rounded-lg">
-                            <p>Good morning. Shout out to my ex-crush. May bago na akong jawa.</p>
-                            <p class="text-right text-xs text-gray-500">Posted February 14, 2025</p>
-                        </div>
+                    <div class="mt-4 space-y-3 pr-2" style="max-height: 350px; overflow-y: auto;">
+                        @if (!Model.Any())
+                        {
+                            <div class="bg-gray-100 p-3 rounded-lg text-center">
+                                <p class="text-gray-500">No announcements for now.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var announcement in Model)
+                            {
+                                <div class="bg-gray-100 p-3 rounded-lg">
+                                    <h3 class="text-lg font-bold text-blue-600">@announcement.Title</h3>
+                                    <p>@announcement.Description</p>
+                                    <p class="text-right text-xs text-gray-500">
+                                        Posted @Convert.ToDateTime(announcement.DatePosted).ToString("MMMM dd, yyyy hh:mm tt")
+                                    </p>
+                                </div>
+                            }
+                        }
                     </div>
-                </div>
+                </div> 
             </div>
 
             <!-- Right Section (Stats & Calendar) -->

@@ -1,0 +1,461 @@
+﻿@{
+    Layout = "_HomeLayout";
+    ViewData["Title"] = "Subvi | Bill & Payments";
+
+    string userId = Context.Request.Cookies["Id"];
+    string role = Context.Request.Cookies["UserRole"];
+
+    // Declare controller
+    string homeController = "";
+    string calendarController = "";
+    string facilitiesController = "";
+    string billController = "";
+    string servicesController = "";
+    string forumsController = "";
+    string feedbacksController = "";
+    string resourcesController = "";
+
+    // Default action values
+    string homeAction = "";
+    string calendarAction = "";
+    string facilitiesAction = "";
+    string billAction = "";
+    string servicesAction = "";
+    string forumsAction = "";
+    string feedbacksAction = "";
+    string resourcesAction = "";
+
+    // Assign controllers/actions based on role
+    if (role == "Homeowner")
+    {
+        homeController = "home"; homeAction = "dashboard";
+        calendarController = "home"; calendarAction = "calendar";
+        facilitiesController = "home"; facilitiesAction = "facilities";
+        billController = "home"; billAction = "bill";
+        servicesController = "home"; servicesAction = "services";
+        forumsController = "home"; forumsAction = "forums";
+        feedbacksController = "home"; feedbacksAction = "feedbacks";
+        resourcesController = "home"; resourcesAction = "resources";
+    }
+}
+
+<link rel="stylesheet" href="~/css/paymentpaneldesign.css" />
+
+<div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
+    @* Sidebar *@
+    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
+        <ul class="space-y-4">
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="home" asp-action="dashboard">
+                    <i class="fas fa-home text-xl"></i>
+                    <span class="font-semibold">Home</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item transition ease-in-out rounded-l-full"
+                   asp-controller="home" asp-action="calendar">
+                    <i class="fas fa-calendar-alt text-xl"></i>
+                    <span class="font-semibold">Calendar</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="home" asp-action="facilities">
+                    <i class="fas fa-building text-xl"></i>
+                    <span class="font-semibold">Facilities</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item"
+                   asp-controller="home" asp-action="bill">
+                    <i class="fas fa-file-invoice-dollar text-xl"></i>
+                    <span class="font-semibold">Bill Payment</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="home" asp-action="services">
+                    <i class="fas fa-tools text-xl"></i>
+                    <span class="font-semibold">Services</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="home" asp-action="forums">
+                    <i class="fas fa-comments text-xl"></i>
+                    <span class="font-semibold">Forums Discussion</span>
+                </a>
+            </li>
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="home" asp-action="feedbacks">
+                    <i class="fas fa-bullhorn text-xl"></i>
+                    <span class="font-semibold">Feedbacks</span>
+                </a>
+            </li>
+            <!-- Resources -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@resourcesController" asp-action="@resourcesAction">
+                    <i class="fas fa-folder text-xl"></i>
+                    <span class="font-semibold">Resources</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-2">
+        <div class="max-w-3xl mx-auto">
+            <!-- Payment Header -->
+            <div class="text-center mb-2">
+                <h1 class="text-3xl font-bold text-gray-800">Complete Your Payment</h1>
+                <p class="text-gray-600 mt-2">Secure payment processed through PayMongo</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="relative mb-12">
+                <div class="flex items-center justify-between">
+                    <div class="flex flex-col items-center relative z-10">
+                        <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center transition-all duration-300" id="step1">
+                            1
+                        </div>
+                        <span class="text-sm font-medium mt-2 text-blue-600">Bill Details</span>
+                    </div>
+                    <div class="flex flex-col items-center relative z-10">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center transition-all duration-300" id="step2">
+                            2
+                        </div>
+                        <span class="text-sm font-medium mt-2 text-gray-500">Payment Method</span>
+                    </div>
+                    <div class="flex flex-col items-center relative z-10">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center transition-all duration-300" id="step3">
+                            3
+                        </div>
+                        <span class="text-sm font-medium mt-2 text-gray-500">Confirmation</span>
+                    </div>
+                </div>
+                <div class="absolute top-5 left-0 right-0 h-1 bg-gray-200 -z-0">
+                    <div class="h-full bg-blue-600 transition-all duration-500" id="progressBar" style="width: 33%"></div>
+                </div>
+            </div>
+
+            <!-- Section 1: Bill Details -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8 transition-all duration-300 transform" id="section1">
+                <div class="p-8">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3">1</span>
+                        Bill Information
+                    </h2>
+                
+                    <div class="space-y-4">
+                        <div class="flex justify-between py-3 border-b border-gray-100">
+                            <span class="text-gray-600">Reference Number</span>
+                            <span class="font-medium">@ViewBag.Bill.BillId</span>
+                        </div>
+                        <div class="flex justify-between py-3 border-b border-gray-100">
+                            <span class="text-gray-600">Description</span>
+                            <span class="font-medium text-right">@ViewBag.Bill.BillName</span>
+                        </div>
+                        <div class="flex justify-between py-3 border-b border-gray-100">
+                            <span class="text-gray-600">Amount Due</span>
+                            <span class="font-medium">₱@ViewBag.Bill.BillAmount.ToString("N2")</span>
+                        </div>
+                        <div class="flex justify-between py-3 border-b border-gray-100">
+                            <span class="text-gray-600">Service Fee</span>
+                            <span class="font-medium">₱200.00</span>
+                        </div>
+                        <div class="flex justify-between py-4">
+                            <span class="text-lg font-semibold">Total Amount</span>
+                            <span class="text-xl font-bold text-blue-600">₱@((ViewBag.Bill.BillAmount + 200).ToString("N2"))</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-end">
+                        <button onclick="nextSection()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center">
+                            Continue
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Payment Method -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8 hidden transition-all duration-300 transform" id="section2">
+                <div class="p-8">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3">2</span>
+                        Select Payment Method
+                    </h2>
+
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <!-- GCash -->
+                        <label class="payment-method-option">
+                            <input type="radio" name="paymentMethod" value="gcash" class="sr-only" checked>
+                                <div class="border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full">
+                                <div class="bg-blue-50 p-4 rounded-lg flex justify-center">
+                                    <img src="/images/payment/gcash.png" alt="GCash" class="h-12">
+                                </div>
+                                <div class="mt-3 text-center">
+                                    <div class="font-medium text-gray-800">GCash</div>
+                                    <div class="text-sm text-gray-500">Pay with mobile wallet</div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- Maya -->
+                        <label class="payment-method-option">
+                            <input type="radio" name="paymentMethod" value="paymaya" class="sr-only">
+                             <div class="border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full">
+                                <div class="bg-purple-50 p-4 rounded-lg flex justify-center">
+                                    <img src="/images/payment/maya.png" alt="Maya" class="h-12">
+                                </div>
+                                <div class="mt-3 text-center">
+                                    <div class="font-medium text-gray-800">Maya</div>
+                                    <div class="text-sm text-gray-500">Pay with mobile wallet</div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- GrabPay -->
+                        <label class="payment-method-option">
+                            <input type="radio" name="paymentMethod" value="grab_pay" class="sr-only">
+                                <div class="border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full">
+                                <div class="bg-green-50 p-4 rounded-lg flex justify-center">
+                                    <img src="/images/payment/grabpay.png" alt="GrabPay" class="h-12">
+                                </div>
+                                <div class="mt-3 text-center">
+                                    <div class="font-medium text-gray-800">GrabPay</div>
+                                    <div class="text-sm text-gray-500">Pay with Grab app</div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- Credit/Debit Card -->
+                        <label class="payment-method-option">
+                            <input type="radio" name="paymentMethod" value="card" class="sr-only">
+                                <div class="border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full">
+                                <div class="bg-yellow-50 p-4 rounded-lg flex justify-center">
+                                    <img src="/images/payment/cards.png" alt="Credit/Debit Card" class="h-12">
+                                </div>
+                                <div class="mt-3 text-center">
+                                    <div class="font-medium text-gray-800">Card</div>
+                                    <div class="text-sm text-gray-500">Credit/Debit card</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-between mt-8">
+                        <button onclick="prevSection()" class="px-6 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg transition duration-200 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                            </svg>
+                            Back
+                        </button>
+                        <button onclick="nextSection()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center">
+                            Continue
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Confirmation -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden hidden transition-all duration-300 transform" id="section3">
+                <div class="p-8">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3">3</span>
+                        Confirm Your Payment
+                    </h2>
+
+                    <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">Bill Summary</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Reference Number</span>
+                                <span class="font-medium">@ViewBag.Bill.BillId</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Description</span>
+                                <span class="font-medium">@ViewBag.Bill.BillName</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Amount Due</span>
+                                <span class="font-medium">₱@ViewBag.Bill.BillAmount.ToString("N2")</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Service Fee</span>
+                                <span class="font-medium">₱200.00</span>
+                            </div>
+                            <div class="flex justify-between pt-3 border-t border-gray-200 mt-3">
+                                <span class="text-lg font-semibold">Total Amount</span>
+                                <span class="text-lg font-bold text-blue-600">₱@((ViewBag.Bill.BillAmount + 200).ToString("N2"))</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">Payment Method</h3>
+                        <div id="selectedPaymentMethod" class="flex items-center">
+                            <img id="paymentMethodImage" src="/images/payment/gcash.png" alt="GCash" class="h-10 mr-4">
+                            <div>
+                                <div class="font-medium text-gray-800" id="paymentMethodName">GCash</div>
+                                <div class="text-sm text-gray-500" id="paymentMethodDescription">Pay with mobile wallet</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start mb-8">
+                        <input type="checkbox" id="terms" name="terms" required
+                               class="mt-1 mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5">
+                        <label for="terms" class="text-sm text-gray-600">
+                            I agree to the <a href="#" class="text-blue-600 hover:underline">Terms and Conditions</a>
+                            and authorize the payment of ₱@((ViewBag.Bill.BillAmount + 200).ToString("N2"))
+                        </label>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <button onclick="prevSection()" class="px-6 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg transition duration-200 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                            </svg>
+                            Back
+                        </button>
+                        <button type="submit" form="paymentForm" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                            </svg>
+                            Confirm and Pay
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden Form for Submission -->
+            <form method="post" asp-action="ConfirmPayment" id="paymentForm" class="hidden">
+                <input type="hidden" name="billId" value="@ViewBag.Bill.BillId" />
+                <input type="hidden" name="amountPaid" value="@(ViewBag.Bill.BillAmount + 200)" />
+                <input type="hidden" name="paymentMethod" id="formPaymentMethod" value="gcash" />
+            </form>
+
+            <!-- Security Badges -->
+            <div class="mt-12 flex justify-center space-x-8">
+                <img src="/images/payment/ssl-secure.png" alt="SSL Secure" class="h-10 opacity-70 hover:opacity-100 transition">
+                <img src="/images/payment/pci-dss.png" alt="PCI DSS Compliant" class="h-10 opacity-70 hover:opacity-100 transition">
+                <img src="/images/payment/paymongo-secure.png" alt="PayMongo Secure" class="h-10 opacity-70 hover:opacity-100 transition">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentSection = 1;
+    const totalSections = 3;
+    
+    function updateProgress() {
+        // Update progress bar
+        document.getElementById('progressBar').style.width = `${(currentSection / totalSections) * 100}%`;
+        
+        // Update step indicators
+        for (let i = 1; i <= totalSections; i++) {
+            const step = document.getElementById(`step${i}`);
+            if (i < currentSection) {
+                step.classList.remove('bg-gray-200', 'text-gray-600');
+                step.classList.add('bg-green-500', 'text-white');
+            } else if (i === currentSection) {
+                step.classList.remove('bg-gray-200', 'text-gray-600');
+                step.classList.add('bg-blue-600', 'text-white');
+            } else {
+                step.classList.remove('bg-blue-600', 'text-white', 'bg-green-500');
+                step.classList.add('bg-gray-200', 'text-gray-600');
+            }
+        }
+    }
+
+         function nextSection() {
+        if (currentSection < totalSections) {
+            // Animate current section out
+            document.getElementById(`section${currentSection}`).classList.add('hidden');
+            document.getElementById(`section${currentSection}`).classList.remove('animate-fadeIn');
+
+            currentSection++;
+
+            // Animate next section in
+            document.getElementById(`section${currentSection}`).classList.remove('hidden');
+            document.getElementById(`section${currentSection}`).classList.add('animate-fadeIn');
+
+            updateProgress();
+
+            // Update payment method display in confirmation section
+            if (currentSection === 3) {
+                const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked');
+                if (selectedMethod) {
+                    document.getElementById('formPaymentMethod').value = selectedMethod.value;
+
+                    // Update displayed payment method
+                    const card = selectedMethod.parentElement.querySelector('.payment-method-card');
+                    const img = card.querySelector('img').cloneNode(true);
+                    const name = card.querySelector('.font-medium').textContent;
+                    const desc = card.querySelector('.text-sm').textContent;
+                    const number = card.querySelector('.payment-number')?.textContent ?? '';  // Optional chaining in case there's no number
+
+                    // Replace payment method image
+                    const paymentImage = document.getElementById('paymentMethodImage');
+                    paymentImage.replaceWith(img);
+                    paymentImage.id = 'paymentMethodImage'; // Ensure new img has correct ID
+
+                    // Update other details
+                    document.getElementById('paymentMethodName').textContent = name;
+                    document.getElementById('paymentMethodDescription').textContent = desc;
+                    document.getElementById('paymentMethodNumber').textContent = number;
+                }
+            }
+        }
+    }
+
+    function prevSection() {
+        if (currentSection > 1) {
+            // Animate current section out
+            document.getElementById(`section${currentSection}`).classList.add('hidden');
+            document.getElementById(`section${currentSection}`).classList.remove('animate-fadeIn');
+
+            currentSection--;
+
+            // Animate previous section in
+            document.getElementById(`section${currentSection}`).classList.remove('hidden');
+            document.getElementById(`section${currentSection}`).classList.add('animate-fadeIn');
+
+            updateProgress();
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        updateProgress();
+
+        // Add animation classes
+        for (let i = 1; i <= totalSections; i++) {
+            document.getElementById(`section${i}`).classList.add('transition-all', 'duration-300');
+        }
+
+        // Set up payment method selection
+        document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                // Reset styles for all cards
+                document.querySelectorAll('.payment-method-card').forEach(card => {
+                    card.classList.remove('border-blue-400', 'bg-blue-50');
+                });
+
+                // Apply styles to selected card
+                if (this.checked) {
+                    this.parentElement.querySelector('.payment-method-card').classList.add('border-blue-400', 'bg-blue-50');
+                }
+            });
+        });
+    });
+    </script>

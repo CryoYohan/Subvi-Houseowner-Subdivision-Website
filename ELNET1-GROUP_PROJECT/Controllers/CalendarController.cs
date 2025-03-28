@@ -26,9 +26,18 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         {
             try
             {
+                RefreshJwtCookies();
+
+                // Retrieve User ID from Cookies
+                var Iduser = HttpContext.Request.Cookies["Id"];
+                if (!int.TryParse(Iduser, out int userId))
+                {
+                    return RedirectToAction("Login");
+                }
+
                 var schedules = new Dictionary<string, ScheduleData>();
 
-                // Fetch Events
+                // Fetch ALL Events (no UserId filter)
                 var events = await _context.Event_Calendar
                     .Select(e => new { Date = e.DateTime.Date, e.Description })
                     .ToListAsync();
@@ -42,9 +51,9 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     schedules[dateKey].Events.Add(ev.Description);
                 }
 
-                // Fetch Reservations
                 var reservations = await _context.Reservations
-                    .Select(r => new { Date = r.DateTime.Date, Time = r.DateTime.ToString("HH:mm:ss") }) // Fetch Time
+                    .Where(r => r.UserId == userId && r.Status == "Approved")
+                    .Select(r => new { Date = r.DateTime.Date, Time = r.DateTime.ToString("HH:mm:ss") })
                     .ToListAsync();
 
                 foreach (var res in reservations)
@@ -62,6 +71,44 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error fetching schedules.", error = ex.Message });
+            }
+        }
+
+        //Resetting the cookies time
+        private void RefreshJwtCookies()
+        {
+            var token = Request.Cookies["jwt"];
+            var role = Request.Cookies["UserRole"];
+            var id = Request.Cookies["Id"];
+
+            if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(role) && !string.IsNullOrEmpty(id))
+            {
+                // Reset cookies with updated expiration
+                var expiryMinutes = 15;  // Reset to 15 minutes
+
+                var options = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+                };
+
+                Response.Cookies.Append("jwt", token, options);
+                Response.Cookies.Append("UserRole", role, new CookieOptions
+                {
+                    HttpOnly = false,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+                });
+                Response.Cookies.Append("Id", id, new CookieOptions
+                {
+                    HttpOnly = false,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(expiryMinutes)
+                });
             }
         }
     }

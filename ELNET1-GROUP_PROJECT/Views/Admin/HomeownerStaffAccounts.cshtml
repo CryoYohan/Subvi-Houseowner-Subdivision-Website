@@ -3,155 +3,294 @@
 
 @{
     Layout = "_AdminLayout";
-    ViewData["Title"] = "User Accounts";
+    ViewData["Title"] = "Homeowner & Staff Accounts";
 }
-<div class="flex overflow-hidden bg-gray-100">
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <text>
+            Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: '@TempData["SuccessMessage"]'
+            });
+        </text>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <text>
+            Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: '@TempData["ErrorMessage"]'
+            });
+        </text>
+    }
+    });
+</script>
+
+<div class="flex overflow-hidden">
     <!-- Sidebar -->
-    <aside class="bg-white shadow-xl w-72 p-4 flex flex-col border-r border-gray-200">
+    <aside class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-72 p-4 py-6">
         <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
         <nav class="flex-1 space-y-3">
             <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-home w-6"></i>
                 <span class="ml-3">Dashboard</span>
             </a>
             <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-calendar-check w-6"></i>
                 <span class="ml-3">Reservations</span>
             </a>
             <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-users w-6"></i>
                 <span class="ml-3">Homeowners & Staff Accounts</span>
             </a>
             <a asp-controller="admin" asp-action="billpayment" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-file-invoice-dollar w-6"></i>
                 <span class="ml-3">Bill Payment</span>
             </a>
             <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-history w-6"></i>
                 <span class="ml-3">Payment History</span>
             </a>
             <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-tools w-6"></i>
                 <span class="ml-3">Services</span>
             </a>
             <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-bullhorn w-6"></i>
                 <span class="ml-3">Announcements</span>
+            </a>
+            <a asp-controller="admin" asp-action="reports" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-chart-line w-6"></i>
+                <span class="ml-3">Reports</span>
             </a>
         </nav>
     </aside>
 
-    <div class="col-12 col-md-6 bsb-tpl-bg-lotion">
-        <div class="p-3 p-md-4 p-xl-5">
-            <div class="row">
-                <div class="col-12">
-                    <div class="mb-5">
-                        <h2 class="h3">Add Homeowner</h2>
-                        <h3 class="fs-6 fw-normal text-secondary m-0">Enter homeowner details to register</h3>
+    <!-- Main Content -->
+    <div class="flex-1 p-2">
+        <div class="bg-white shadow-md rounded-xl p-2 mb-2 flex items-center space-x-3">
+            <span><i class="fas fa-users text-blue-700 text-xl"></i></span>
+            <h1 class="text-blue-700 font-bold text-lg">Homeowners & Staff Accounts</h1>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <!-- Left Side: Sign Up Form -->
+            <div class="bg-white shadow-lg rounded-lg p-6">
+                <h2 class="text-2xl font-bold text-blue-600 mb-4">Add Homeowner or Staff</h2>
+                <h3 class="text-sm text-gray-600 mb-6">Enter details to register</h3> 
+
+                <form asp-action="AddUserAccount" method="post">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="FirstName" class="block text-sm font-medium text-gray-700">First Name <span class="text-red-500">*</span></label>
+                            <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="FirstName" id="FirstName" placeholder="First Name" required>
+                        </div>
+                        <div>
+                            <label for="LastName" class="block text-sm font-medium text-gray-700">Last Name <span class="text-red-500">*</span></label>
+                            <input type="text" style="text-transform: capitalize;"  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="LastName" id="LastName" placeholder="Last Name" required>
+                        </div>
+                        <div>
+                            <label for="Role" class="block text-sm font-medium text-gray-700">Role <span class="text-red-500">*</span></label>
+                            <select name="Role" id="Role" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="" disabled selected>Select Role</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Staff">Staff</option>
+                                <option value="Homeowner">Homeowner</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="Address" class="block text-sm font-medium text-gray-700">Address <span class="text-red-500">*</span></label>
+                            <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Address" id="Address" placeholder="Address" required>
+                        </div>
+                        <div>
+                            <label for="PhoneNumber" class="block text-sm font-medium text-gray-700">
+                                Phone Number <span class="text-red-500">*</span>
+                            </label>
+                            <input type="tel"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                   name="PhoneNumber"
+                                   id="PhoneNumber"
+                                   placeholder="Phone Number"
+                                   required
+                                   pattern="[0-9\-]*"
+                                   title="Phone number can only contain numbers and hyphens"
+                                   oninput="this.value = this.value.replace(/[^0-9\-]/g, '')">
+                        </div>
+                        <div>
+                            <label for="Email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
+                            <input type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Email" id="Email" placeholder="name@example.com" required>
+                        </div>
+                        <div>
+                            <label for="Password" class="block text-sm font-medium text-gray-700">Password <span class="text-red-500">*</span></label>
+                            <input type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Password" id="Password" placeholder="Password" required>
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 px-2 rounded-md hover:bg-blue-700 transition">Add User</button>
+                        </div>
+                    </div>
+                </form>
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div>
+                        <div class="bg-red-100 border border-red-400 text-red-700 p-2 px-4 py-3 rounded relative" role="alert">
+                            <strong>Error:</strong> @TempData["ErrorMessage"]
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Right Side: User Accounts Table -->
+            <div class="flex-1">
+                <div class="grid grid-cols-1 gap-2">
+                    <!-- Right Side: User Accounts Table -->
+                    <div class="bg-white shadow-lg rounded-lg p-4 transition-all duration-300">
+
+
+                        <!-- User Info Section (Hidden by Default) -->
+                        <div id="userInfoBox" class="hidden bg-blue-50 p-3 rounded-lg shadow-md mb-4 transition-all duration-300">
+                            <h3 class="text-xl font-bold text-blue-600 mb-2">User Information</h3>
+                            <div class="space-y-2 text-gray-700">
+                                <div><i class="fas fa-id-badge text-blue-500"></i> <span id="userInfoId"></span></div>
+                                <div><i class="fas fa-user text-blue-500"></i> <span id="userInfoName"></span></div>
+                                <div><i class="fas fa-user-tag text-blue-500"></i> <span id="userInfoRole"></span></div>
+                                <div><i class="fas fa-map-marker-alt text-blue-500"></i> <span id="userInfoAddress"></span></div>
+                                <div><i class="fas fa-phone text-blue-500"></i> <span id="userInfoPhone"></span></div>
+                                <div><i class="fas fa-envelope text-blue-500"></i> <span id="userInfoEmail"></span></div>
+                            </div>
+                            <div class="mt-4 flex justify-end space-x-2">
+                                <button onclick="closeUserInfoBox()" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Close</button>
+                                <button onclick="openEditModalFromBox()" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Edit</button>
+                                <button onclick="deleteUserFromBox()" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between mb-1">
+                            <div>
+                                <h2 class="text-2xl font-bold text-blue-600">User Accounts</h2>
+                                <p id="userCount" class="text-sm text-gray-500">All: @Model.Count() Total Users</p>
+                            </div>
+
+                            <div class="flex items-center space-x-2">
+                                <label for="roleFilter" class="text-sm font-medium text-gray-700">Filter:</label>
+                                <select id="roleFilter" onchange="filterByRole()" class="p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="All">All</option>
+                                    <option value="Admin">Admin</option>
+                                    <option value="Staff">Staff</option>
+                                    <option value="Homeowner">Homeowner</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        @if (!Model.Any())
+                        {
+                            <div class="bg-white shadow-md rounded-lg p-4 mb-4 text-center">
+                                <p class="text-gray-500">No Users. Add to create now.</p>
+                            </div>
+                        } else
+                        {
+                        <div id="userTableContainer" class="transition-all duration-300 overflow-y-auto" style="max-height: 520px;">
+                            <table class="min-w-full bg-white">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">ID</th>
+                                        <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Name</th>
+                                        <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Role</th>
+                                        <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTableBody" class="divide-y divide-gray-200">
+                                    @foreach (var user in Model)
+                                    {
+                                        <tr onclick='openUserInfoBox(@Html.Raw(Json.Serialize(user)))' data-role="@user.Role" class="cursor-pointer hover:bg-blue-200 transition">
+                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">@user.Id</td>
+                                                <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500 capitalize">
+                                                    @user.Firstname @user.Lastname
+                                                </td>
+                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">@user.Email</td>
+                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">@user.Role</td>
+                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">
+                                                <button onclick='openEditModal(@Html.Raw(Json.Serialize(user)), event)' class="bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600"><i class="far fa-edit"></i></button>
+                                                <button onclick='deleteUser(@user.Id, event)' class="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 ml-2"><i class="far fa-trash-alt"></i></button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        }
+                        
                     </div>
                 </div>
             </div>
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <script>
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: '@TempData["SuccessMessage"]',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                </script>
-            }
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <script>
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: '@TempData["ErrorMessage"]',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                </script>
-            }
-            <form asp-action="AddUserAccount" method="post">
-                <div class="row gy-3 gy-md-4 overflow-hidden">
-                    <div class="col-12">
-                        <label for="FirstName" class="form-label">First Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="FirstName" id="FirstName" placeholder="First Name" required>
+        </div>
+    </div>
+
+    <!-- Modal for Editing User -->
+    <div id="editUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 p-6">
+            <h2 class="text-2xl font-bold text-blue-600 mb-4">Edit User</h2>
+            <form asp-action="EditUser" method="post">
+                <input type="hidden" id="editUserId" name="Id" />
+                <div class="space-y-4">
+                    <div>
+                        <label for="editFirstName" class="block text-sm font-medium text-gray-700">First Name</label>
+                        <input type="text" style="text-transform: capitalize;"  class="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Firstname" id="editFirstName" placeholder="Enter First Name">
                     </div>
-                    <div class="col-12">
-                        <label for="LastName" class="form-label">Last Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="LastName" id="LastName" placeholder="Last Name" required>
+                    <div>
+                        <label for="editLastName" class="block text-sm font-medium text-gray-700">Last Name</label>
+                        <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Lastname" id="editLastName" placeholder="Enter Last Name">
                     </div>
-                    <div class="col-12">
-                        <label for="Role" class="form-label">Role <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="Role" id="Role" placeholder="Role" required>
+                    <div>
+                        <label for="editRole" class="block text-sm font-medium text-gray-700">Role</label>
+                        <select name="Role" id="editRole" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="" disabled selected>Select Role</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Staff">Staff</option>
+                            <option value="Homeowner">Homeowner</option>
+                        </select>
                     </div>
-                    <div class="col-12">
-                        <label for="Address" class="form-label">Address <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="Address" id="Address" placeholder="Address" required>
+                    <div>
+                        <label for="editAddress" class="block text-sm font-medium text-gray-700">Address</label>
+                        <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Address" id="editAddress" placeholder="Enter Address">
                     </div>
-                    <div class="col-12">
-                        <label for="PhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                        <input type="tel" class="form-control" name="PhoneNumber" id="PhoneNumber" placeholder="Phone Number" required>
+                    <div>
+                        <label for="editPhoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input type="tel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                               name="PhoneNumber"
+                               id="editPhoneNumber"
+                               placeholder="Enter Phone Number"
+                               pattern="[0-9\-]*"
+                               title="Phone number can only contain numbers and hyphens"
+                               oninput="this.value = this.value.replace(/[^0-9\-]/g, '')">
                     </div>
-                    <div class="col-12">
-                        <label for="Email" class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" name="Email" id="Email" placeholder="name@example.com" required>
+                    <div>
+                        <label for="editEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Email" id="editEmail" placeholder="Enter Email ex. name@example.com">
                     </div>
-                    <div class="col-12">
-                        <label for="Password" class="form-label">Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" name="Password" id="Password" placeholder="Password" required>
-                    </div>
-                    <!-- You can include other fields as necessary -->
-                    <div class="col-12">
-                        <div class="d-grid">
-                            <button class="btn bsb-btn-xl btn-primary" type="submit">Sign up</button>
-                        </div>
+                    <div>
+                        <label for="editPassword" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Password" id="editPassword" placeholder="Enter New Password (leave blank to keep current)">
                     </div>
                 </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="closeEditModal()" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Cancel</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Save Changes</button>
+                </div>
             </form>
-            <!-- Display User Table -->
-            <h3 class="mt-5">User Accounts</h3>
-            <table class="table table-bordered mt-3">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Role</th>
-                        <th>Address</th>
-                        <th>Phone Number</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in Model)
-                    {
-                        <tr>
-                            <td>@user.Id</td>
-                            <td>@user.Firstname</td>
-                            <td>@user.Lastname</td>
-                            <td>@user.Role</td>
-                            <td>@user.Address</td>
-                            <td>@user.PhoneNumber</td>
-                            <td>@user.Email</td>
-                            <td>@user.Role</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-       
+            
         </div>
     </div>
 </div>

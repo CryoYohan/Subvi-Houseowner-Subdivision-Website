@@ -1,0 +1,82 @@
+.sidebar {
+    animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+    width: 240px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: left center;
+    position: relative;
+    overflow: hidden;
+    padding: 14px 24px;
+    margin: 0 12px;
+    border-radius: 12px;
+}
+
+    .sidebar-item:hover {
+        box-shadow: 2px 2px 12px rgba(37, 99, 235, 0.1);
+        transform: translateX(4px);
+    }
+
+        .sidebar-item:hover i {
+            transform: translateX(5px);
+            color: #2563eb;
+        }
+
+        .sidebar-item:hover::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            animation: lineGrow 0.3s ease-out;
+        }
+
+        .sidebar-item.active-item i {
+            transform: translateX(5px);
+        }
+
+    .sidebar-item i {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
+    }
+
+    /* Add logout specific styles if needed */
+    .sidebar-item.logout:hover {
+        background-color: #fef2f2;
+        color: #dc2626;
+        transform: scale(1.05) translateX(8px);
+    }
+
+        .sidebar-item.logout:hover::after {
+            background-color: #dc2626;
+        }
+
+        .sidebar-item.logout:hover i {
+            color: #dc2626;
+        }
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes lineGrow {
+    from {
+        transform: scaleY(0);
+    }
+
+    to {
+        transform: scaleY(1);
+    }
+}

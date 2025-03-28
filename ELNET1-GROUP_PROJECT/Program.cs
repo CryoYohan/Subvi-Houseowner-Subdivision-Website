@@ -1,4 +1,5 @@
 ﻿using ELNET1_GROUP_PROJECT.Data;
+using ELNET1_GROUP_PROJECT.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using ELNET1_GROUP_PROJECT.Models; // Add this using directive
@@ -18,6 +19,19 @@ builder.Services.AddDbContext<MyAppDBContext>(options =>
 
 builder.Services.AddControllersWithViews();
 
+// Add to your services
+// Add HttpClientFactory
+builder.Services.AddHttpClient();
+
+// Register PayMongo service
+builder.Services.AddSingleton<PayMongoServices>(provider =>
+    new PayMongoServices(
+        provider.GetRequiredService<IHttpClientFactory>().CreateClient(),
+        builder.Configuration["PayMongo:SecretKey"],
+        builder.Configuration.GetValue<bool>("PayMongo:UseSandbox")
+    )
+);
+
 var app = builder.Build();
 
 app.Use(async (context, next) =>
@@ -30,6 +44,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseMiddleware<SlidingExpirationMiddleware>();
 app.UseRouting();
 
 if (!app.Environment.IsDevelopment())
@@ -79,8 +94,23 @@ app.UseEndpoints(endpoints =>
 
     endpoints.MapControllerRoute(
         name: "staff",
-        pattern: "staff/dashboard",
-        defaults: new { controller = "Staff", action = "Staffdashboard" });
+        pattern: "staff/{action=Dashboard}",
+        defaults: new { controller = "Staff" });
+
+    endpoints.MapControllerRoute(
+        name: "staff_vehicle",
+        pattern: "staff/vehicle/{action}",
+        defaults: new { controller = "Staff" });
+
+    endpoints.MapControllerRoute(
+        name: "staff_requests",
+        pattern: "staff/requests/{action}",
+        defaults: new { controller = "Staff" });
+
+    endpoints.MapControllerRoute(
+        name: "staff_pass",
+        pattern: "staff/pass/{action}",
+        defaults: new { controller = "Staff" });
 
     endpoints.MapControllerRoute(
         name: "homeowner",

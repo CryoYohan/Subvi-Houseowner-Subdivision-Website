@@ -1,4 +1,5 @@
 @{
+    Layout = "_HomeLayout";
     ViewData["Title"] = "Subvi | Calendar";
 
     // Retrieve the user's role from cookies
@@ -12,48 +13,37 @@
     string servicesController = "";
     string forumsController = "";
     string feedbacksController = "";
+    string resourcesController = "";
 
     // Default action values
-    string homeAction = "Landing";
-    string calendarAction = "Calendar";
-    string facilitiesAction = "Facilities";
-    string billAction = "Bill";
-    string servicesAction = "Services";
-    string forumsAction = "Forums";
-    string feedbacksAction = "Feedbacks";
+    string homeAction = "";
+    string calendarAction = "";
+    string facilitiesAction = "";
+    string billAction = "";
+    string servicesAction = "";
+    string forumsAction = "";
+    string feedbacksAction = "";
+    string resourcesAction = "";
 
-    // Assign controllers/actions based on role
-    if (role == "Admin")
-    {
-        homeController = "admin"; homeAction = "Index";
-        calendarController = "admin"; calendarAction = "Calendar";
-        facilitiesController = "admin"; facilitiesAction = "Facilities";
-        billController = "admin"; billAction = "BillManagement";
-        servicesController = "admin"; servicesAction = "ServicesManagement";
-        forumsController = "admin"; forumsAction = "Forums";
-        feedbacksController = "admin"; feedbacksAction = "Feedbacks";
-    }
-    else if (role == "Homeowner")
+    if (role == "Homeowner")
     {
         homeController = "home"; homeAction = "dashboard";
-        calendarController = "home"; calendarAction = "Calendar";
-        facilitiesController = "home"; facilitiesAction = "Facilities";
-        billController = "home"; billAction = "Bill";
-        servicesController = "home"; servicesAction = "Services";
-        forumsController = "home"; forumsAction = "Forums";
-        feedbacksController = "home"; feedbacksAction = "Feedbacks";
-    }
-    else if (role == "Staff")
-    {
-        homeController = "staff"; homeAction = "Dashboard";
-        calendarController = "staff"; calendarAction = "Calendar";
-        facilitiesController = "staff"; facilitiesAction = "Facilities";
-        billController = "staff"; billAction = "Bill";
-        servicesController = "staff"; servicesAction = "Services";
-        forumsController = "staff"; forumsAction = "Forums";
-        feedbacksController = "staff"; feedbacksAction = "Feedbacks";
+        calendarController = "home"; calendarAction = "calendar";
+        facilitiesController = "home"; facilitiesAction = "facilities";
+        billController = "home"; billAction = "bill";
+        servicesController = "home"; servicesAction = "services";
+        forumsController = "home"; forumsAction = "forums";
+        feedbacksController = "home"; feedbacksAction = "feedbacks";
+        resourcesController = "home"; resourcesAction = "resources";
     }
 }
+
+<link rel="stylesheet" href="~/css/calendar.css" />
+
+@section Scripts {
+    <script src="~/js/calendar.js" asp-append-version="true"></script>
+}
+
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
@@ -109,7 +99,7 @@
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
                    asp-controller="@forumsController" asp-action="@forumsAction">
                     <i class="fas fa-comments text-xl"></i>
-                    <span class="font-semibold">Forums</span>
+                    <span class="font-semibold">Forums Discussion</span>
                 </a>
             </li>
 
@@ -121,12 +111,23 @@
                     <span class="font-semibold">Feedbacks</span>
                 </a>
             </li>
+
+            <!-- Resources -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@resourcesController" asp-action="@resourcesAction">
+                    <i class="fas fa-folder text-xl"></i>
+                    <span class="font-semibold">Resources</span>
+                </a>
+            </li>
         </ul>
     </div>
 
     <!-- Main Content -->
     <div class="flex flex-1 flex-col bg-gray-100 bg-white p-2 space-y-4">
-
+        <div id="header" class="flex items-center mx-auto space-x-2 w-[95%] bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md">
+            <i class="fas fa-calendar-alt text-xl"></i>
+            <h1 class="text-2xl font-bold">Calendar</h1>
+        </div>
         <div class="flex space-x-4 bg-white">
             <!-- Schedule List -->
             <div class="bg-white shadow-md rounded-lg w-1/4 p-4">

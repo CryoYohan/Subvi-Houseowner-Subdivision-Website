@@ -1,4 +1,5 @@
-﻿@{
+@{
+    Layout = "_HomeLayout";
     ViewData["Title"] = "Subvi | Facilities";
 
     // Retrieve the user's role from cookies
@@ -12,28 +13,19 @@
     string servicesController = "";
     string forumsController = "";
     string feedbacksController = "";
+    string resourcesController = "";
 
     // Default action values
-    string homeAction = "Landing";
-    string calendarAction = "Calendar";
-    string facilitiesAction = "Facilities";
-    string billAction = "Bill";
-    string servicesAction = "Services";
-    string forumsAction = "Forums";
-    string feedbacksAction = "Feedbacks";
+    string homeAction = "";
+    string calendarAction = "";
+    string facilitiesAction = "";
+    string billAction = "";
+    string servicesAction = "";
+    string forumsAction = "";
+    string feedbacksAction = "";
+    string resourcesAction = "";
 
-    // Assign controllers/actions based on role
-    if (role == "Admin")
-    {
-        homeController = "admin"; homeAction = "Index";
-        calendarController = "admin"; calendarAction = "Calendar";
-        facilitiesController = "admin"; facilitiesAction = "Facilities";
-        billController = "admin"; billAction = "BillManagement";
-        servicesController = "admin"; servicesAction = "ServicesManagement";
-        forumsController = "admin"; forumsAction = "Forums";
-        feedbacksController = "admin"; feedbacksAction = "Feedbacks";
-    }
-    else if (role == "Homeowner")
+    if (role == "Homeowner")
     {
         homeController = "home"; homeAction = "dashboard";
         calendarController = "home"; calendarAction = "Calendar";
@@ -127,7 +119,7 @@
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
                    asp-controller="@forumsController" asp-action="@forumsAction">
                     <i class="fas fa-comments text-xl"></i>
-                    <span class="font-semibold">Forums</span>
+                    <span class="font-semibold">Forums Discussion</span>
                 </a>
             </li>
 
@@ -137,6 +129,15 @@
                    asp-controller="@feedbacksController" asp-action="@feedbacksAction">
                     <i class="fas fa-bullhorn text-xl"></i>
                     <span class="font-semibold">Feedbacks</span>
+                </a>
+            </li>
+
+            <!-- Resources -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="@resourcesController" asp-action="@resourcesAction">
+                    <i class="fas fa-folder text-xl"></i>
+                    <span class="font-semibold">Resources</span>
                 </a>
             </li>
         </ul>

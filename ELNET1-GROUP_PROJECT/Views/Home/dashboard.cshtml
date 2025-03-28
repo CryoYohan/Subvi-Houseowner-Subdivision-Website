@@ -1,4 +1,5 @@
 ﻿@{
+    Layout = "_HomeLayout";
     ViewData["Title"] = "Subvi | Home";
 
     // Retrieve the user's role from cookies
@@ -12,64 +13,46 @@
     string servicesController = "";
     string forumsController = "";
     string feedbacksController = "";
+    string resourcesController = "";
 
     // Default action values
-    string homeAction = "Landing";
-    string calendarAction = "Calendar";
-    string facilitiesAction = "Facilities";
-    string billAction = "Bill";
-    string servicesAction = "Services";
-    string forumsAction = "Forums";
-    string feedbacksAction = "Feedbacks";
+    string homeAction = "";
+    string calendarAction = "";
+    string facilitiesAction = "";
+    string billAction = "";
+    string servicesAction = "";
+    string forumsAction = "";
+    string feedbacksAction = "";
+    string resourcesAction = "";
 
-    // Assign controllers/actions based on role
-    if (role == "Admin")
-    {
-        homeController = "admin"; homeAction = "Index";
-        calendarController = "admin"; calendarAction = "Calendar";
-        facilitiesController = "admin"; facilitiesAction = "Facilities";
-        billController = "admin"; billAction = "BillManagement";
-        servicesController = "admin"; servicesAction = "ServicesManagement";
-        forumsController = "admin"; forumsAction = "Forums";
-        feedbacksController = "admin"; feedbacksAction = "Feedbacks";
-    }
-    else if (role == "Homeowner")
+     if (role == "Homeowner")
     {
         homeController = "home"; homeAction = "dashboard";
-        calendarController = "home"; calendarAction = "Calendar";
-        facilitiesController = "home"; facilitiesAction = "Facilities";
-        billController = "home"; billAction = "Bill";
-        servicesController = "home"; servicesAction = "Services";
-        forumsController = "home"; forumsAction = "Forums";
-        feedbacksController = "home"; feedbacksAction = "Feedbacks";
-    }
-    else if (role == "Staff")
-    {
-        homeController = "staff"; homeAction = "Dashboard";
-        calendarController = "staff"; calendarAction = "Calendar";
-        facilitiesController = "staff"; facilitiesAction = "Facilities";
-        billController = "staff"; billAction = "Bill";
-        servicesController = "staff"; servicesAction = "Services";
-        forumsController = "staff"; forumsAction = "Forums";
-        feedbacksController = "staff"; feedbacksAction = "Feedbacks";
+        calendarController = "home"; calendarAction = "calendar";
+        facilitiesController = "home"; facilitiesAction = "facilities";
+        billController = "home"; billAction = "bill";
+        servicesController = "home"; servicesAction = "services";
+        forumsController = "home"; forumsAction = "forums";
+        feedbacksController = "home"; feedbacksAction = "feedbacks";
+        resourcesController = "home"; resourcesAction = "resources";
     }
 }
 
 @* Sidebar *@
-<div class="flex flex-row overflow-hidden pt-4 gap-2 flex-shrink-0">
+<div class="flex flex-row overflow-hidden pt-4 flex-shrink-0  min-h-screen">
     <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6">
         <ul class="space-y-4">
              <!-- Home -->
             <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item" asp-controller="@homeController" asp-action="@homeAction">
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item"
+                   asp-controller="home" asp-action="dashboard">
                     <i class="fas fa-home text-xl"></i>
                     <span class="font-semibold">Home</span>
                 </a>
             </li>
-
-            <!-- Calendar -->
             <li>
-                <a class="flex items-center space-x-4 p-3 sidebar-item hover:bg-gray-100 transition ease-in-out rounded-l-full" asp-controller="@calendarController" asp-action="@calendarAction">
+                <a class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item transition ease-in-out rounded-l-full"
+                   asp-controller="home" asp-action="calendar">
                     <i class="fas fa-calendar-alt text-xl"></i>
                     <span class="font-semibold">Calendar</span>
                 </a>
@@ -103,7 +86,7 @@
             <li>
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@forumsController" asp-action="@forumsAction">
                     <i class="fas fa-comments text-xl"></i>
-                    <span class="font-semibold">Forums</span>
+                    <span class="font-semibold">Forums Discussion</span>
                 </a>
             </li>
 
@@ -114,15 +97,32 @@
                     <span class="font-semibold">Feedbacks</span>
                 </a>
             </li>
+
+            <!-- Resources -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@resourcesController" asp-action="@resourcesAction">
+                    <i class="fas fa-folder text-xl"></i>
+                    <span class="font-semibold">Resources</span>
+                </a>
+            </li>
         </ul>
     </div>
 
-    <div class="bg-white shadow-md rounded-lg p-4 w-vw-3/4">
-        <div class="flex space-x-6 text-blue-800 font-semibold border-b">
-            <button class="pb-2 border-b-2 border-blue-800">Announcements</button>
-            <button class="pb-2 hover:text-blue-500">Polls</button>
-            <button class="pb-2 hover:text-blue-500">Surveys</button>
-        </div>
+    <div class="flex gap-4 p-2 w-full">
+        <!-- Left Side Content (Announcements, Polls, Surveys) - 75% -->
+        <div class="w-3/4 bg-white shadow-lg rounded-xl p-6">
+            <!-- Tab Navigation -->
+            <div class="space-x-4 text-center mb-4 border-b border-gray-200">
+                <button id="announcements-tab" class="tab-button px-6 py-3 rounded-t-lg font-semibold" onclick="showPanel('announcements')">
+                    Announcements
+                </button>
+                <button id="polls-tab" class="tab-button px-6 py-3 rounded-t-lg font-semibold" onclick="showPanel('polls')">
+                    Polls
+                </button>
+                <button id="surveys-tab" class="tab-button px-6 py-3 rounded-t-lg font-semibold" onclick="showPanel('surveys')">
+                    Surveys
+                </button>
+            </div>
 
         <!-- INSERT CODE HERE-->
         <div class="flex flex-grow gap-4 p-6">

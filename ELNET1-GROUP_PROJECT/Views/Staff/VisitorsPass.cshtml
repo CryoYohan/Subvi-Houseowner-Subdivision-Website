@@ -1,0 +1,323 @@
+﻿@{
+    Layout = "_StaffLayout";
+    ViewData["Title"] = "Staff | Visitor Pass";
+}
+
+<div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
+    <!-- Sidebar -->
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
+        <!-- Sidebar Header -->
+        <div class="px-6 py-8 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
+        </div>
+
+        <!-- Navigation Links -->
+        <ul class="flex-1 px-4 py-6 space-y-2">
+            <li class="nav-item">
+                <a href="/staff" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-home w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/pass/visitors" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VisitorsPass" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tasks w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Visitors Pass</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/vehicle/registration" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VehicleRegistration" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Vehicle Registration</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/reservation" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ReservationRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-bell w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Reservation Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/services" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ServiceRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tools w-6"></i>
+                    <span class="font-medium">Service Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/bills_and_payments" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "BillsAndPayments" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-file-invoice-dollar w-6"></i>
+                    <span class="font-medium">Bills & Payments</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/reports" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Reports</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8 overflow-y-auto fade-in">
+        <div class="container mt-4">
+            <!-- Top Section with Filter Buttons and Search Bar -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button class="btn btn-primary" onclick="openAddModal()">Add Visitor</button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="filterVisitors('Active')">Active</button>
+                    <button class="btn btn-outline-secondary" onclick="filterVisitors('Deleted')">Deleted</button>
+                    <button class="btn btn-outline-danger" onclick="filterVisitors('Prohibited')">Prohibited</button>
+                </div>
+            </div>
+            <input type="text" class="form-control mb-3" placeholder="Search visitors..." oninput="searchVisitors(this.value)">
+
+            <!-- Visitor Table -->
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Visitor Name</th>
+                        <th>Date & Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="visitorTable">
+                    <!-- Visitor Data Will Populate Here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Add/Edit Modal -->
+        <div id="visitorModal" class="modal fade" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Visitor</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="visitorId">
+
+                        <!-- Homeowner Search -->
+                        <div class="mb-3">
+                            <label class="form-label">Homeowner</label>
+                            <input type="text" id="homeownerSearch" class="form-control" placeholder="Search homeowner..." oninput="filterHomeowners()">
+                            <div id="homeownerList" class="border mt-2 p-2" style="max-height: 150px; overflow-y: auto;">
+                                <!-- Homeowners will load here -->
+                            </div>
+                        </div>
+
+                        <!-- Selected Homeowner -->
+                        <input type="hidden" id="selectedUserId">
+                        <div class="mb-3">
+                            <label class="form-label">Selected Homeowner</label>
+                            <input type="text" id="selectedHomeownerName" class="form-control" readonly>
+                        </div>
+
+                        <!-- Visitor Name -->
+                        <div class="mb-3">
+                            <label class="form-label">Visitor Name</label>
+                            <input type="text" id="visitorName" class="form-control">
+                        </div>
+
+                        <!-- Relationship -->
+                        <div class="mb-3">
+                            <label class="form-label">Relationship</label>
+                            <input type="text" id="relationship" class="form-control">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="saveVisitor()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let homeowners = [];
+
+    // Load homeowners on modal open
+    async function loadHomeowners() {
+        try {
+            const response = await fetch('/staff/gethomeowners');
+            homeowners = await response.json();
+            renderHomeowners(homeowners);
+        } catch (error) {
+            console.error('Error fetching homeowners:', error);
+        }
+    }
+
+    // Render homeowners list
+        function renderHomeowners(data) {
+        const homeownerList = document.getElementById('homeownerList');
+        homeownerList.innerHTML = data.length
+            ? data.map(user => `
+                <div class="p-2 border-bottom hover-bg-light"
+                    onclick="selectHomeowner(${user.userId}, '${user.firstName} ${user.lastName}')"
+                    style="cursor: pointer; transition: background-color 0.2s;"
+                    onmouseover="this.style.backgroundColor='#f0f0f0'"
+                    onmouseout="this.style.backgroundColor='transparent'">
+                    ${user.firstName} ${user.lastName}
+                </div>
+              `).join('')
+            : '<div class="text-muted p-2">No homeowners yet</div>';
+    }
+
+    // Filter homeowners on input, supporting full name search
+    function filterHomeowners() {
+        const query = document.getElementById('homeownerSearch').value.toLowerCase();
+        const filtered = homeowners.filter(user => {
+            const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+            return user.firstName.toLowerCase().includes(query) ||
+                   user.lastName.toLowerCase().includes(query) ||
+                   fullName.includes(query);
+        });
+        renderHomeowners(filtered);
+    }
+
+    // Select a homeowner
+    function selectHomeowner(userId, fullName) {
+        document.getElementById('selectedUserId').value = userId;
+        document.getElementById('selectedHomeownerName').value = fullName;
+    }
+
+    // Open modal (Add mode)
+    function openAddModal() {
+        document.getElementById('visitorId').value = '';
+        document.getElementById('selectedUserId').value = '';
+        document.getElementById('selectedHomeownerName').value = '';
+        document.getElementById('visitorName').value = '';
+        document.getElementById('relationship').value = '';
+
+        loadHomeowners();
+        const modal = new bootstrap.Modal(document.getElementById('visitorModal'));
+        modal.show();
+    }
+
+    // Open modal (Edit mode)
+    async function openEditModal(visitorId) {
+        const response = await fetch(`/staff/getvisitor/${visitorId}`);
+        const visitor = await response.json();
+
+        document.getElementById('visitorId').value = visitor.visitorId;
+        document.getElementById('selectedUserId').value = visitor.userId;
+        document.getElementById('selectedHomeownerName').value = visitor.homeownerName;
+        document.getElementById('visitorName').value = visitor.visitorName;
+        document.getElementById('relationship').value = visitor.relationship;
+
+        await loadHomeowners();
+        const modal = new bootstrap.Modal(document.getElementById('visitorModal'));
+        modal.show();
+    }
+
+    // Save visitor (Add or Edit)
+    async function saveVisitor() {
+        const visitorId = document.getElementById('visitorId').value;
+        const userId = document.getElementById('selectedUserId').value;
+        const visitorName = document.getElementById('visitorName').value;
+        const relationship = document.getElementById('relationship').value;
+        console.log("data", visitorId, userId, visitorName, relationship)
+
+        if (!userId) {
+            Swal.fire('Error', 'Please select a homeowner.', 'error');
+            return;
+        }
+
+        const payload = { visitorId, userId, visitorName, relationship };
+        const url = visitorId ? '/staff/editvisitor' : '/staff/addvisitor';
+        const method = 'POST';
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            Swal.fire('Success', visitorId ? 'Visitor updated!' : 'Visitor added!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('visitorModal')).hide();
+            fetchVisitors('Active');
+        } else {
+            Swal.fire('Error', result.message, 'error');
+        }
+    }
+
+    // Fetch visitors by status
+    async function fetchVisitors(status) {
+        try {
+            const response = await fetch(`/staff/getvisitors?status=${status}`);
+            const data = await response.json();
+            renderVisitors(data);
+        } catch (error) {
+            console.error('Error fetching visitors:', error);
+        }
+    }
+
+    // Render visitor data
+    function renderVisitors(data) {
+        const tableBody = document.querySelector('#visitorTable');
+        tableBody.innerHTML = '';
+
+        if (!data.length) {
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No visitors found.</td></tr>';
+            return;
+        }
+
+        data.forEach(visitor => {
+            const row = `
+                <tr>
+                    <td>${visitor.visitorName}</td>
+                    <td>${visitor.dateTime}</td>
+                    <td>${visitor.status}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="openEditModal(${visitor.visitorId})">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDelete(${visitor.visitorId})">Delete</button>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+    }
+
+    // Confirm Delete
+    function confirmDelete(visitorId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'This action will mark the visitor as deleted.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                await fetch(`/staff/deletevisitor/${visitorId}`, { method: 'POST' });
+                Swal.fire('Deleted!', 'Visitor has been deleted.', 'success');
+                fetchVisitors('Active');
+            }
+        });
+    }
+
+    // Filter search results
+    function searchVisitors(query) {
+        const rows = document.querySelectorAll('#visitorTable tr');
+        query = query.toLowerCase();
+
+        rows.forEach(row => {
+            const visitorName = row.cells[0].textContent.toLowerCase();
+            row.style.display = visitorName.includes(query) ? '' : 'none';
+        });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchVisitors('Active');  // Load active visitors on page load
+    });
+</script>

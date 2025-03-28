@@ -21,7 +21,7 @@ namespace ELNET1_GROUP_PROJECT.Models
         public DateTime DateTime { get; set; }
 
         [Column("STATUS")]
-        [MaxLength(50)]
+        [MaxLength(10)]
         public string Status { get; set; }
     }
 }

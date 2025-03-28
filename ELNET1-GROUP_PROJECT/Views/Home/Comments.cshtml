@@ -1,0 +1,215 @@
+@model CommentsViewModel
+
+@{
+    Layout = "_HomeLayout";
+    ViewData["Title"] = "Subvi | Forums";
+
+    // Retrieve the user's role from cookies
+    string role = Context.Request.Cookies["UserRole"];
+
+    // Declare controller
+    string homeController = "";
+    string calendarController = "";
+    string facilitiesController = "";
+    string billController = "";
+    string servicesController = "";
+    string forumsController = "";
+    string feedbacksController = "";
+    string resourcesController = "";
+
+    // Default action values
+    string homeAction = "";
+    string calendarAction = "";
+    string facilitiesAction = "";
+    string billAction = "";
+    string servicesAction = "";
+    string forumsAction = "";
+    string feedbacksAction = "";
+    string resourcesAction = "";
+
+    if (role == "Homeowner")
+    {
+        homeController = "home"; homeAction = "dashboard";
+        calendarController = "home"; calendarAction = "calendar";
+        facilitiesController = "home"; facilitiesAction = "facilities";
+        billController = "home"; billAction = "bill";
+        servicesController = "home"; servicesAction = "services";
+        forumsController = "home"; forumsAction = "forums";
+        feedbacksController = "home"; feedbacksAction = "feedbacks";
+        resourcesController = "home"; resourcesAction = "resources";
+    }
+}
+
+<link rel="stylesheet" href="~/css/comments.css" />
+
+<div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
+    @* Sidebar *@
+    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
+        <ul class="space-y-4">
+            <!-- Home (Dynamic) -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="@homeController" asp-action="@homeAction">
+                    <i class="fas fa-home text-xl"></i>
+                    <span class="font-semibold">Home</span>
+                </a>
+            </li>
+
+            <!-- Calendar -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="@calendarController" asp-action="@calendarAction">
+                    <i class="fas fa-calendar-alt text-xl"></i>
+                    <span class="font-semibold">Calendar</span>
+                </a>
+            </li>
+
+            <!-- Facilities -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="@facilitiesController" asp-action="@facilitiesAction">
+                    <i class="fas fa-building text-xl"></i>
+                    <span class="font-semibold">Facilities</span>
+                </a>
+            </li>
+
+            <!-- Bill Payment -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="@billController" asp-action="@billAction">
+                    <i class="fas fa-file-invoice-dollar text-xl"></i>
+                    <span class="font-semibold">Bill Payment</span>
+                </a>
+            </li>
+
+            <!-- Services -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="@servicesController" asp-action="@servicesAction">
+                    <i class="fas fa-tools text-xl"></i>
+                    <span class="font-semibold">Services</span>
+                </a>
+            </li>
+
+            <!-- Forums -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item"
+                   asp-controller="@forumsController" asp-action="@forumsAction">
+                    <i class="fas fa-comments mr-3"></i>
+                    <span class="font-semibold">Forums Discussion</span>
+                </a>
+            </li>
+
+            <!-- Feedbacks -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
+                   asp-controller="@feedbacksController" asp-action="@feedbacksAction">
+                    <i class="fas fa-bullhorn text-xl"></i>
+                    <span class="font-semibold">Feedbacks</span>
+                </a>
+            </li>
+
+            <!-- Resources -->
+            <li>
+                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" 
+                    asp-controller="@resourcesController" asp-action="@resourcesAction">
+                    <i class="fas fa-folder text-xl"></i>
+                    <span class="font-semibold">Resources</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8">
+        <!-- Post Header -->
+        <div class="post-details">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="user-avatar">
+                    @Model.Post.Firstname[0]@Model.Post.Lastname[0]
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-800 mb-2">@Model.Post.Title</h1>
+                    <p class="text-slate-500 text-sm">
+                        Posted by <span class="font-medium">@Model.Post.Firstname @Model.Post.Lastname</span>
+                        · @Model.Post.DatePosted.ToString("MMM dd, yyyy 'at' h:mm tt")
+                    </p>
+                </div>
+            </div>
+            <div class="prose max-w-none text-slate-700">
+                @Model.Post.Content
+            </div>
+        </div>
+
+        <!-- Replies Section -->
+        <div class="replies-section">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold text-slate-800">
+                    <i class="fas fa-comment-dots mr-2 text-blue-500"></i>
+                    @Model.Replies.Count replies
+                </h3>
+            </div>
+
+            <!-- Replies List -->
+            @if (!Model.Replies.Any())
+            {
+                <div class="text-center py-12">
+                    <i class="fas fa-comment-slash text-4xl text-slate-300 mb-4"></i>
+                    <p class="text-slate-500">No replies yet. Be the first to join the discussion!</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var reply in Model.Replies)
+                {
+                    <div class="reply">
+                        <div class="flex items-start gap-3 mb-3">
+                            <div class="user-avatar text-sm">
+                                @reply.Firstname[0]@reply.Lastname[0]
+                            </div>
+                            <div>
+                                <div class="font-medium text-slate-800">@reply.FullName</div>
+                                <div class="text-sm text-slate-500">
+                                    @reply.Date.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-slate-700 leading-relaxed">@reply.Content</p>
+                    </div>
+                }
+            }
+
+            <!-- Reply Form -->
+            <div class="mt-8 p-6 bg-white rounded-xl shadow-sm">
+                <h4 class="text-lg font-semibold mb-4 text-slate-800">
+                    <i class="fas fa-reply mr-2 text-blue-500"></i>
+                    Post a Reply
+                </h4>
+                <form method="post" class="reply-form" asp-action="AddReply" asp-controller="Home">
+                    <input type="hidden" name="PostId" value="@Model.Post.PostId" />
+                    <textarea name="Content"
+                              rows="4"
+                              class="w-full mb-4"
+                              placeholder="Share your thoughts..."></textarea>
+                    <button type="submit"
+                            class="bg-blue-600 hover:bg-blue-800 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Post Reply
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+        // Add smooth scroll to reply form
+    document.querySelectorAll('.reply a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelector('#reply-form').scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+</script>

@@ -1,0 +1,92 @@
+/* General Card Styling */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    background: #ffffff;
+    border-radius: 12px;
+}
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+/* Like/Comment Buttons - Gray outline, blue on hover */
+.btn-outline-gray {
+    border: 1px solid #6c757d;
+    color: #6c757d;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+    .btn-outline-gray:hover {
+        border-color: #0d6efd;
+        color: #0d6efd;
+    }
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: #0ea5e9;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+/* Like/Comment Icon Colors */
+.bi-hand-thumbs-up-fill.text-primary,
+.bi-hand-thumbs-up.text-secondary,
+.bi-chat {
+    transition: color 0.2s;
+}
+
+/* Pulse Animation */
+.animate-pulse {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.5;
+    }
+}
+
+#forum-posts {
+    display: none;
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #e0e0e0;
+}
+
+    /* For Chrome, Edge, and Safari */
+    #forum-posts::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #forum-posts::-webkit-scrollbar-track {
+        background: #e0e0e0;
+        border-radius: 10px;
+    }
+
+    #forum-posts::-webkit-scrollbar-thumb {
+        background: #007bff;
+        border-radius: 10px;
+        transition: background 0.3s;
+    }
+
+        #forum-posts::-webkit-scrollbar-thumb:hover {
+            background: #0056b3;
+        }

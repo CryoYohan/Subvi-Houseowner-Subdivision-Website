@@ -1,0 +1,62 @@
+/* Sidebar Slide-in Animation */
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.sidebar {
+    animation: slideIn 0.5s ease-out;
+}
+
+/* Hover Effects with Scale Animation */
+.nav-item a {
+    transition: all 0.3s ease;
+    transform-origin: left;
+}
+
+    .nav-item a:hover {
+        background-color: #eff6ff; /* Light blue background */
+        color: #2563eb; /* Blue text */
+        transform: scale(1.05);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-item a.logout:hover {
+        background-color: #fef2f2; /* Light red background */
+        color: #dc2626; /* Red text */
+        transform: scale(1.05);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Icon Hover Animation */
+    .nav-item a i {
+        transition: transform 0.3s ease;
+    }
+
+    .nav-item a:hover i {
+        transform: translateX(5px);
+    }
+
+/* Fade-in Animation for Content */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}

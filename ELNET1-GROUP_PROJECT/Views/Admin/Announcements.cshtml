@@ -1,50 +1,159 @@
-﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.User_Account>
+﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.Announcement>
 
 
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Announcements";
 }
-<div class="flex overflow-hidden bg-gray-100">
+
+<script>
+        document.addEventListener("DOMContentLoaded", function () {
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>
+                            Swal.fire({
+                                icon: 'success',
+                            title: 'Success',
+                            text: '@TempData["SuccessMessage"]'
+                                    });
+                </text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>
+                            Swal.fire({
+                                icon: 'error',
+                            title: 'Error',
+                            text: '@TempData["ErrorMessage"]'
+                                    });
+                </text>
+            }
+    });
+</script>
+<div class="flex overflow-hidden">
     <!-- Sidebar -->
-    <aside class="bg-white shadow-xl w-72 p-4 flex flex-col border-r border-gray-200">
+    <aside class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-72 p-4 py-6">
         <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
         <nav class="flex-1 space-y-3">
             <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-home w-6"></i>
                 <span class="ml-3">Dashboard</span>
             </a>
             <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-calendar-check w-6"></i>
                 <span class="ml-3">Reservations</span>
             </a>
             <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-users w-6"></i>
                 <span class="ml-3">Homeowners & Staff Accounts</span>
             </a>
             <a asp-controller="admin" asp-action="billpayment" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-file-invoice-dollar w-6"></i>
                 <span class="ml-3">Bill Payment</span>
             </a>
             <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-history w-6"></i>
                 <span class="ml-3">Payment History</span>
             </a>
             <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-tools w-6"></i>
                 <span class="ml-3">Services</span>
             </a>
             <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
-               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "bg-blue-100 text-blue-600" : "")">
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-bullhorn w-6"></i>
                 <span class="ml-3">Announcements</span>
             </a>
+            <a asp-controller="admin" asp-action="reports" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-chart-line w-6"></i>
+                <span class="ml-3">Reports</span>
+            </a>
         </nav>
     </aside>
+
+    <div class="p-6 w-full">
+        <div class="bg-white shadow-md rounded-lg flex items-center justify-between p-4 md:p-6 mb-4">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-bullhorn text-blue-700 text-2xl"></i>
+                <h2 class="text-xl md:text-2xl font-bold text-blue-600">Announcements</h2>
+            </div>
+            <button onclick="toggleAddForm()"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition focus:outline-none focus:ring focus:ring-blue-300">
+                + Add Announcement
+            </button>
+        </div>
+
+        <!-- Add Announcement Form -->
+        <div id="addAnnouncementForm" class="hidden bg-white shadow-md rounded-lg p-4 mb-4">
+            <form method="post" asp-controller="Admin" asp-action="AddAnnouncement">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" name="title" class="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" class="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required></textarea>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="toggleAddForm()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">Cancel</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Add</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Edit Announcement Modal -->
+        <div id="editAnnouncementModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300">
+            <div class="bg-white shadow-lg rounded-lg p-6 w-full max-w-lg transform scale-95 transition-transform duration-300">
+                <h2 class="text-lg font-bold text-blue-600 mb-4">Edit Announcement</h2>
+                <form method="post" asp-controller="Admin" asp-action="EditAnnouncement" onsubmit="return validateForm('editTitle', 'editDescription')">
+                    <input type="hidden" id="editAnnouncementId" name="id" />
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Title</label>
+                        <input type="text" id="editTitle" name="title" class="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="editDescription" name="description" class="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-300" required></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" onclick="closeAnnouncementModal('editAnnouncementModal')" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">Cancel</button>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Announcement Cards -->
+        @if (!Model.Any())
+        {
+            <div class="bg-white shadow-md rounded-lg p-4 mb-4 text-center">
+                <p class="text-gray-500">No announcements. Press Add Announcements to create announcement.</p>
+            </div>
+        }
+        else
+        {
+           @foreach (var announcement in Model)
+            {
+                <div class="bg-white shadow-md rounded-lg p-4 mb-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-blue-600">@announcement.Title</h3>
+                        <span class="text-sm text-gray-500">Posted @Convert.ToDateTime(announcement.DatePosted).ToString("MMMM dd, yyyy hh:mm tt")</span>
+                    </div>
+                    <p class="mt-2 text-gray-700">@announcement.Description</p>
+                    <div class="flex justify-end mt-4 space-x-2">
+                        <button onclick='openAnnouncementEditModal(@Html.Raw(Json.Serialize(announcement)))' class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition">Edit</button>
+                        <button onclick="confirmDelete(@announcement.AnnouncementId)" class="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition">Delete</button>
+                    </div>
+                </div>
+            }
+        }
+        
+    </div>
 </div>
