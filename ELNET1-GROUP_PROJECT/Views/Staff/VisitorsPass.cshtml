@@ -3,6 +3,8 @@
     ViewData["Title"] = "Staff | Visitor Pass";
 }
 
+<link rel="stylesheet" href="~/css/visitorpass.css" />
+
 <div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
     <!-- Sidebar -->
     <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
@@ -61,78 +63,150 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 p-8 overflow-y-auto fade-in">
-        <div class="container mt-4">
-            <!-- Top Section with Filter Buttons and Search Bar -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <button class="btn btn-primary" onclick="openAddModal()">Add Visitor</button>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary" onclick="filterVisitors('Active')">Active</button>
-                    <button class="btn btn-outline-secondary" onclick="filterVisitors('Deleted')">Deleted</button>
-                    <button class="btn btn-outline-danger" onclick="filterVisitors('Prohibited')">Prohibited</button>
+    <div class="flex-1 p-8 overflow-y-auto bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header Section -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+                <div class="mb-4 sm:mb-0">
+                    <h1 class="text-2xl font-bold text-gray-900">Visitor Management</h1>
+                    <p class="text-gray-600 mt-1">Manage and track all visitor entries</p>
                 </div>
+                <button onclick="openAddModal()"
+                        class="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Visitor
+                </button>
             </div>
-            <input type="text" class="form-control mb-3" placeholder="Search visitors..." oninput="searchVisitors(this.value)">
+
+            <!-- Filter Controls -->
+            <div class="flex flex-wrap gap-3 mb-6">
+                <button onclick="fetchVisitors('Active')"
+                        class="filter-btn active">
+                    Active Visitors
+                </button>
+                <button onclick="fetchVisitors('Deleted')"
+                        class="filter-btn">
+                    Archived
+                </button>
+                <button onclick="fetchVisitors('Prohibited')"
+                        class="filter-btn">
+                    Restricted
+                </button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative mb-6">
+                <input type="text"
+                       placeholder="Search visitors..."
+                       oninput="searchVisitors(this.value)"
+                       class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                <svg class="absolute right-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
 
             <!-- Visitor Table -->
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Visitor Name</th>
-                        <th>Date & Time</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="visitorTable">
-                    <!-- Visitor Data Will Populate Here -->
-                </tbody>
-            </table>
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Visitor Name</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Date Created</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Homeowner</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                                <th class="px-6 py-4 text-right text-sm font-semibold text-gray-700">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100" id="visitorTable">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="p-8 text-center">
+                    <div class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+                    <p class="mt-3 text-gray-600">Loading visitors...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden p-8 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No visitors found</h3>
+                    <p class="mt-1 text-sm text-gray-500">Get started by adding a new visitor</p>
+                </div>
+            </div>
         </div>
 
         <!-- Add/Edit Modal -->
-        <div id="visitorModal" class="modal fade" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add Visitor</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="visitorId">
+        <div id="visitorModal" class="fixed z-50 inset-0 bg-black bg-opacity-30 hidden items-center justify-center p-4">
+            <div class="bg-white rounded-xl max-w-md w-full animate-modal-in">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 class="text-xl font-semibold">Visitor Details</h3>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
 
-                        <!-- Homeowner Search -->
-                        <div class="mb-3">
-                            <label class="form-label">Homeowner</label>
-                            <input type="text" id="homeownerSearch" class="form-control" placeholder="Search homeowner..." oninput="filterHomeowners()">
-                            <div id="homeownerList" class="border mt-2 p-2" style="max-height: 150px; overflow-y: auto;">
-                                <!-- Homeowners will load here -->
-                            </div>
-                        </div>
+                <!-- Modal Body -->
+                <div class="p-6 space-y-5">
+                    <input type="hidden" id="visitorId">
 
-                        <!-- Selected Homeowner -->
-                        <input type="hidden" id="selectedUserId">
-                        <div class="mb-3">
-                            <label class="form-label">Selected Homeowner</label>
-                            <input type="text" id="selectedHomeownerName" class="form-control" readonly>
-                        </div>
-
-                        <!-- Visitor Name -->
-                        <div class="mb-3">
-                            <label class="form-label">Visitor Name</label>
-                            <input type="text" id="visitorName" class="form-control">
-                        </div>
-
-                        <!-- Relationship -->
-                        <div class="mb-3">
-                            <label class="form-label">Relationship</label>
-                            <input type="text" id="relationship" class="form-control">
+                    <!-- Homeowner Search -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Associate Homeowner</label>
+                        <div class="relative">
+                            <input type="text"
+                                   id="homeownerSearch"
+                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                   placeholder="Search homeowners..."
+                                   oninput="filterHomeowners()">
+                            <div id="homeownerList" class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden"></div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" onclick="saveVisitor()">Save</button>
+
+                    <!-- Selected Homeowner -->
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-1">Selected Homeowner:</p>
+                        <p id="selectedHomeownerName" class="font-medium text-blue-700">None selected</p>
                     </div>
+
+                    <!-- Form Fields -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Visitor Name</label>
+                            <input type="text"
+                                   id="visitorName"
+                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Relationship</label>
+                            <input type="text"
+                                   id="relationship"
+                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex justify-end gap-3 p-6 border-t">
+                    <button onclick="closeModal()"
+                            class="px-5 py-2.5 text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="saveVisitor()"
+                            class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Save Visitor
+                    </button>
                 </div>
             </div>
         </div>
@@ -154,19 +228,16 @@
     }
 
     // Render homeowners list
-        function renderHomeowners(data) {
-        const homeownerList = document.getElementById('homeownerList');
-        homeownerList.innerHTML = data.length
-            ? data.map(user => `
-                <div class="p-2 border-bottom hover-bg-light"
-                    onclick="selectHomeowner(${user.userId}, '${user.firstName} ${user.lastName}')"
-                    style="cursor: pointer; transition: background-color 0.2s;"
-                    onmouseover="this.style.backgroundColor='#f0f0f0'"
-                    onmouseout="this.style.backgroundColor='transparent'">
-                    ${user.firstName} ${user.lastName}
-                </div>
-              `).join('')
-            : '<div class="text-muted p-2">No homeowners yet</div>';
+    function renderHomeowners(data) {
+        const list = document.getElementById('homeownerList');
+        list.innerHTML = data.length ? data.map(user => `
+            <div onclick="selectHomeowner(${user.userId}, '${user.firstName} ${user.lastName}')"
+                class="hover:bg-gray-50">
+                <span class="font-medium">${user.firstName} ${user.lastName}</span>
+                <span class="text-gray-500 text-sm block">${user.email}</span>
+            </div>
+        `).join('') : '<div class="text-gray-500 p-4">No homeowners found</div>';
+        list.classList.remove('hidden');
     }
 
     // Filter homeowners on input, supporting full name search
@@ -222,26 +293,28 @@
         const userId = document.getElementById('selectedUserId').value;
         const visitorName = document.getElementById('visitorName').value;
         const relationship = document.getElementById('relationship').value;
-        console.log("data", visitorId, userId, visitorName, relationship)
 
         if (!userId) {
             Swal.fire('Error', 'Please select a homeowner.', 'error');
             return;
         }
 
-        const payload = { visitorId, userId, visitorName, relationship };
+    const formData = new FormData();
+        if (visitorId) formData.append('visitorId', visitorId);
+        formData.append('userId', userId);
+        formData.append('visitorName', visitorName);
+        formData.append('relationship', relationship);
+
         const url = visitorId ? '/staff/editvisitor' : '/staff/addvisitor';
-        const method = 'POST';
 
         const response = await fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            method: 'POST',
+            body: formData
         });
 
         const result = await response.json();
         if (result.success) {
-            Swal.fire('Success', visitorId ? 'Visitor updated!' : 'Visitor added!', 'success');
+            Swal.fire('Success', visitorId ? 'Visitor updated successfully!' : 'Visitor added successfully!', 'success');
             bootstrap.Modal.getInstance(document.getElementById('visitorModal')).hide();
             fetchVisitors('Active');
         } else {
@@ -254,31 +327,66 @@
         try {
             const response = await fetch(`/staff/getvisitors?status=${status}`);
             const data = await response.json();
-            renderVisitors(data);
+            renderVisitors(data, status);
         } catch (error) {
             console.error('Error fetching visitors:', error);
         }
     }
 
-    // Render visitor data
-    function renderVisitors(data) {
+    function formatDateTime(dateTimeString) {
+        const date = new Date(dateTimeString);
+        const options = {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+        };
+
+        const formattedDate = date.toLocaleDateString('en-US', options);
+        const formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        return `${formattedDate} at ${formattedTime}`;
+    }
+
+    function renderVisitors(data, status) {
         const tableBody = document.querySelector('#visitorTable');
+        const loading = document.getElementById('loadingState');
+        const empty = document.getElementById('emptyState');
+
+        loading.classList.add('hidden');
         tableBody.innerHTML = '';
 
         if (!data.length) {
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No visitors found.</td></tr>';
+            empty.classList.remove('hidden');
             return;
         }
 
+        empty.classList.add('hidden');
         data.forEach(visitor => {
             const row = `
                 <tr>
-                    <td>${visitor.visitorName}</td>
-                    <td>${visitor.dateTime}</td>
-                    <td>${visitor.status}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm" onclick="openEditModal(${visitor.visitorId})">Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="confirmDelete(${visitor.visitorId})">Delete</button>
+                    <td class="px-6 py-4 font-medium text-gray-900">${visitor.visitorName}</td>
+                    <td class="px-6 py-4 text-gray-600">${formatDateTime(visitor.dateTime)}</td>
+                    <td class="px-6 py-4 text-gray-600">${visitor.fullName}</td>
+                    <td class="px-6 py-4">
+                        <span class="status-badge ${visitor.status}">${visitor.status}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                        <button
+                            onclick="openEditModal(${visitor.visitorId})"
+                            class="text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                            </svg>
+                        </button>
+                        <button
+                            onclick="confirmDelete('${visitor.visitorId}','${visitor.visitorName}', '${visitor.fullName}')"
+                            class="text-red-600 hover:text-red-800 transition-colors"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
                     </td>
                 </tr>
             `;
@@ -287,10 +395,10 @@
     }
 
     // Confirm Delete
-    function confirmDelete(visitorId) {
+    function confirmDelete(visitorId, visitorname, homeownername) {
         Swal.fire({
-            title: 'Are you sure?',
-            text: 'This action will mark the visitor as deleted.',
+            title: 'Are you sure you want to delete?',
+            text: `The visitor name ${visitorname} associated with homeowner ${homeownername}?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',

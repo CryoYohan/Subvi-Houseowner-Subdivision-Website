@@ -1,5 +1,4 @@
 ﻿@{
-    Layout = "_HomeLayout";
     ViewData["Title"] = "Subvi | Facilities";
 
     // Retrieve the user's role from cookies
@@ -13,30 +12,65 @@
     string servicesController = "";
     string forumsController = "";
     string feedbacksController = "";
-    string resourcesController = "";
 
     // Default action values
-    string homeAction = "";
-    string calendarAction = "";
-    string facilitiesAction = "";
-    string billAction = "";
-    string servicesAction = "";
-    string forumsAction = "";
-    string feedbacksAction = "";
-    string resourcesAction = "";
+    string homeAction = "Landing";
+    string calendarAction = "Calendar";
+    string facilitiesAction = "Facilities";
+    string billAction = "Bill";
+    string servicesAction = "Services";
+    string forumsAction = "Forums";
+    string feedbacksAction = "Feedbacks";
 
-    if (role == "Homeowner")
+    // Assign controllers/actions based on role
+    if (role == "Admin")
+    {
+        homeController = "admin"; homeAction = "Index";
+        calendarController = "admin"; calendarAction = "Calendar";
+        facilitiesController = "admin"; facilitiesAction = "Facilities";
+        billController = "admin"; billAction = "BillManagement";
+        servicesController = "admin"; servicesAction = "ServicesManagement";
+        forumsController = "admin"; forumsAction = "Forums";
+        feedbacksController = "admin"; feedbacksAction = "Feedbacks";
+    }
+    else if (role == "Homeowner")
     {
         homeController = "home"; homeAction = "dashboard";
-        calendarController = "home"; calendarAction = "calendar";
-        facilitiesController = "home"; facilitiesAction = "facilities";
-        billController = "home"; billAction = "bill";
-        servicesController = "home"; servicesAction = "services";
-        forumsController = "home"; forumsAction = "forums";
-        feedbacksController = "home"; feedbacksAction = "feedbacks";
-        resourcesController = "home"; resourcesAction = "resources";
+        calendarController = "home"; calendarAction = "Calendar";
+        facilitiesController = "home"; facilitiesAction = "Facilities";
+        billController = "home"; billAction = "Bill";
+        servicesController = "home"; servicesAction = "Services";
+        forumsController = "home"; forumsAction = "Forums";
+        feedbacksController = "home"; feedbacksAction = "Feedbacks";
+    }
+    else if (role == "Staff")
+    {
+        homeController = "staff"; homeAction = "Dashboard";
+        calendarController = "staff"; calendarAction = "Calendar";
+        facilitiesController = "staff"; facilitiesAction = "Facilities";
+        billController = "staff"; billAction = "Bill";
+        servicesController = "staff"; servicesAction = "Services";
+        forumsController = "staff"; forumsAction = "Forums";
+        feedbacksController = "staff"; feedbacksAction = "Feedbacks";
     }
 }
+
+<style>
+  
+    .facility-card:hover img {
+        transform: scale(1.05);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .facility-card {
+        overflow: hidden;
+    }
+
+    .facility-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: box-shadow 0.3s ease-in-out;
+    }
+</style>
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
@@ -48,6 +82,7 @@
                    asp-controller="@homeController" asp-action="@homeAction">
                     <i class="fas fa-home text-xl"></i>
                     <span class="font-semibold">Home</span>
+
                 </a>
             </li>
 
@@ -92,7 +127,7 @@
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
                    asp-controller="@forumsController" asp-action="@forumsAction">
                     <i class="fas fa-comments text-xl"></i>
-                    <span class="font-semibold">Forums Discussion</span>
+                    <span class="font-semibold">Forums</span>
                 </a>
             </li>
 
@@ -104,34 +139,8 @@
                     <span class="font-semibold">Feedbacks</span>
                 </a>
             </li>
-
-            <!-- Resources -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@resourcesController" asp-action="@resourcesAction">
-                    <i class="fas fa-folder text-xl"></i>
-                    <span class="font-semibold">Resources</span>
-                </a>
-            </li>
         </ul>
     </div>
-
-    <style>
-
-        .facility-card:hover img {
-            transform: scale(1.05);
-            transition: transform 0.3s ease-in-out;
-        }
-
-        .facility-card {
-            overflow: hidden;
-        }
-
-            .facility-card:hover {
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-                transition: box-shadow 0.3s ease-in-out;
-            }
-    </style>
 
     @* MainContent *@  
     <div class="container mt-4">
@@ -634,166 +643,164 @@
             </div>
         </div>
     </div>
-</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Swimming Pool Modal
+            var facilityModal = document.getElementById('facilityModal');
+            facilityModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget; // Button that triggered the modal
+                var facility = button.getAttribute('data-facility'); // Extract facility name
+                var cleaner = button.getAttribute('data-cleaner'); // Extract cleaner name
+                var time = button.getAttribute('data-time'); // Extract available time
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Swimming Pool Modal
-        var facilityModal = document.getElementById('facilityModal');
-        facilityModal.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget; // Button that triggered the modal
-            var facility = button.getAttribute('data-facility'); // Extract facility name
-            var cleaner = button.getAttribute('data-cleaner'); // Extract cleaner name
-            var time = button.getAttribute('data-time'); // Extract available time
+                // Update the modal's content
+                var modalFacilityName = facilityModal.querySelector('#modalFacilityName');
+                var modalCleaner = facilityModal.querySelector('#modalCleaner');
+                var modalTime = facilityModal.querySelector('#modalTime');
 
-            // Update the modal's content
-            var modalFacilityName = facilityModal.querySelector('#modalFacilityName');
-            var modalCleaner = facilityModal.querySelector('#modalCleaner');
-            var modalTime = facilityModal.querySelector('#modalTime');
+                modalFacilityName.textContent = facility;
+                modalCleaner.textContent = cleaner;
+                modalTime.textContent = time;
+            });
 
-            modalFacilityName.textContent = facility;
-            modalCleaner.textContent = cleaner;
-            modalTime.textContent = time;
+            // Playground Modal
+            var playgroundModal = document.getElementById('playgroundModal');
+            playgroundModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget; // Button that triggered the modal
+                var facility = button.getAttribute('data-facility'); // Extract facility name
+                var cleaner = button.getAttribute('data-cleaner'); // Extract cleaner name
+                var time = button.getAttribute('data-time'); // Extract available time
+
+                // Update the modal's content
+                var modalFacilityName = playgroundModal.querySelector('#playgroundModalLabel');
+                var modalCleaner = playgroundModal.querySelector('#modalCleaner');
+                var modalTime = playgroundModal.querySelector('#modalTime');
+
+                modalFacilityName.textContent = facility;
+                modalCleaner.textContent = cleaner;
+                modalTime.textContent = time;
+            });
         });
+                 document.addEventListener('DOMContentLoaded', function () {
+            // Get the Reserve button and Reservation modal
+            var reserveButton = document.querySelector('#facilityModal .btn-primary');
+            var reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
 
-        // Playground Modal
-        var playgroundModal = document.getElementById('playgroundModal');
-        playgroundModal.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget; // Button that triggered the modal
-            var facility = button.getAttribute('data-facility'); // Extract facility name
-            var cleaner = button.getAttribute('data-cleaner'); // Extract cleaner name
-            var time = button.getAttribute('data-time'); // Extract available time
+            // Add click event to the Reserve button
+            reserveButton.addEventListener('click', function () {
+                // Close the current modal (facilityModal)
+                var facilityModal = bootstrap.Modal.getInstance(document.getElementById('facilityModal'));
+                facilityModal.hide();
 
-            // Update the modal's content
-            var modalFacilityName = playgroundModal.querySelector('#playgroundModalLabel');
-            var modalCleaner = playgroundModal.querySelector('#modalCleaner');
-            var modalTime = playgroundModal.querySelector('#modalTime');
+                // Open the reservation modal
+                reservationModal.show();
+            });
 
-            modalFacilityName.textContent = facility;
-            modalCleaner.textContent = cleaner;
-            modalTime.textContent = time;
-        });
-    });
-             document.addEventListener('DOMContentLoaded', function () {
-        // Get the Reserve button and Reservation modal
-        var reserveButton = document.querySelector('#facilityModal .btn-primary');
-        var reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
+            // Calendar Functionality
+            let currentDate = new Date();
+            let currentMonth = currentDate.getMonth();
+            let currentYear = currentDate.getFullYear();
 
-        // Add click event to the Reserve button
-        reserveButton.addEventListener('click', function () {
-            // Close the current modal (facilityModal)
-            var facilityModal = bootstrap.Modal.getInstance(document.getElementById('facilityModal'));
-            facilityModal.hide();
+            const monthNames = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
 
-            // Open the reservation modal
-            reservationModal.show();
-        });
+            // Function to render the calendar
+            function renderCalendar(month, year) {
+                const calendarBody = document.querySelector('#calendarTable tbody');
+                const currentMonthYear = document.getElementById('currentMonthYear');
 
-        // Calendar Functionality
-        let currentDate = new Date();
-        let currentMonth = currentDate.getMonth();
-        let currentYear = currentDate.getFullYear();
+                // Clear existing calendar
+                calendarBody.innerHTML = '';
 
-        const monthNames = [
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
-        ];
+                // Set the current month and year
+                currentMonthYear.textContent = `${monthNames[month]} ${year}`;
 
-        // Function to render the calendar
-        function renderCalendar(month, year) {
-            const calendarBody = document.querySelector('#calendarTable tbody');
-            const currentMonthYear = document.getElementById('currentMonthYear');
+                // Get the first day of the month
+                const firstDay = new Date(year, month, 1);
+                const startingDay = firstDay.getDay(); // 0 (Sunday) to 6 (Saturday)
 
-            // Clear existing calendar
-            calendarBody.innerHTML = '';
+                // Get the number of days in the month
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            // Set the current month and year
-            currentMonthYear.textContent = `${monthNames[month]} ${year}`;
+                let date = 1;
+                for (let i = 0; i < 6; i++) {
+                    const row = document.createElement('tr');
+                    for (let j = 0; j < 7; j++) {
+                        const cell = document.createElement('td');
+                        cell.style.padding = '10px';
+                        cell.style.cursor = 'pointer';
+                        cell.style.borderRadius = '5px';
+                        if (i === 0 && j < startingDay) {
+                            // Empty cells before the first day of the month
+                            cell.textContent = '';
+                        } else if (date > daysInMonth) {
+                            // Empty cells after the last day of the month
+                            cell.textContent = '';
+                        } else {
+                            // Fill in the dates
+                            cell.textContent = date;
 
-            // Get the first day of the month
-            const firstDay = new Date(year, month, 1);
-            const startingDay = firstDay.getDay(); // 0 (Sunday) to 6 (Saturday)
-
-            // Get the number of days in the month
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            let date = 1;
-            for (let i = 0; i < 6; i++) {
-                const row = document.createElement('tr');
-                for (let j = 0; j < 7; j++) {
-                    const cell = document.createElement('td');
-                    cell.style.padding = '10px';
-                    cell.style.cursor = 'pointer';
-                    cell.style.borderRadius = '5px';
-                    if (i === 0 && j < startingDay) {
-                        // Empty cells before the first day of the month
-                        cell.textContent = '';
-                    } else if (date > daysInMonth) {
-                        // Empty cells after the last day of the month
-                        cell.textContent = '';
-                    } else {
-                        // Fill in the dates
-                        cell.textContent = date;
-
-                        // Highlight the current date
-                        if (date === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear()) {
-                            cell.style.backgroundColor = '#007bff';
-                            cell.style.color = '#fff';
-                        }
-
-                        // Add hover effect
-                        cell.addEventListener('mouseover', function () {
-                            if (cell.textContent !== '') {
-                                cell.style.backgroundColor = '#f0f0f0';
+                            // Highlight the current date
+                            if (date === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear()) {
+                                cell.style.backgroundColor = '#007bff';
+                                cell.style.color = '#fff';
                             }
-                        });
-                        cell.addEventListener('mouseout', function () {
-                            if (cell.textContent !== '') {
-                                cell.style.backgroundColor = '';
-                                if (date === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear()) {
-                                    cell.style.backgroundColor = '#007bff';
-                                    cell.style.color = '#fff';
+
+                            // Add hover effect
+                            cell.addEventListener('mouseover', function () {
+                                if (cell.textContent !== '') {
+                                    cell.style.backgroundColor = '#f0f0f0';
                                 }
-                            }
-                        });
+                            });
+                            cell.addEventListener('mouseout', function () {
+                                if (cell.textContent !== '') {
+                                    cell.style.backgroundColor = '';
+                                    if (date === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear()) {
+                                        cell.style.backgroundColor = '#007bff';
+                                        cell.style.color = '#fff';
+                                    }
+                                }
+                            });
 
-                        // Add click event
-                        cell.addEventListener('click', function () {
-                            // Highlight the selected date
-                            const selectedDate = new Date(year, month, date);
-                            alert(`Selected Date: ${selectedDate.toDateString()}`);
-                        });
+                            // Add click event
+                            cell.addEventListener('click', function () {
+                                // Highlight the selected date
+                                const selectedDate = new Date(year, month, date);
+                                alert(`Selected Date: ${selectedDate.toDateString()}`);
+                            });
 
-                        date++;
+                            date++;
+                        }
+                        row.appendChild(cell);
                     }
-                    row.appendChild(cell);
+                    calendarBody.appendChild(row);
+                    if (date > daysInMonth) break;
                 }
-                calendarBody.appendChild(row);
-                if (date > daysInMonth) break;
             }
-        }
 
-        // Initial render
-        renderCalendar(currentMonth, currentYear);
-
-        // Previous Month Button
-        document.getElementById('prevMonth').addEventListener('click', function () {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
+            // Initial render
             renderCalendar(currentMonth, currentYear);
-        });
 
-        // Next Month Button
-        document.getElementById('nextMonth').addEventListener('click', function () {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            renderCalendar(currentMonth, currentYear);
+            // Previous Month Button
+            document.getElementById('prevMonth').addEventListener('click', function () {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                renderCalendar(currentMonth, currentYear);
+            });
+
+            // Next Month Button
+            document.getElementById('nextMonth').addEventListener('click', function () {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                renderCalendar(currentMonth, currentYear);
+            });
         });
-    });
-</script>
+    </script>

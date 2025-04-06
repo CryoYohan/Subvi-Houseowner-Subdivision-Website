@@ -66,6 +66,10 @@ body {
     background-color: var(--card-bg) !important;
 }
 
+.logo-color{
+    color: var(--logo-color);
+}
+
 .text-blue-800 {
     color: var(--sidebar-text) !important;
 }

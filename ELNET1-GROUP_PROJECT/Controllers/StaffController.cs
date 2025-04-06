@@ -110,17 +110,21 @@ public class StaffController : Controller
         var visitors = _context.Visitor_Pass
             .Where(v => status == null || v.Status == status)
             .OrderByDescending(v => v.DateTime)
-            .Select(v => new
-            {
-                v.VisitorId,
-                v.VisitorName,
-                v.DateTime,
-                v.Relationship,
-                v.Status
-            })
+            .Join(_context.User_Accounts,
+                  v => v.UserId,
+                  u => u.Id,
+                  (v, u) => new
+                  {
+                      v.VisitorId,
+                      v.VisitorName,
+                      v.DateTime,
+                      v.Relationship,
+                      v.Status,
+                      FullName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
+                  })
             .ToList();
 
-        if (visitors == null || !visitors.Any())
+        if (!visitors.Any())
         {
             return Json(new { message = "No visitors found." });
         }
@@ -132,12 +136,12 @@ public class StaffController : Controller
     public IActionResult GetHomeowners()
     {
         var homeowners = _context.User_Accounts
-            .Where(u => u.Role == "Homeowner")
+            .Where(u => u.Role == "Homeowner" && u.Status == "Active") 
             .Select(u => new
             {
                 UserId = u.Id,
-                FirstName = u.Firstname,
-                LastName = u.Lastname
+                FirstName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
+                LastName = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
             })
             .ToList();
 

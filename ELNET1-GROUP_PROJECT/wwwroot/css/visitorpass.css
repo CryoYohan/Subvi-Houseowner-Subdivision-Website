@@ -1,0 +1,74 @@
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb; /* gray-200 */
+    background-color: white;
+    color: #4b5563; /* gray-600 */
+    transition: all 0.2s ease-in-out;
+}
+
+    .filter-btn:hover {
+        border-color: #3b82f6; /* blue-500 */
+        color: #2563eb; /* blue-600 */
+    }
+
+    .filter-btn.active {
+        border-color: #3b82f6; /* blue-500 */
+        background-color: #eff6ff; /* blue-50 */
+        color: #2563eb; /* blue-600 */
+    }
+
+.animate-modal-in {
+    animation: modalIn 0.3s ease-out;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#homeownerList div {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem; /* text-sm */
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+    #homeownerList div:hover {
+        background-color: #f9fafb; /* gray-50 */
+    }
+
+    #homeownerList div.active {
+        background-color: #eff6ff; /* blue-50 */
+    }
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px; /* rounded-full */
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 500;
+}
+
+    .status-badge.Active {
+        background-color: #d1fae5; /* green-100 */
+        color: #065f46; /* green-800 */
+    }
+
+    .status-badge.Deleted {
+        background-color: #fee2e2; /* red-100 */
+        color: #991b1b; /* red-800 */
+    }
+
+    .status-badge.Prohibited {
+        background-color: #fef3c7; /* yellow-100 */
+        color: #92400e; /* yellow-800 */
+    }
