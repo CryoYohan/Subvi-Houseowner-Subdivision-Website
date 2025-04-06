@@ -158,11 +158,13 @@ public class AdminController : Controller
                 if (model.Role == "Homeowner")
                 {
                     var emailSent = SendEmail(model.Email, fullname, username, originalPassword);
+                    /*
                     if (!emailSent)
                     {
                         TempData["ErrorMessage"] = "User registered, but failed to send email.";
                         return RedirectToAction("HomeownerStaffAccounts");
                     }
+                    */
                 }
 
                 TempData["SuccessMessage"] = "User registered successfully!";
@@ -292,9 +294,9 @@ public class AdminController : Controller
         }
         catch (SmtpException smtpEx)
         {
-            TempData["ErrorMessage"] = $"Error sending email: {smtpEx.Message}";
-            Console.WriteLine($"SMTP Error: {smtpEx.Message}");
-            Console.WriteLine($"Status Code: {smtpEx.StatusCode}");
+            Console.WriteLine($"SMTP Error: {smtpEx.StatusCode}");
+            Console.WriteLine($"Details: {smtpEx.Message}");
+            Console.WriteLine($"Inner Exception: {smtpEx.InnerException?.Message}");
         }
         catch (Exception ex)
         {
