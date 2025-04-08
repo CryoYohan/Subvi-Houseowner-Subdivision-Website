@@ -136,7 +136,7 @@ public class StaffController : Controller
     public IActionResult GetHomeowners()
     {
         var homeowners = _context.User_Accounts
-            .Where(u => u.Role == "Homeowner" && u.Status == "Active") 
+            .Where(u => u.Role == "Homeowner") 
             .Select(u => new
             {
                 UserId = u.Id,
