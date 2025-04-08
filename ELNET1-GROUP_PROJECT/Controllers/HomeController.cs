@@ -641,23 +641,27 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         {
             var feedbacks = string.IsNullOrEmpty(feedbackType)
                 ? _context.Feedback
+                    .OrderByDescending(f => f.DateSubmitted)
+                    .AsEnumerable() // Switch to LINQ to Objects
                     .Select(f => new {
                         f.FeedbackId,
-                        FeedbackType = f.FeedbackType ?? "", // Handle NULL
-                        Description = f.Description ?? string.Empty, // Handle NULL
-                        f.Status,
+                        FeedbackType = f.FeedbackType ?? "Unknown",
+                        Description = f.Description ?? string.Empty,
+                        ComplaintStatus = f.ComplaintStatus ?? "None",
                         f.DateSubmitted,
                         f.UserId,
-                        Rating = f.Rating ?? 0 // Handle NULL
+                        Rating = f.Rating ?? 0
                     })
                     .ToList()
                 : _context.Feedback
                     .Where(f => f.FeedbackType == feedbackType)
+                    .OrderByDescending(f => f.DateSubmitted)
+                    .AsEnumerable() // Switch to LINQ to Objects
                     .Select(f => new {
                         f.FeedbackId,
-                        FeedbackType = f.FeedbackType ?? "Unknown", // Handle NULL
+                        FeedbackType = f.FeedbackType ?? "Unknown",
                         Description = f.Description ?? string.Empty,
-                        f.Status,
+                        ComplaintStatus = f.ComplaintStatus ?? "None",
                         f.DateSubmitted,
                         f.UserId,
                         Rating = f.Rating ?? 0
@@ -686,7 +690,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 FeedbackType = request.FeedbackType,
                 Description = request.Description,
                 Rating = request.FeedbackType == "Compliment" ? request.Rating : null,
-                Status = true,
+                ComplaintStatus = request.FeedbackType == "Complaint" ? "PENDING" : null,
                 DateSubmitted = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                 UserId = userId
             };

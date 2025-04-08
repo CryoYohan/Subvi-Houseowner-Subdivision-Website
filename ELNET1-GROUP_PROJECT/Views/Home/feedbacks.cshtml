@@ -41,7 +41,7 @@
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
-    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
+    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6">
         <ul class="space-y-4">
             <!-- Home (Dynamic) -->
             <li>
@@ -116,10 +116,13 @@
         </ul>
     </div>
 
-        <div class="container mx-auto mt-8 p-4 bg-white rounded-xl shadow-md">
-            <h1 class="text-2xl font-bold mb-4 text-blue-600">Feedback Management</h1>
-            <div class="mb-4 flex items-center space-x-2">
-                <select id="filterType" class="border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+        <div class="container mx-auto mt-4 p-2 bg-white rounded-xl shadow-md">
+            <div class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+                <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-bullhorn text-xl"></i> Feedbacks</h1>
+            </div>
+        
+            <div class="mb-2 flex items-center space-x-2">
+                <select id="filterType" class="border border-gray-300 rounded-md px-2 py-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">All</option>
                     <option value="Compliment">Compliment</option>
                     <option value="Complaint">Complaint</option>
@@ -129,7 +132,7 @@
                 <button onclick="openFeedbackModal()" class="ml-auto bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition">Add Feedback</button>
             </div>
 
-            <div id="feedbackList" class="space-y-3"></div>
+            <div id="feedbackList" class="overflow-y-auto space-y-2" style="max-height: 500px"></div>
         </div>
 
         <div id="feedbackModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center">
@@ -166,16 +169,18 @@
 
     <script>
         let currentRating = 0;
+        let currentfilterstatus = '';
 
         function loadFeedbacks() {
             const feedbackType = document.getElementById("filterType").value;
+            currentfilterstatus = feedbackType;
             fetch(`/Home/GetFeedbacks?feedbackType=${feedbackType}`)
                 .then(res => res.json())
                 .then(data => {
                     const list = document.getElementById("feedbackList");
                     list.innerHTML = "";
                     if (data.length === 0) {
-                        list.innerHTML = '<p class="text-gray-500 font-semibold text-base text-center">No feedback yet.</p>';
+                        list.innerHTML = '<p class="text-gray-500 font-semibold text-base text-center">No ${currentfilterstatus} feedback yet.</p>';
                         return;
                     }
 
@@ -184,9 +189,19 @@
                             <div class="p-4 border rounded-lg shadow-sm hover:shadow-md transition hover:blue-600" style="background-color:white">
                                 <div class="flex justify-between items-center">
                                     <h3 class="text-lg font-semibold">${feedback.feedbackType}</h3>
-                                    <p class="text-sm px-3 py-1 rounded-md ${feedback.status ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}">
-                                        ${feedback.status ? 'Active' : 'Inactive'}
-                                    </p>
+                                    ${feedback.feedbackType == 'Complaint' ? `
+                                          <p class="text-sm px-3 py-1 rounded-md ${
+                                            feedback.complaintStatus === 'RESOLVED'
+                                              ? 'bg-green-600 text-white'
+                                              : feedback.complaintStatus === 'PENDING'
+                                              ? 'bg-red-600 text-white'
+                                              : feedback.complaintStatus === 'ONGOING'
+                                              ? 'bg-gray-500 text-white'
+                                              : 'hidden'
+                                          }">
+                                            ${feedback.complaintStatus}
+                                          </p>
+                                        ` : ''}
                                 </div>
                                 <p class="text-gray-700 mt-2">${feedback.description}</p>
                                 <p class="text-sm text-gray-500 mt-1">${new Date(feedback.dateSubmitted).toLocaleString()}</p>

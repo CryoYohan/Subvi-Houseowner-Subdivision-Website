@@ -20,9 +20,8 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("DESCRIPTION")]
         public string Description { get; set; }
 
-        [Required]
-        [Column("STATUS")]
-        public bool Status { get; set; } = true;
+        [Column("COMPLAINT_STATUS")]
+        public string? ComplaintStatus { get; set; }
 
         [Required]
         [Column("DATE_SUBMITTED")]
@@ -33,7 +32,7 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("USER_ID")]
         public int UserId { get; set; }
 
-        // Optional: Rating (only for Compliments)
+        // Rating (only for Compliments)
         [Column("RATING")]
         public int? Rating { get; set; }
     }
