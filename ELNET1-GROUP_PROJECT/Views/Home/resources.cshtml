@@ -142,7 +142,7 @@
                     <p class="text-gray-600 mb-4">Upcoming meetings, activities, and announcements</p>
                     <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Calendar →</button>
                 </div>
-                <div onclick="openModal('documents')" class="resource-card group">
+                <div onclick="openDocumentsModal()" class="resource-card group cursor-pointer">
                     <div class="flex items-center gap-3 mb-2">
                         <div class="p-3 bg-gray-100 rounded-lg">
                             <span class="text-2xl">📄</span>
@@ -281,7 +281,125 @@
     </div>
 </div>
 
+<!-- Documents Modal -->
+<div id="documentsModalOverlay" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="p-8 rounded-2xl shadow-2xl w-full max-w-lg animate-modalIn relative transform transition-all" style="background: linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 100%)">
+        <!-- Close Button -->
+        <button class="absolute -top-5 -right-5 hover:scale-110 transition-all duration-200" onclick="closeDocumentsModal()">
+            <svg class="w-8 h-8 text-gray-800 hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <!-- Modal Content -->
+        <div class="text-center space-y-6">
+            <!-- Decorative Icon -->
+            <div class="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center mb-4 shadow-md animate-bounce">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+
+            <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text text-transparent">HOA Documents</h2>
+            <p class="text-gray-600">Download official Subvi subdivision documents</p>
+
+            <!-- Document Buttons -->
+            <div class="grid grid-cols-1 gap-3 mt-6">
+                <!-- CC&Rs Button -->
+                <button onclick="downloadDocument('ccr')" class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-green-500 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-700 opacity-100"></div>
+                    <span class="relative z-10 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                        </svg>
+                        CC&Rs
+                    </span>
+                </button>
+
+                <!-- Community Plan -->
+                <button onclick="downloadDocument('community_plans')" class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-green-500 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-700 opacity-100"></div>
+                    <span class="relative z-10 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                        </svg>
+                        Community Plans
+                    </span>
+                </button>
+
+                <button onclick="downloadDocument('bylaws')" class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-green-500 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:from-blue-600 hover:to-green-600 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                    </svg>
+                    By Laws
+                </button>
+
+                <button onclick="downloadDocument('rules_regulations')" class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-green-500 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:from-blue-600 hover:to-green-600 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                    </svg>
+                    Rules and Regulations
+                </button>
+
+                <button onclick="downloadDocument('articles')" class="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-green-500 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:from-blue-600 hover:to-green-600 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                    </svg>
+                    Articles of Incorporation/Association
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <script>
+        // Documents Modal Functions
+        function openDocumentsModal() {
+            document.getElementById("documentsModalOverlay").classList.remove("hidden");
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDocumentsModal() {
+            document.getElementById("documentsModalOverlay").classList.add("hidden");
+            document.body.style.overflow = '';
+        }
+
+        function downloadDocument(type) {
+            // PDF File Setup Instructions:
+            // 1. Create a folder called "documents" in your website's root directory
+            // 2. Add your PDF files with these exact names:
+            //    - subvi_ccrs.pdf (for CC&Rs)
+            //    - subvi_community_plans.pdf
+            //    - subvi_bylaws.pdf
+            //    - subvi_rules_regulations.pdf
+            //    - subvi_articles_of_incorporation.pdf
+
+            const fileMap = {
+                'ccr': '/documents/subvi_ccrs.pdf',
+                'community_plans': '/documents/subvi_community_plans.pdf',
+                'bylaws': '/documents/subvi_bylaws.pdf',
+                'rules_regulations': '/documents/subvi_rules_regulations.pdf',
+                'articles': '/documents/subvi_articles_of_incorporation.pdf'
+            };
+
+            // Create a temporary link to trigger download
+            const link = document.createElement('a');
+            link.href = fileMap[type];
+            link.download = fileMap[type].split('/').pop();
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Close modal after download starts
+            setTimeout(closeDocumentsModal, 500);
+        }
+
+        // Close modal when clicking outside content
+        document.getElementById('documentsModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDocumentsModal();
+            }
+        });
         const modalData = {
             homeowner: {
                 title: "Homeowner Guidelines",
