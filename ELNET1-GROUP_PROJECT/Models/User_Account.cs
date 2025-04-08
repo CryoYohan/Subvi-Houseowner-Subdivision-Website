@@ -29,6 +29,8 @@ namespace ELNET1_GROUP_PROJECT.Models
         public string Address { get; set; }
         [Column("CONTACT")]
         public string PhoneNumber { get; set; }
+        [Column("STATUS")]
+        public string Status { get; set; }
 
     }
 }
