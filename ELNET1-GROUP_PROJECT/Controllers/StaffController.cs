@@ -70,16 +70,6 @@ public class StaffController : Controller
         return jwtToken?.Claims.FirstOrDefault(c => c.Type == "Role")?.Value;
     }
 
-    public IActionResult Landing()
-    {
-        var role = HttpContext.Request.Cookies["UserRole"];
-        if (role != "Staff")
-        {
-            return RedirectToAction("Landing");
-        }
-        return View();
-    }
-
     [HttpGet("")]
     [HttpGet("dashboard")]
     public IActionResult Dashboard()
@@ -116,7 +106,7 @@ public class StaffController : Controller
                   (v, u) => new
                   {
                       v.VisitorId,
-                      v.VisitorName,
+                      VisitorName = char.ToUpper(v.VisitorName[0]) + v.VisitorName.Substring(1),
                       v.DateTime,
                       v.Relationship,
                       v.Status,
@@ -136,12 +126,13 @@ public class StaffController : Controller
     public IActionResult GetHomeowners()
     {
         var homeowners = _context.User_Accounts
-            .Where(u => u.Role == "Homeowner" && u.Status == "Active") 
+            .Where(u => u.Role == "Homeowner" && u.Status == "ACTIVE") 
             .Select(u => new
             {
                 UserId = u.Id,
                 FirstName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
-                LastName = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
+                LastName = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                Email = u.Email
             })
             .ToList();
 
@@ -151,20 +142,20 @@ public class StaffController : Controller
     [HttpGet("getvisitor/{id}")]
     public IActionResult GetVisitor(int id)
     {
-        var visitor = _context.Visitor_Pass
-            .Where(v => v.VisitorId == id)
-            .Select(v => new
-            {
-                VisitorId = v.VisitorId,
-                UserId = v.UserId,
-                HomeownerName = _context.User_Accounts
-                    .Where(u => u.Id == v.UserId)
-                    .Select(u => u.Firstname + " " + u.Lastname)
-                    .FirstOrDefault(),
-                VisitorName = v.VisitorName,
-                Relationship = v.Relationship
-            })
-            .FirstOrDefault();
+        var visitor = (from v in _context.Visitor_Pass
+                       join u in _context.User_Accounts on v.UserId equals u.Id
+                       where v.VisitorId == id
+                       select new
+                       {
+                           v.VisitorId,
+                           v.UserId,
+                           FirstName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
+                           LastName = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                           Email = u.Email,
+                           HomeownerName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                           v.VisitorName,
+                           v.Relationship
+                       }).FirstOrDefault();
 
         if (visitor == null)
         {
@@ -173,6 +164,7 @@ public class StaffController : Controller
 
         return Json(visitor);
     }
+
     [HttpPost("addvisitor")]
     public IActionResult AddVisitor(int? visitorId, int userId, string visitorName, string relationship)
     {
@@ -241,16 +233,18 @@ public class StaffController : Controller
         return Json(new { success = true });
     }
 
-    [HttpPost("deletevisitor")]
+    [HttpPost("deletevisitor/{id}")]
     public IActionResult DeleteVisitor(int id)
     {
         var visitor = _context.Visitor_Pass.Find(id);
         if (visitor != null)
         {
+            // Mark visitor as deleted
             visitor.Status = "Deleted";
             _context.SaveChanges();
+            return Json(new { success = true });
         }
-        return Json(new { success = true });
+        return Json(new { success = false, message = "Visitor not found." });
     }
 
     [HttpGet("vehicle/registration")]
@@ -263,6 +257,102 @@ public class StaffController : Controller
             return RedirectToAction("landing", "Home");
         }
         return View();
+    }
+
+    [HttpGet("vehicle/registration/data/status/{status}")]
+    public IActionResult GetVehiclesByStatus(string status)
+    {
+        RefreshJwtCookies();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Staff")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+
+        // Fetch vehicles by status from the database
+        var vehicleList = _context.Vehicle_Registration
+            .Where(v => v.Status.ToLower() == status.ToLower())
+            .OrderByDescending(v => v.VehicleId)
+            .ToList();
+
+        // Return JSON data to be handled by the JavaScript
+        return Json(vehicleList);
+    }
+
+    // GET: staff/VehicleRegistration/5
+    [HttpGet("VehicleRegistration/{id}")]
+    public IActionResult GetById(int id)
+    {
+        var vehicle = (from v in _context.Vehicle_Registration
+                       join u in _context.User_Accounts on v.UserId equals u.Id
+                       where v.VehicleId == id
+                       select new
+                       {
+                           v.VehicleId,
+                           v.PlateNumber,
+                           v.Type,
+                           v.Status,
+                           v.Color,
+                           v.CarBrand,
+                           v.UserId,
+                           FirstName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
+                           LastName = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                           Email = u.Email,
+                           HomeownerName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                       }).FirstOrDefault();
+
+        if (vehicle == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(vehicle);
+    }
+
+    [HttpPost("VehicleRegistration")]
+    public IActionResult AddVehicle([FromBody] VehicleRegistration vehicle)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        // vehicleId will be auto-generated, so no need to pass it in the request body
+        // Add the new vehicle to the database
+        _context.Vehicle_Registration.Add(vehicle);
+        _context.SaveChanges();
+
+        // Return the added vehicle, including the auto-generated vehicleId
+        return Ok(vehicle);
+    }
+
+    // PUT: staff/VehicleRegistration/5
+    [HttpPut("VehicleRegistration/{id}")]
+    public IActionResult UpdateVehicle(int id, [FromBody] VehicleRegistration updated)
+    {
+        if (id != updated.VehicleId) return BadRequest();
+
+        var vehicle = _context.Vehicle_Registration.FirstOrDefault(v => v.VehicleId == id);
+        if (vehicle == null) return NotFound();
+
+        vehicle.PlateNumber = updated.PlateNumber;
+        vehicle.Type = updated.Type;
+        vehicle.Status = updated.Status;
+        vehicle.Color = updated.Color;
+        vehicle.CarBrand = updated.CarBrand;
+        vehicle.UserId = updated.UserId;
+
+        _context.SaveChanges();
+        return Ok(vehicle);
+    }
+
+    // DELETE: staff/VehicleRegistration/5
+    [HttpDelete("VehicleRegistration/{id}")]
+    public IActionResult DeleteVehicle(int id)
+    {
+        var vehicle = _context.Vehicle_Registration.FirstOrDefault(v => v.VehicleId == id);
+        if (vehicle == null) return NotFound();
+
+        _context.Vehicle_Registration.Remove(vehicle);
+        _context.SaveChanges();
+        return Ok();
     }
 
     [HttpGet("requests/reservation")]

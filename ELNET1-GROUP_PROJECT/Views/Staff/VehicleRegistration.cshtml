@@ -3,9 +3,674 @@
     ViewData["Title"] = "Staff | Vehicle Registration";
 }
 
+<style>
+    #carPreview {
+        width: 100%;
+        height: 300px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .preview-label {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.9em;
+        color: #1e293b;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .input-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #475569;
+        font-weight: 500;
+    }
+
+    .input-group input,
+    .input-group select {
+        width: 100%;
+        padding: 0.3rem 1rem;
+        border: 2px solid #cbd5e1;
+        border-radius: 8px;
+        transition: border-color 0.2s;
+    }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+    .status-badge {
+        display: inline-block;
+        border-radius: 9999px; 
+        font-size: 0.875rem; /* text-sm */
+        font-weight: 500;
+        padding: 0.25rem 0.75rem; 
+        text-align: center; 
+    }
+
+    .homeowner-list-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+        .homeowner-list-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .homeowner-list-item.selected {
+            background-color: #eef2ff;
+        }
+
+        .homeowner-list-item:last-child {
+            border-bottom: none;
+        }
+
+    #homeownerList {
+        scrollbar-width: thin;
+        scrollbar-color: #e5e7eb #f3f4f6;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls, carMesh;
+        let carPreviewInitialized = false;
+        let currentCarData = null;
+
+        function setupInputListeners() {
+            // Debounced update function
+            const debouncedUpdate = debounce(updateCarModel, 300);
+    
+            // Add event listeners to all relevant inputs
+            ['type', 'color', 'plateNumber', 'carBrand'].forEach(fieldId => {
+                document.getElementById(fieldId).addEventListener('input', debouncedUpdate);
+            });
+        }
+
+        function cleanupCarPreview() {
+            if (renderer) {
+                renderer.domElement?.remove();
+                renderer.dispose();
+            }
+            if (scene) {
+                scene.traverse(child => {
+                    if (child.isMesh) {
+                        child.geometry?.dispose();
+                        child.material?.dispose();
+                    }
+                });
+            }
+            controls?.dispose();
+            scene = null;
+            camera = null;
+            renderer = null;
+            controls = null;
+        }
+
+        // Handle window resize
+        function onWindowResize() {
+            const container = document.getElementById('carPreview');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.height);
+        }
+
+        // Initialize 3D Viewer
+        function initCarPreview() {
+            const container = document.getElementById('carPreview');
+
+            // Scene setup
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setClearColor(0xf3f4f6);
+            container.innerHTML = '';
+            container.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Initial car
+            updateCarModel();
+            animate();
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // Update car model based on inputs
+        function updateCarModel() {
+            // Remove existing car
+            if (carMesh) {
+                // Properly dispose of all children geometries and materials
+                carMesh.traverse(child => {
+                    if (child.isMesh) {
+                        child.geometry.dispose();
+                        if (child.material) {
+                            if (Array.isArray(child.material)) {
+                                child.material.forEach(material => material.dispose());
+                            } else {
+                                child.material.dispose();
+                            }
+                        }
+                    }
+                });
+                scene.remove(carMesh);
+            }
+
+            // Get current values with proper fallbacks
+            const type = document.getElementById('type')?.value || 'sedan';
+            const color = document.getElementById('color')?.value || '#ffffff';
+            const plate = document.getElementById('plateNumber')?.value?.trim() || 'ABC-123';
+
+            // Create new car
+            carMesh = createBasicCar(type, color, plate);
+            scene.add(carMesh);
+
+            // Position camera with safety checks
+            if (camera && controls) {
+                camera.position.set(5, 3, 5);
+                controls.target.set(0, 0.5, 0);
+                controls.update();
+            }
+        }
+
+        // Basic car creation
+        function createBasicCar(type, color, plate) {
+            const group = new THREE.Group();
+
+            // Body dimensions based on type
+            const dimensions = {
+                sedan: { width: 2, height: 1.4, length: 4 },
+                suv: { width: 2.2, height: 1.8, length: 4.5 },
+                truck: { width: 2.5, height: 2.2, length: 6 }
+                //Add if there will be more vehicle that we include, I'm still thinking
+            }[type];
+
+            // Main body
+            const bodyGeometry = new THREE.BoxGeometry(
+                dimensions.width,
+                dimensions.height,
+                dimensions.length
+            );
+            const bodyMaterial = new THREE.MeshPhysicalMaterial({
+                color: color,
+                metalness: 0.3,
+                roughness: 0.4
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            group.add(body);
+
+            // Wheels
+            const wheelGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 16);
+            const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+
+            [-1, 1].forEach(x => {
+                [-1.5, 1.5].forEach(z => {
+                    const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+                    wheel.rotation.z = Math.PI / 2;
+                    wheel.position.set(x * dimensions.width/2, -0.6, z);
+                    group.add(wheel);
+                });
+            });
+
+            // License plate
+            const plateTexture = new THREE.CanvasTexture(createLicensePlateTexture(plate));
+            const plateMaterial = new THREE.MeshBasicMaterial({ map: plateTexture });
+            const plateMesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(1, 0.3),
+                plateMaterial
+            );
+            plateMesh.position.set(0, -0.3, -dimensions.length/2 + 0.2);
+            plateMesh.rotation.x = -Math.PI / 2;
+            group.add(plateMesh);
+
+            return group;
+        }
+
+        // License plate texture generator
+        function createLicensePlateTexture(text) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 154;
+            const ctx = canvas.getContext('2d');
+
+            // Background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 512, 154);
+
+            // Text
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 64px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text.toUpperCase(), 256, 77);
+
+            return canvas;
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Utility function
+        function debounce(func, wait) {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        window.carPreviewInitialized = carPreviewInitialized;
+        window.currentCarData = currentCarData;
+        window.cleanupCarPreview = cleanupCarPreview;
+        window.setupInputListeners = setupInputListeners;
+        renderer = new THREE.WebGLRenderer({ antialias: true })
+        window.initCarPreview = initCarPreview;
+        window.updateCarModel = updateCarModel;
+        window.onWindowResize = onWindowResize;
+        window.debounce = debounce;
+        window.renderer = renderer;
+    </script>
+
+
+    <script>    
+        let deleteId = '';
+        let selectedStatus = '';
+        let homeowners = [];
+        let selectedHomeownerId = null;
+
+        // Expose to global scope
+        window.initCarPreview();
+        window.updateCarModel();
+        window.onWindowResize();
+        window.renderer();
+        window.debounce();
+        window.carPreviewInitialized();
+        window.currentCarData();
+        window.setupInputListeners();
+
+        // Handle status selection and change the button colors
+        function filterByStatus(status) {
+           // Set the selected status
+           selectedStatus = status;
+
+                // Update the button styles
+                if (status === 'Active') {
+                    document.getElementById('activeButton').classList.remove('bg-blue-400');
+                    document.getElementById('activeButton').classList.add('bg-blue-700');
+                    document.getElementById('inactiveButton').classList.remove('bg-blue-700');
+                    document.getElementById('inactiveButton').classList.add('bg-blue-400');
+                } else {
+                    document.getElementById('inactiveButton').classList.remove('bg-blue-400');
+                    document.getElementById('inactiveButton').classList.add('bg-blue-700');
+                    document.getElementById('activeButton').classList.remove('bg-blue-700');
+                    document.getElementById('activeButton').classList.add('bg-blue-400');
+                }
+
+            fetchVehicles(status)
+        }
+
+        function filterTable() {
+            let input = document.getElementById('searchInput').value.toLowerCase();  // Get the search input value
+            let tableBody = document.getElementById('vehicleTableBody');
+            let tableRows = tableBody.getElementsByTagName('tr');
+            let noDataMessage = document.getElementById('noDataMessage');
+            let isAnyRowVisible = false;
+
+            if (noDataMessage) {
+                noDataMessage.remove();
+            }
+
+            for (let row of tableRows) {
+                if (row.cells.length < 5) continue;
+
+                let plateNumber = row.cells[0].innerText.toLowerCase();
+                let type = row.cells[1].innerText.toLowerCase();
+                let status = row.cells[4].innerText.toLowerCase(); // Column 5 is the status
+                let color = row.cells[2].innerText.toLowerCase();
+                let carBrand = row.cells[3].innerText.toLowerCase();
+                let isSearchMatch = plateNumber.includes(input) || type.includes(input) || status.includes(input) || color.includes(input) || carBrand.includes(input);
+
+                if (isSearchMatch) {
+                    row.style.display = ''; 
+                    isAnyRowVisible = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+
+            if (!isAnyRowVisible) {
+                let noDataMessage = document.createElement('tr');
+                noDataMessage.id = 'noDataMessage';
+                noDataMessage.innerHTML = '<td colspan="6" class="text-center py-4 text-gray-500">No Data Found</td>';
+                tableBody.appendChild(noDataMessage);
+            }
+        }
+
+        async function fetchVehicles(status = "Active") {
+          try {
+            const response = await fetch(`/staff/vehicle/registration/data/status/${status}`);
+
+            // Check if the response is ok (status 200)
+            if (!response.ok) {
+              throw new Error('Failed to fetch vehicle data');
+            }
+
+            const data = await response.json();
+            renderVehicleTable(data, status); // Pass the fetched data to renderVehicleTable
+          } catch (error) {
+            console.error("Error fetching vehicle data:", error);
+          }
+        }
+
+        fetchVehicles('Active');
+
+        // Function to render the table
+        function renderVehicleTable(data, status) {
+            const tableBody = document.getElementById('vehicleTableBody');
+            tableBody.innerHTML = ""; 
+
+            if (data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4">No ${status} Data Found.</td></tr>`;
+            } else {
+                data.forEach(vehicle => {
+                    // Creating table row
+                    const row = document.createElement('tr');
+
+                    row.innerHTML = `
+                        <td class="p-2 text-center">${vehicle.plateNumber}</td>
+                        <td class="p-2 text-center">${vehicle.type}</td>
+                        <td class="p-2 text-center">${vehicle.color}</td>
+                        <td class="p-2 text-center">${vehicle.carBrand}</td>
+                        <td class="p-2 text-center">
+                            <span class="status-badge
+                                ${vehicle.status === 'Active' ? 'bg-green-500 text-white' :
+                                vehicle.status === 'Inactive' ? 'bg-red-500 text-white' :
+                                'bg-gray-500 text-white'}">
+                                ${vehicle.status}
+                            </span>
+                        </td>
+                        <td class="p-2 text-center space-x-2">
+                            <button onclick="editVehicle(${vehicle.vehicleId})" class="text-blue-600 text-base font-semibold">Edit</button>
+                            <button onclick="confirmDelete(${vehicle.vehicleId})" class="text-red-500 text-base font-semibold">Delete</button>
+                        </td>
+                    `;
+
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        // Load homeowners on modal open
+        async function loadHomeowners() {
+            try {
+                const response = await fetch('/staff/gethomeowners');
+                homeowners = await response.json();
+                renderHomeowners(homeowners);
+            } catch (error) {
+                console.error('Error fetching homeowners:', error);
+            }
+        }
+
+        // Render homeowners list
+        function renderHomeowners(data) {
+            const list = document.getElementById('homeownerList');
+            list.innerHTML = data.length ? data.map(user => `
+                <div onclick="selectHomeowner(${user.userId}, '${user.firstName} ${user.lastName}')"
+                    class="px-4 py-2 cursor-pointer ${
+                        selectedHomeownerId === user.userId ? 'bg-blue-100' : 'hover:bg-gray-50'
+                    } rounded-md">
+                    <span class="font-medium">${user.firstName} ${user.lastName}</span>
+                    <span class="text-gray-500 text-sm block">${user.email}</span>
+                </div>
+            `).join('') : '<div class="text-gray-500 p-4">No homeowners found</div>';
+            list.classList.remove('hidden');
+        }
+
+        // Filter homeowners on input
+        function filterHomeowners() {
+            const query = document.getElementById('homeownerSearch').value.toLowerCase();
+            const filtered = homeowners.filter(user => {
+                const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+                return user.firstName.toLowerCase().includes(query) ||
+                       user.lastName.toLowerCase().includes(query) ||
+                       fullName.includes(query);
+            });
+            renderHomeowners(filtered);
+        }
+
+        // Select a homeowner
+        function selectHomeowner(userId, fullName) {
+            selectedHomeownerId = userId; // Update selected
+            document.getElementById('selectedUserId').value = userId;
+            document.getElementById('selectedHomeownerName').innerText = fullName;
+            document.getElementById('homeownerSearch').value = '';
+            renderHomeowners(homeowners); // Re-render to highlight
+        }
+
+        function showAddModal() {
+            $('#vehicleForm')[0].reset();
+            document.getElementById('selectedUserId').value = '';
+            document.getElementById('selectedHomeownerName').value = '';
+            $('#modalTitle').text('Add Vehicle');
+            $('#vehicleId').val('');
+            $('#vehicleModal').removeClass('hidden').addClass('flex');
+            loadHomeowners();
+            initCarPreview();
+            // Add input listeners
+            ['type', 'color', 'plateNumber'].forEach(id => {
+                document.getElementById(id).addEventListener('input',
+                    debounce(updateCarModel, 300)
+                );
+            });
+        }
+
+        function editVehicle(id) {
+            $.get(`/staff/VehicleRegistration/${id}`, function (data) {
+                loadHomeowners();
+                document.getElementById('selectedUserId').value = data.userId;
+                document.getElementById('selectedHomeownerName').textContent = data.homeownerName;
+                selectedHomeownerId = data.userId; 
+                renderHomeowners(data);
+                currentCarData = data;
+
+                // Populate form fields
+                $('#modalTitle').text('Edit Vehicle');
+                $('#vehicleId').val(data.vehicleId);
+                $('#plateNumber').val(data.plateNumber);
+                $('#type').val(data.type.toLowerCase());
+                $('#color').val(data.color);
+                $('#carBrand').val(data.carBrand);
+                
+                if (carPreviewInitialized) {
+                    cleanupCarPreview();
+                }
+
+                // Initialize preview after short delay to ensure DOM updates
+                setTimeout(() => {
+                    if (!carPreviewInitialized) {
+                        initCarPreview();
+                        ['type', 'color', 'plateNumber'].forEach(id => {
+                            document.getElementById(id).addEventListener('input',
+                                debounce(updateCarModel, 300)
+                            );
+                        });
+                        carPreviewInitialized = true;
+                    }
+                    updateCarModel();
+                }, 50);
+
+                // Show modal
+                $('#vehicleModal').removeClass('hidden').addClass('flex');
+            });
+        }
+
+        function saveVehicle() {
+            const vehicleID = $('#vehicleId').val();
+            const userId = document.getElementById('selectedUserId').value;
+
+            if (!userId) {
+                Swal.fire('Error', 'Please select a homeowner.', 'error');
+                return;
+            }
+
+            const addvehicle = {
+                plateNumber: $('#plateNumber').val(),
+                type: $('#type').val(),
+                color: $('#color').val(),
+                carBrand: $('#carBrand').val(),
+                userId: userId
+            };
+
+            const editvehicle = {
+                vehicleId: vehicleID,
+                plateNumber: $('#plateNumber').val(),
+                type: $('#type').val(),
+                color: $('#color').val(),
+                carBrand: $('#carBrand').val(),
+                userId: userId
+            };
+
+            const url = vehicleID ? `/staff/VehicleRegistration/${vehicleID}` : '/staff/VehicleRegistration';
+            const method = vehicleID ? 'PUT' : 'POST';
+            const data = vehicleID ? editvehicle : addvehicle;
+
+            $.ajax({
+                url: url,
+                type: method,
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function () {
+                    document.getElementById('homeownerSearch').value = '';
+                    selectedHomeownerId = null;
+                    document.getElementById('selectedHomeownerName').textContent = null;
+                    Swal.fire({
+                        icon: 'success',
+                        title: vehicleID ? 'Vehicle Updated Successfully!' : 'Vehicle Added Successfully!',
+                        text: 'The vehicle has been successfully saved.',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                    }).then(() => {
+                        location.reload();
+                    });
+                },
+                error: function (xhr, status, error) {
+                    // Error message using SweetAlert2
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Something Went Wrong!',
+                        text: 'Operation Failed.',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#d33',
+                    });
+                }
+            });
+        }   
+
+        function confirmDelete(id) {
+            deleteId = id; // This will assign the value properly
+            $('#deleteConfirm').removeClass('hidden').addClass('flex');
+        }
+
+        function deleteVehicleConfirmed() {
+            if (!deleteId) return; // Ensure deleteId is valid
+
+            // Proceed with the deletion and show a success message after deletion
+            $.ajax({
+                url: `/staff/VehicleRegistration/${deleteId}`,
+                type: 'DELETE',
+                success: function () {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: 'The vehicle has been deleted successfully.',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        location.reload(); // Reload page after deletion
+                    });
+                },
+                error: function () {
+                    // Show an error message if something goes wrong
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'There was an issue deleting the vehicle.',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        }
+
+        function closeModal() {
+            $('#vehicleModal').addClass('hidden');
+            document.getElementById('homeownerSearch').value = '';
+            selectedHomeownerId = null;
+            document.getElementById('selectedHomeownerName').textContent = null;
+            carPreviewInitialized = false;
+            $('#vehicleModal').addClass('hidden');
+        }
+
+        function closeDeleteConfirm() {
+            $('#deleteConfirm').addClass('hidden');
+        }
+
+    </script>
+}
+
 <div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
     <!-- Sidebar -->
-    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 flex flex-col">
         <!-- Sidebar Header -->
         <div class="px-6 py-8 border-b border-gray-100">
             <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
@@ -14,7 +679,7 @@
         <!-- Navigation Links -->
         <ul class="flex-1 px-4 py-6 space-y-2">
             <li class="nav-item">
-                <a href="/staff" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
+                <a href="/staff/dashboard" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
                     <i class="fas fa-home w-5 h-5 mr-3"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
@@ -61,9 +726,119 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 p-8 overflow-y-auto fade-in">
+    <div class="flex-1 p-4 overflow-y-auto fade-in">
          <div class="container">
-            <!-- Put your code here guys -->
+            <div class="flex items-center mx-auto text-lg space-x-2 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+                <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-chart-line w-5 h-5 mr-3"></i> Vehicle Registration</h1>
+            </div>
+            <h2 class="text-2xl font-bold mb-4"></h2>
+
+            <div class="flex justify-between items-center mb-4">
+                <button class="bg-blue-600 text-white px-4 py-2 rounded" onclick="showAddModal()">Add Vehicle</button>
+
+                <!-- Filter Buttons -->
+                <div class="space-x-4">
+                    <div id="activeButton" class="bg-blue-700 text-white px-4 py-2 rounded cursor-pointer inline-block" onclick="filterByStatus('Active')">Active</div>
+                    <div id="inactiveButton" class="bg-blue-400 text-white px-4 py-2 rounded cursor-pointer inline-block" onclick="filterByStatus('Inactive')">Inactive</div>
+                </div>
+            </div>
+
+            <input type="text" id="searchInput" class="border p-2 mb-4 w-full" placeholder="Search Vehicle Registered..." onkeyup="filterTable()">
+
+            <table class="w-full border" id="vehicleTable">
+                <thead class="bg-blue-800 text-white">
+                    <tr>
+                        <th class="p-2 text-center">PLATE NO.</th>
+                        <th class="p-2 text-center">TYPE</th>
+                        <th class="p-2 text-center">COLOR</th>
+                        <th class="p-2 text-center">BRAND</th>
+                        <th class="p-2 text-center">STATUS</th>
+                        <th class="p-2 text-center">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="vehicleTableBody">
+                    <!-- Rows will be populated by JavaScript -->
+                </tbody>
+            </table>
+
+            <!-- Add/Edit Modal -->
+            <div id="vehicleModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4">
+                <div class="bg-white p-2 rounded-xl w-full max-w-2xl relative">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800" id="modalTitle">Add Vehicle</h3>
+                    <form id="vehicleForm" class="space-y-4">
+                        <input type="hidden" id="vehicleId" />
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label>Vehicle Type</label>
+                                <select id="type" class="input-field">
+                                    <option value="sedan">Sedan</option>
+                                    <option value="suv">SUV</option>
+                                    <option value="truck">Truck</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Vehicle Color</label>
+                                <input type="color" id="color" value="#ffffff">
+                            </div>
+                            <div class="input-group">
+                                <label>Car Brand Name</label>
+                                <input type="text" id="carBrand" placeholder="Enter the Car Brand Name">
+                            </div>
+                            <div class="input-group">
+                                <label>Plate Number</label>
+                                <input type="text" id="plateNumber" placeholder="ABC-123">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Associated Homeowner</label>
+                            <div class="relative">
+                                <input type="text"
+                                       id="homeownerSearch"
+                                       class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                       placeholder="Search homeowners..."
+                                       oninput="filterHomeowners()">
+                                <div id="homeownerList"
+                                     class="hidden w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-sm overflow-y-auto" style="max-height: 120px">
+                                    <!-- Homeowners will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Selected Homeowner -->
+                        <input type="hidden" id="selectedUserId">
+                        <div class="bg-blue-50 p-2 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">Selected Homeowner:</p>
+                            <p id="selectedHomeownerName" class="font-medium text-blue-700">None selected</p>
+                        </div>
+
+                        <!-- 3D Preview Container -->
+                        <div id="carPreview" style="height: 180px; border: 2px solid #e2e8f0; border-radius: 8px;"></div>
+
+                        <div class="mt-6 flex justify-end space-x-3">
+                            <button type="button" onclick="saveVehicle()"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
+                                Save Changes
+                            </button>
+                            <button type="button" onclick="closeModal()"
+                                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-lg transition-colors">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation -->
+            <div id="deleteConfirm" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+                <div class="bg-white p-6 rounded">
+                    <p>Are you sure you want to delete this vehicle?</p>
+                    <div class="mt-4 space-x-4 text-right">
+                        <button onclick="deleteVehicleConfirmed()" class="bg-red-600 text-white px-4 py-2 rounded">Delete</button>
+                        <button onclick="closeDeleteConfirm()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button>
+                    </div>
+                </div>
+            </div>
           </div>
     </div>
 </div>

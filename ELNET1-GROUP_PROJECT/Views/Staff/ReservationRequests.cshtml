@@ -14,7 +14,7 @@
         <!-- Navigation Links -->
         <ul class="flex-1 px-4 py-6 space-y-2">
             <li class="nav-item">
-                <a href="/staff" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
+                <a href="/staff/dashboard" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
                     <i class="fas fa-home w-5 h-5 mr-3"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
@@ -61,12 +61,11 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 p-8 overflow-y-auto fade-in">
-        <div class="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-md">
-            <h1 class="text-2xl font-bold mb-4 text-blue-900 flex items-center">
-                <i class="fas fa-bell text-lg"></i>
-                Reservation
-            </h1>
+    <div class="flex-1 p-2 overflow-y-auto fade-in">
+        <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md">
+            <div class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+                <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-bell text-lg"></i> Reservation</h1>
+            </div>
 
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">Filter by Status</label>

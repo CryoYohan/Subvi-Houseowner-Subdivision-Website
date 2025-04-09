@@ -72,3 +72,40 @@
         background-color: #fef3c7; /* yellow-100 */
         color: #92400e; /* yellow-800 */
     }
+
+.homeowner-list-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+    .homeowner-list-item:hover {
+        background-color: #f9fafb;
+    }
+
+    .homeowner-list-item.selected {
+        background-color: #eef2ff;
+    }
+
+    .homeowner-list-item:last-child {
+        border-bottom: none;
+    }
+
+#homeownerList {
+    scrollbar-width: thin;
+    scrollbar-color: #e5e7eb #f3f4f6;
+}
+
+    #homeownerList::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #homeownerList::-webkit-scrollbar-track {
+        background: #f3f4f6;
+    }
+
+    #homeownerList::-webkit-scrollbar-thumb {
+        background-color: #e5e7eb;
+        border-radius: 4px;
+    }
