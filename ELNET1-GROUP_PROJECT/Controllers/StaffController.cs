@@ -521,6 +521,50 @@ public class StaffController : Controller
         return View();
     }
 
+    [HttpGet("bills/data")]
+    public async Task<IActionResult> GetBills()
+    {
+        var bills = await _context.Bill
+            .Where(b => b.Status == "Paid") 
+            .OrderByDescending(b => b.BillId)
+            .Select(b => new Bill
+            {
+                BillId = b.BillId,
+                BillName = b.BillName,
+                DueDate = b.DueDate,
+                Status = b.Status,
+                BillAmount = b.BillAmount
+            })
+            .ToListAsync();
+
+        return Ok(bills);
+    }
+
+    // GET: api/BillPayment/by-bill/5
+    [HttpGet("payments/by-bill/{billId}")]
+    public async Task<IActionResult> GetPaymentsByBill(int billId)
+    {
+        // Fetch the payments for the given BillId
+        var payments = await _context.Payment
+            .Where(p => p.BillId == billId)
+            .OrderByDescending(p => p.PaymentId)
+            .Select(p => new Payment
+            {
+                PaymentId = p.PaymentId,
+                AmountPaid = p.AmountPaid,
+                PaymentStatus = p.PaymentStatus,
+                PaymentMethod = p.PaymentMethod,
+                DatePaid = p.DatePaid
+            })
+            .ToListAsync();
+
+        // Calculate the total amount paid
+        var totalAmountPaid = payments.Sum(p => p.AmountPaid);
+
+        // Return the payments along with the total amount
+        return Ok(new { Payments = payments, TotalAmountPaid = totalAmountPaid });
+    }
+
     [HttpGet("reports")]
     public IActionResult Reports()
     {

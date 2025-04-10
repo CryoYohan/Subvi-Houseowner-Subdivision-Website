@@ -414,8 +414,10 @@
           }
         }
 
-        fetchVehicles('Active');
-
+        document.addEventListener('DOMContentLoaded', () => {
+            filterByStatus('Active');
+        });
+        
         // Function to render the table
         function renderVehicleTable(data, status) {
             const tableBody = document.getElementById('vehicleTableBody');

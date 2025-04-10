@@ -420,6 +420,51 @@ public class AdminController : Controller
         return View();
     }
 
+    public async Task<IActionResult> GetBills()
+    {
+        var bills = await _context.Bill
+            .Where(b => b.Status == "Paid")
+            .OrderByDescending(b => b.BillId)
+            .Select(b => new Bill
+            {
+                BillId = b.BillId,
+                BillName = b.BillName,
+                DueDate = b.DueDate,
+                Status = b.Status,
+                BillAmount = b.BillAmount
+            })
+            .ToListAsync();
+
+        return Ok(bills);
+    }
+
+    public IActionResult GetPaymentsByBill(int billId)
+    {
+        // Synchronously fetch payments from the database
+        var payments = _context.Payment
+            .Where(p => p.BillId == billId)
+            .OrderByDescending(p => p.PaymentId)
+            .Select(p => new
+            {
+                PaymentId = p.PaymentId,
+                AmountPaid = p.AmountPaid,
+                PaymentStatus = p.PaymentStatus,
+                PaymentMethod = p.PaymentMethod,
+                DatePaid = p.DatePaid
+            })
+            .ToList(); // Convert to list synchronously
+
+        if (payments.Count == 0)
+        {
+            return NotFound(new { Message = "No payments found for this bill." });
+        }
+
+        // Calculate total amount paid synchronously
+        var totalAmountPaid = payments.Sum(p => p.AmountPaid);
+
+        return Ok(new { Payments = payments, TotalAmountPaid = totalAmountPaid });
+    }
+
     public IActionResult PaymentHistory()
     {
         RefreshJwtCookies();
