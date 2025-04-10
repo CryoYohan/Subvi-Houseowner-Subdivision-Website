@@ -172,7 +172,7 @@
                     <p class="text-gray-600 mb-4">Submit and track maintenance issues</p>
                     <button class="apply px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg transition-all hover:border-blue-500 hover:text-blue-600 group-hover:border-blue-500 group-hover:text-blue-600;">View Maintenance Requests →</button>
                 </div>
-                <div onclick="openModal('emergency')" class="resource-card group">
+                <div onclick="showEmergencyContacts()" class="resource-card group" style="cursor: pointer;">
                     <div class="flex items-center gap-3 mb-2">
                         <div class="p-3 bg-red-100 rounded-lg">
                             <span class="text-2xl">🚨</span>
@@ -351,8 +351,73 @@
         </div>
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+                function showEmergencyContacts() {
+        Swal.fire({
+            title: 'Emergency Contacts',
+            html: `
+                <div style="text-align: left;">
+                    <h3 style="color: #dc2626; font-weight: bold; margin-bottom: 10px;">Subdivision Contacts</h3>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                        <div style="width: 48%;">
+                            <h4 style="font-weight: bold; margin-bottom: 5px;">Homeowners Association (HOA)</h4>
+                            <p>📞 President: +63 917 123 4567</p>
+                            <p>📞 Secretary: +63 928 234 5678</p>
+                            <p>📧 Email: hoa@greensubdivision.ph</p>
+
+                            <h4 style="font-weight: bold; margin-top: 15px; margin-bottom: 5px;">Security Office</h4>
+                            <p>📞 Guard House: +63 2 8123 4000</p>
+                            <p>📞 Mobile: +63 920 123 4567 (24/7)</p>
+                            <p>📧 Email: security@greensubdivision.ph</p>
+                        </div>
+                        <div style="width: 48%;">
+                            <h4 style="font-weight: bold; margin-bottom: 5px;">Subdivision Owner</h4>
+                            <p>📞 Main Office: +63 2 8123 4567</p>
+                            <p>📞 Emergency: +63 919 876 5432</p>
+                            <p>📧 Email: admin@greensubdivision.ph</p>
+
+                            <h4 style="font-weight: bold; margin-top: 15px; margin-bottom: 5px;">Maintenance Team</h4>
+                            <p>📞 Office: +63 2 8123 5000</p>
+                            <p>📞 Emergency: +63 918 765 4321</p>
+                            <p>📧 Email: maintenance@greensubdivision.ph</p>
+                        </div>
+                    </div>
+
+                    <h3 style="color: #dc2626; font-weight: bold; margin-bottom: 10px;">Philippines Emergency Hotlines</h3>
+                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                        <div style="width: 48%; margin-bottom: 10px;">
+                            <p>🚓 <strong>Police Emergency:</strong> 117 or 911</p>
+                            <p>🚓 <strong>NCRPO Hotline:</strong> +63 2 8723 0401</p>
+                        </div>
+                        <div style="width: 48%; margin-bottom: 10px;">
+                            <p>🚒 <strong>Bureau of Fire:</strong> 117 or 911</p>
+                            <p>🚒 <strong>Fire Department:</strong> +63 2 8426 0219</p>
+                        </div>
+                        <div style="width: 48%; margin-bottom: 10px;">
+                            <p>🏥 <strong>Medical Emergency:</strong> 117 or 911</p>
+                            <p>🏥 <strong>Red Cross:</strong> 143 or +63 2 8790 2300</p>
+                        </div>
+                        <div style="width: 48%; margin-bottom: 10px;">
+                            <p>🚔 <strong>MMDA Traffic:</strong> 136</p>
+                            <p>🚔 <strong>DOTR Hotline:</strong> +63 2 8790 8300</p>
+                        </div>
+                    </div>
+                </div>
+            `,
+            width: 800,
+            padding: '2em',
+            background: '#fff',
+            backdrop: `
+                rgba(220,38,38,0.1)
+            `,
+            confirmButtonText: 'Close',
+            confirmButtonColor: '#dc2626',
+            customClass: {
+                popup: 'border-2 border-red-200'
+            }
+        });
+    }
         // Documents Modal Functions
         function openDocumentsModal() {
             document.getElementById("documentsModalOverlay").classList.remove("hidden");
