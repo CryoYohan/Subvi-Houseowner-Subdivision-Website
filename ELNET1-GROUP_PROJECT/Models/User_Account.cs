@@ -30,7 +30,7 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("CONTACT")]
         public string PhoneNumber { get; set; }
         [Column("STATUS")]
-        public string Status { get; set; }
+        public string? Status { get; set; } = "ACTIVE";
 
     }
 }

@@ -70,7 +70,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Email == loginDTO.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDTO.Password, user.Password))
             {
-                return Unauthorized(new { message = "Invalid credentials." });
+                return Unauthorized(new { message = "Login Failed. Please check your email or password." });
             }
 
             var token = GenerateJwtToken(user);

@@ -521,12 +521,21 @@ public class StaffController : Controller
         return View();
     }
 
-    [HttpGet("bills/data")]
-    public async Task<IActionResult> GetBills()
+    [HttpGet("bills/data/{status}")]
+    public async Task<IActionResult> GetBills(string status = "Paid")  // Default to "Paid"
     {
-        var bills = await _context.Bill
-            .Where(b => b.Status == "Paid") 
-            .OrderByDescending(b => b.BillId)
+        IQueryable<Bill> query = _context.Bill.OrderByDescending(b => b.BillId);
+
+        if (status == "Paid")
+        {
+            query = query.Where(b => b.Status == "Paid");
+        }
+        else if (status == "Not Paid")
+        {
+            query = query.Where(b => b.Status != "Paid");
+        }
+
+        var bills = await query
             .Select(b => new Bill
             {
                 BillId = b.BillId,

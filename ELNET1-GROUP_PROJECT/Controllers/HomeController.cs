@@ -83,7 +83,6 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         public IActionResult landing()
         {
-            RefreshJwtCookies();
             var role = GetUserRoleFromToken();
             if (!string.IsNullOrEmpty(role))
             {
@@ -140,6 +139,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         public IActionResult Bill()
         {
+            RefreshJwtCookies();
             var Iduser = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(Iduser, out int userId))
             {
@@ -236,6 +236,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         public IActionResult PaymentPanel(int billId)
         {
+            RefreshJwtCookies();
             var Iduser = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(Iduser, out int userId))
             {
@@ -280,6 +281,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpPost]
         public async Task<IActionResult> ConfirmPayment(int billId, decimal amountPaid, string paymentMethod)
         {
+            RefreshJwtCookies();
             try
             {
                 // Create Payment Intent
@@ -323,6 +325,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpPost]
         public async Task<IActionResult> PaymentCallback(int billId, decimal amountPaid, int userId)
         {
+            RefreshJwtCookies();
             try
             {
                 // Get the total payments made for this bill by this user
@@ -416,6 +419,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpGet]
         public async Task<IActionResult> Forums()
         {
+            RefreshJwtCookies();
             var Iduser = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(Iduser, out int userId))
             {
@@ -463,6 +467,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpGet]
         public IActionResult SearchDiscussions(string query)
         {
+            RefreshJwtCookies();
             var searchResults = _context.Forum
                 .Where(f => f.Title.Contains(query) || f.Content.Contains(query)) // Search by Title or Content
                 .Join(_context.User_Accounts, f => f.UserId, u => u.Id, (f, u) => new
@@ -484,6 +489,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpPost]
         public async Task<IActionResult> AddPost(string title, string content)
         {
+            RefreshJwtCookies();
             var Iduser = HttpContext.Request.Cookies["Id"];
 
             if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(content))
@@ -521,6 +527,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpPost]
         public async Task<IActionResult> ToggleLike(int postId)
         {
+            RefreshJwtCookies();
             var Iduser = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(Iduser, out int userId))
             {
@@ -556,6 +563,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpGet]
         public IActionResult Comments(int id, string title)
         {
+            RefreshJwtCookies();
             // Fetch the post and replies based on the PostId (id)
             var post = _context.Forum
                 .Where(f => f.PostId == id)
@@ -611,6 +619,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpPost]
         public async Task<IActionResult> AddReply(int postId, string content)
         {
+            RefreshJwtCookies();
             var Iduser = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(Iduser, out int userId))
             {
@@ -639,6 +648,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         public IActionResult GetFeedbacks(string feedbackType = "")
         {
+            RefreshJwtCookies();
             var feedbacks = string.IsNullOrEmpty(feedbackType)
                 ? _context.Feedback
                     .OrderByDescending(f => f.DateSubmitted)
@@ -674,6 +684,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpPost]
         public IActionResult AddFeedback([FromBody] FeedbackRequest request)
         {
+            RefreshJwtCookies();
             var Iduser = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(Iduser, out int userId))
             {
@@ -710,6 +721,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpGet]
         public IActionResult GetTodayAnnouncements()
         {
+            RefreshJwtCookies();
             var today = DateTime.Now.Date;
             var todayString = today.ToString("yyyy-MM-dd");
 
@@ -728,6 +740,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         [HttpGet]
         public IActionResult GetCommunityStats()
         {
+            RefreshJwtCookies();
             var IduserStr = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(IduserStr, out int userId))
             {

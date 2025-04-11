@@ -1,9 +1,8 @@
 ﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.User_Account>
 
-
 @{
     Layout = "_AdminLayout";
-    ViewData["Title"] = "Payment History";
+    ViewData["Title"] = "Bill Payment History";
 }
 <div class="flex overflow-hidden">
     <!-- Sidebar -->
@@ -25,15 +24,10 @@
                 <i class="fas fa-users w-6"></i>
                 <span class="ml-3">Homeowners & Staff Accounts</span>
             </a>
-            <a asp-controller="admin" asp-action="billpayment" style="text-decoration: none;"
-               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "active-item" : "transition ease-in-out")">
-                <i class="fas fa-file-invoice-dollar w-6"></i>
-                <span class="ml-3">Bill Payment</span>
-            </a>
             <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
                class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-history w-6"></i>
-                <span class="ml-3">Payment History</span>
+                <span class="ml-3">Bill Payment History</span>
             </a>
             <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
                class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
@@ -53,10 +47,185 @@
         </nav>
     </aside>
     <div class="flex-1 p-3">
-        <div class="bg-white shadow-md rounded-xl p-3 mb-3 flex items-center space-x-3">
-            <span><i class="fas fa-history text-blue-700 text-xl"></i></span>
-            <h1 class="text-blue-700 font-bold text-lg">Payment History</h1>
+        <div class="mx-autospace-x-1 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md">
+            <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-history w-6"></i> Bill Payment History</h1>
         </div>
-        <!-- Put your code here guys -->
+
+        <div class="mb-4 flex justify-between items-center">
+            <!-- Filter Buttons -->
+            <div class="space-x-4">
+                <button id="fullPaidButton" class="bg-blue-700 text-white px-4 py-2 rounded cursor-pointer" onclick="filterBillsByStatus('Paid')">Full Paid</button>
+                <button id="notPaidButton" class="bg-gray-400 text-white px-4 py-2 rounded cursor-pointer" onclick="filterBillsByStatus('Not Paid')">Not Fully Paid</button>
+            </div>
+
+            <!-- Search Input -->
+            <input type="text"
+                   id="searchInput"
+                   placeholder="Search by Bill Name..."
+                   class="w-full sm:w-64 p-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   oninput="filterBills()" />
+        </div>
+
+        <!-- Table -->
+        <table class="w-full border shadow-lg rounded overflow-hidden" id="billTable">
+            <thead class="bg-blue-800 text-white">
+                <tr>
+                    <th class="p-3 text-left">BILL NAME</th>
+                    <th class="p-3 text-center">DUE DATE</th>
+                    <th class="p-3 text-center">STATUS</th>
+                    <th class="p-3 text-right">BILL AMOUNT</th>
+                </tr>
+            </thead>
+            <tbody id="billTableBody">
+                <!-- Rows injected via JS -->
+            </tbody>
+        </table>
     </div>
 </div>
+
+<script>
+    const getPaymentsByBillUrl = '@Url.Action("GetBillPayments", "Admin")';
+    let allBills = [];
+    let selectedRow = null;
+    let filterStatus = 'Paid';  
+
+    // Function to apply filters based on search input and selected status
+    function filterBills() {
+      const keyword = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = allBills.filter(b =>
+        b.billName.toLowerCase().includes(keyword)
+      );
+      renderBills(filtered);
+    }
+
+    // Function to filter bills by status (Full Paid / Not Paid)
+    function filterBillsByStatus(status) {
+        filterStatus = status === 'Paid' ? 'Paid' : 'Not Paid';  // Set filterStatus to 'Paid' or 'Not Paid'
+        // Toggle button styles based on selection
+        const fullPaidButton = document.getElementById('fullPaidButton');
+        const notPaidButton = document.getElementById('notPaidButton');
+
+        if (status === 'Paid') {
+            fullPaidButton.classList.add('bg-blue-700');
+            fullPaidButton.classList.remove('bg-gray-400');
+            notPaidButton.classList.add('bg-gray-400');
+            notPaidButton.classList.remove('bg-blue-700');
+        } else {
+            notPaidButton.classList.add('bg-blue-700');
+            notPaidButton.classList.remove('bg-gray-400');
+            fullPaidButton.classList.add('bg-gray-400');
+            fullPaidButton.classList.remove('bg-blue-700');
+        }
+
+        fetchBills();
+    }
+
+    // Fetch bills when page loads or when status filter changes
+    async function fetchBills() {
+      try {
+        const response = await fetch(`/admin/getbills?status=${filterStatus}`); // Adjust to your backend route
+        const data = await response.json();
+        allBills = data;
+        renderBills(data);
+      } catch (error) {
+        console.error("Error fetching bills:", error);
+      }
+    }
+
+     function renderBills(bills) {
+       const tableBody = document.getElementById('billTableBody');
+       tableBody.innerHTML = "";
+
+       bills.forEach(bill => {
+         const displayStatus = bill.status === 'Paid' ? 'Fully Paid' : 'Not Fully Paid';
+         const row = document.createElement("tr");
+         row.classList.add("hover:bg-gray-100", "cursor-pointer");
+
+         row.innerHTML = `
+           <td class="p-3">${bill.billName}</td>
+           <td class="p-3 text-center">${new Date(bill.dueDate).toLocaleDateString('en-US')}</td>
+           <td class="p-3 text-center">${displayStatus}</td>
+           <td class="p-3 text-right">₱ ${parseFloat(bill.billAmount).toFixed(2)}</td>
+         `;
+
+         // Click event to toggle dropdown and highlight
+         row.addEventListener("click", () => {
+           if (selectedRow) selectedRow.classList.remove("bg-blue-100");
+           if (selectedRow === row) {
+             selectedRow = null; // Unselect if clicked again
+           } else {
+             row.classList.add("bg-blue-100");
+             selectedRow = row;
+           }
+
+           toggleDropdown(bill.billId, row, bill.status);
+         });
+
+         tableBody.appendChild(row);
+       });
+     }
+
+     async function toggleDropdown(billId, clickedRow, status) {
+        const existingDropdown = clickedRow.nextElementSibling;
+        if (existingDropdown && existingDropdown.classList.contains("payment-dropdown")) {
+            existingDropdown.remove();
+            return;
+        }
+
+        document.querySelectorAll(".payment-dropdown").forEach(e => e.remove());
+
+        try {
+            // Use controller+action-based URL from Razor
+            const res = await fetch(`${getPaymentsByBillUrl}/?billId=${billId}`);
+            const data = await res.json();
+
+            const payments = data.payments || [];
+            const totalAmountPaid = data.totalAmountPaid || 0;
+
+            const paymentStatusClass = status === 'Paid' ? 'bg-green-600' : 'bg-red-600';
+            const paymentStatusText = status === 'Paid' ? 'Fully Paid' : 'Not Fully Paid';
+
+            const dropdownRow = document.createElement("tr");
+            dropdownRow.className = "payment-dropdown";
+            dropdownRow.innerHTML = `
+              <td colspan="4" class="p-4 bg-gray-50 animate-slideDown">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-semibold text-blue-700 mb-2">Payment History
+                        <span class="ml-2 text-white px-2 py-1 rounded ${paymentStatusClass}">${paymentStatusText}</span>
+                    </h4>
+                    <p class="font-semibold text-base">Total Paid: ₱ ${parseFloat(totalAmountPaid).toFixed(2)}</p>
+                </div>
+                ${payments.length > 0
+                  ? `
+                    <table class="w-full text-sm border">
+                       <thead>
+                         <tr class="${status === 'Paid' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}">
+                          <th class="p-2 text-center">AMOUNT</th>
+                          <th class="p-2 text-center">PAYMENT METHOD</th>
+                          <th class="p-2 text-center">DATE PAID</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${payments.map(p => `
+                          <tr class="border-t">
+                            <td class="p-2 text-center">₱ ${parseFloat(p.amountPaid).toFixed(2)}</td>
+                            <td class="p-2 text-center">${p.paymentMethod}</td>
+                            <td class="p-3 text-center">${new Date(p.datePaid).toLocaleDateString('en-US')}</td>
+                          </tr>`).join('')}
+                      </tbody>
+                    </table>`
+                  : `<p class="text-gray-500 italic">No payment history found.</p>`
+                }
+              </td>
+            `;
+
+            clickedRow.parentNode.insertBefore(dropdownRow, clickedRow.nextSibling);
+        } catch (error) {
+            console.error("Error fetching payment data:", error);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchBills();
+    });
+</script>

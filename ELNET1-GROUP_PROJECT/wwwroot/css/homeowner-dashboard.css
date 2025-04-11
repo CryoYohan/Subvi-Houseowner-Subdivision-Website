@@ -29,3 +29,138 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* For CSS Styling in Poll View */
+/* Add custom animations */
+@keyframes choiceEntry {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Add these CSS animations */
+@keyframes barFill {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: var(--target-width);
+    }
+}
+
+@keyframes barShine {
+    0% {
+        transform: translateX(-100%) skew(-20deg);
+    }
+
+    100% {
+        transform: translateX(200%) skew(-20deg);
+    }
+}
+
+@keyframes barBounce {
+    0%, 100% {
+        transform: scaleY(1);
+    }
+
+    50% {
+        transform: scaleY(1.05);
+    }
+}
+
+.vote-bar {
+    position: relative;
+    overflow: hidden;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient( to right, #3b82f6, #2563eb 30%, #3b82f6 70% );
+    background-size: 200% 100%;
+    animation: barBounce 2s ease-in-out infinite;
+}
+
+    .vote-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient( to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) );
+        animation: barShine 1.5s ease-out forwards;
+    }
+
+/* Modify existing CSS */
+.percentage-bar {
+    position: relative;
+    overflow: hidden;
+    border-radius: 9999px;
+    transform-origin: center bottom;
+}
+
+/* Add to your existing CSS */
+.poll-choice {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+    .poll-choice.selected {
+        background: rgba(59, 130, 246, 0.08);
+        border-color: #3b82f6;
+    }
+
+    .poll-choice:hover {
+        transform: translateY(-2px);
+    }
+
+/* Add shine animation to selected choice */
+@keyframes choiceGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.1);
+    }
+
+    100% {
+        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
+}
+
+.poll-choice.voted {
+    animation: choiceGlow 1s ease-out;
+}
+
+@keyframes checkmark {
+    0% {
+        opacity: 0;
+        transform: scale(0);
+    }
+
+    80% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+}
+
+.animate-checkmark {
+    animation: checkmark 0.6s ease-out forwards;
+}
+
+@keyframes modalEnter {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

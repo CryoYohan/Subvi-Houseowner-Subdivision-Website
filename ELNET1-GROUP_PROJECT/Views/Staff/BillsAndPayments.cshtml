@@ -68,11 +68,18 @@
             </div>
 
             <!-- Search -->
-            <div class="mb-4">
+            <div class="mb-4 flex justify-between items-center">
+                <!-- Filter Buttons -->
+                <div class="space-x-4">
+                    <button id="fullPaidButton" class="bg-blue-700 text-white px-4 py-2 rounded cursor-pointer" onclick="filterBillsByStatus('Paid')">Full Paid</button>
+                    <button id="notPaidButton" class="bg-gray-400 text-white px-4 py-2 rounded cursor-pointer" onclick="filterBillsByStatus('Not Paid')">Not Fully Paid</button>
+                </div>
+
+                <!-- Search Input -->
                 <input type="text"
                        id="searchInput"
                        placeholder="Search by Bill Name..."
-                       class="w-full p-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       class="w-full sm:w-64 p-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                        oninput="filterBills()" />
             </div>
 
@@ -97,10 +104,34 @@
 <script>
    let allBills = []; 
    let selectedRow = null;
+   let filterStatus = 'Paid';
 
+    // Function to filter bills by status (Full Paid / Not Paid)
+    function filterBillsByStatus(status) {
+        filterStatus = status === 'Paid' ? 'Paid' : 'Not Paid';  // Set filterStatus to 'Paid' or 'Not Paid'
+        // Toggle button styles based on selection
+        const fullPaidButton = document.getElementById('fullPaidButton');
+        const notPaidButton = document.getElementById('notPaidButton');
+
+        if (status === 'Paid') {
+            fullPaidButton.classList.add('bg-blue-700');
+            fullPaidButton.classList.remove('bg-gray-400');
+            notPaidButton.classList.add('bg-gray-400');
+            notPaidButton.classList.remove('bg-blue-700');
+        } else {
+            notPaidButton.classList.add('bg-blue-700');
+            notPaidButton.classList.remove('bg-gray-400');
+            fullPaidButton.classList.add('bg-gray-400');
+            fullPaidButton.classList.remove('bg-blue-700');
+        }
+
+        fetchBills();
+    }
+
+    // Fetch bills when page loads or when status filter changes
     async function fetchBills() {
       try {
-        const response = await fetch('/staff/bills/data'); // adjust to your backend route
+        const response = await fetch(`/staff/bills/data/${filterStatus}`); // Adjust to your backend route
         const data = await response.json();
         allBills = data;
         renderBills(data);
@@ -215,5 +246,7 @@
       renderBills(filtered);
     }
 
-    document.addEventListener("DOMContentLoaded", fetchBills);
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchBills();
+    });
 </script>

@@ -57,13 +57,8 @@ namespace ELNET1_GROUP_PROJECT.Data
         
         public DbSet<ELNET1_GROUP_PROJECT.Models.Visitor_Pass> Visitor_Pass { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.VehicleRegistration> Vehicle_Registration { get; set; }
-        //public DbSet<ELNET1_GROUP_PROJECT.Models.Poll> Poll { get; set; }
-        //public DbSet<ELNET1_GROUP_PROJECT.Models.Poll_Choice> Poll_Choice { get; set; }
-        
-
-
-        
-        
-        //public DbSet<ELNET1_GROUP_PROJECT.Models.Vote> Vote { get; set; }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.Poll> Poll { get; set; }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.Poll_Choice> Poll_Choice { get; set; }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.Vote> Vote { get; set; }
     }
 }

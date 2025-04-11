@@ -409,7 +409,7 @@ public class AdminController : Controller
         }
     }
 
-    public IActionResult BillPayment()
+    public IActionResult PaymentHistory()
     {
         RefreshJwtCookies();
         var role = HttpContext.Request.Cookies["UserRole"];
@@ -420,11 +420,20 @@ public class AdminController : Controller
         return View();
     }
 
-    public async Task<IActionResult> GetBills()
+    public async Task<IActionResult> GetBills(string status = "Paid")  // Default to "Paid"
     {
-        var bills = await _context.Bill
-            .Where(b => b.Status == "Paid")
-            .OrderByDescending(b => b.BillId)
+        IQueryable<Bill> query = _context.Bill.OrderByDescending(b => b.BillId);
+
+        if (status == "Paid")
+        {
+            query = query.Where(b => b.Status == "Paid");
+        }
+        else if (status == "Not Paid")
+        {
+            query = query.Where(b => b.Status != "Paid");
+        }
+
+        var bills = await query
             .Select(b => new Bill
             {
                 BillId = b.BillId,
@@ -438,13 +447,14 @@ public class AdminController : Controller
         return Ok(bills);
     }
 
-    public IActionResult GetPaymentsByBill(int billId)
+    [HttpGet]
+    public async Task<IActionResult> GetBillPayments(int billId)
     {
-        // Synchronously fetch payments from the database
-        var payments = _context.Payment
+        // Fetch the payments for the given BillId
+        var payments = await _context.Payment
             .Where(p => p.BillId == billId)
             .OrderByDescending(p => p.PaymentId)
-            .Select(p => new
+            .Select(p => new Payment
             {
                 PaymentId = p.PaymentId,
                 AmountPaid = p.AmountPaid,
@@ -452,28 +462,13 @@ public class AdminController : Controller
                 PaymentMethod = p.PaymentMethod,
                 DatePaid = p.DatePaid
             })
-            .ToList(); // Convert to list synchronously
+            .ToListAsync();
 
-        if (payments.Count == 0)
-        {
-            return NotFound(new { Message = "No payments found for this bill." });
-        }
-
-        // Calculate total amount paid synchronously
+        // Calculate the total amount paid
         var totalAmountPaid = payments.Sum(p => p.AmountPaid);
 
+        // Return the payments along with the total amount
         return Ok(new { Payments = payments, TotalAmountPaid = totalAmountPaid });
-    }
-
-    public IActionResult PaymentHistory()
-    {
-        RefreshJwtCookies();
-        var role = HttpContext.Request.Cookies["UserRole"];
-        if (string.IsNullOrEmpty(role) || role != "Admin")
-        {
-            return RedirectToAction("landing", "Home");
-        }
-        return View();
     }
 
     public IActionResult Services()
@@ -485,6 +480,56 @@ public class AdminController : Controller
             return RedirectToAction("landing", "Home");
         }
         return View();
+    }
+
+    // Get service requests by status
+    public async Task<IActionResult> GetServiceRequests(string status)
+    {
+        try
+        {
+            // Fetch service requests with user info
+            var requests = await _context.Service_Request
+                .Where(r => r.Status == status)
+                .Join(
+                    _context.User_Accounts,
+                    sr => sr.UserId,
+                    ua => ua.Id,
+                    (sr, ua) => new
+                    {
+                        sr.ServiceRequestId,
+                        sr.ReqType,
+                        sr.Description,
+                        sr.Status,
+                        sr.DateSubmitted,
+                        RejectedReason = sr.RejectedReason ?? string.Empty,
+                        ScheduleDate = sr.ScheduleDate != null ? sr.ScheduleDate.Value.ToString("yyyy-MM-dd HH:mm") : null,
+                        homeownerName = char.ToUpper(ua.Firstname[0]) + ua.Firstname.Substring(1) + " " +
+                                   char.ToUpper(ua.Lastname[0]) + ua.Lastname.Substring(1)
+                    }
+                )
+                .ToListAsync();
+
+            // Count service requests by status
+            var pendingCount = await _context.Service_Request.CountAsync(r => r.Status == "Pending");
+            var scheduledCount = await _context.Service_Request.CountAsync(r => r.Status == "Scheduled");
+            var ongoingCount = await _context.Service_Request.CountAsync(r => r.Status == "Ongoing");
+            var finishedCount = await _context.Service_Request.CountAsync(r => r.Status == "Finished");
+            var rejectedCount = await _context.Service_Request.CountAsync(r => r.Status == "Rejected");
+
+            return Json(new
+            {
+                pendingCount,
+                scheduledCount,
+                ongoingCount,
+                finishedCount,
+                rejectedCount,
+                requests
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error fetching service requests.", error = ex.Message });
+        }
     }
 
     public IActionResult Announcements()

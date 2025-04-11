@@ -8,6 +8,17 @@ function closeLoginModal() {
     document.getElementById("login-modal").classList.add("hidden");
 }
 
+const passwordInput = document.getElementById('login-password');
+const togglePassword = document.getElementById('toggle-password');
+const toggleIcon = document.getElementById('toggle-icon');
+
+togglePassword.addEventListener('click', () => {
+    const isPasswordHidden = passwordInput.type === 'password';
+    passwordInput.type = isPasswordHidden ? 'text' : 'password';
+    toggleIcon.classList.toggle('fa-eye');
+    toggleIcon.classList.toggle('fa-eye-slash');
+});
+
 // Handle login submission
 document.getElementById("login-form").addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -17,24 +28,32 @@ document.getElementById("login-form").addEventListener("submit", async function 
         password: document.getElementById("login-password").value
     };
 
-    const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginData)
-    });
+    const messageElem = document.getElementById("login-message");
+    messageElem.classList.add("hidden");
+    messageElem.textContent = "";
 
-    if (response.ok) {
-        const data = await response.json();
-        document.getElementById("login-form").reset();
-    //    alert("Login successful!");
+    try {
+        const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(loginData)
+        });
 
-        // Redirect to Dashboard
-        window.location.href = data.redirectUrl;
-    } else {
-        alert("Login failed. Invalid credentials.");
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById("login-form").reset();
+            window.location.href = data.redirectUrl;
+        } else {
+            const errorData = await response.json(); 
+            messageElem.textContent = errorData.message || "Invalid Credentials. Please check your email or password.";
+            messageElem.classList.remove("hidden");
+        }
+    } catch (err) {
+        messageElem.textContent = "Something went wrong. Please try again.";
+        messageElem.classList.remove("hidden");
+        console.error(err);
     }
 });
-
 
 // Handle Google login directly
 async function handleGoogleLogin(response) {

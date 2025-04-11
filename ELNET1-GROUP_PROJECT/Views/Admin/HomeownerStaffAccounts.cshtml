@@ -51,15 +51,10 @@
                 <i class="fas fa-users w-6"></i>
                 <span class="ml-3">Homeowners & Staff Accounts</span>
             </a>
-            <a asp-controller="admin" asp-action="billpayment" style="text-decoration: none;"
-               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "BillPayment" ? "active-item" : "transition ease-in-out")">
-                <i class="fas fa-file-invoice-dollar w-6"></i>
-                <span class="ml-3">Bill Payment</span>
-            </a>
             <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
                class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-history w-6"></i>
-                <span class="ml-3">Payment History</span>
+                <span class="ml-3">Bill Payment History</span>
             </a>
             <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
                class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
