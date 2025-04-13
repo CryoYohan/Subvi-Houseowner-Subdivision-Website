@@ -52,8 +52,14 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="/staff/poll_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-poll w-6"></i>
+                    <span class="font-medium">Poll Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="/staff/reports" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-blue-50 text-blue-600" : "")">
-                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <i class="fas fa-chart-line w-5 h-5"></i>
                     <span class="font-medium">Reports</span>
                 </a>
             </li>
@@ -63,6 +69,9 @@
     <!-- Main Content -->
     <div class="flex-1 p-3 w-full overflow-y-auto fade-in">
          <div class="container">
+            <div class="mx-autospace-x-1 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-blue-900 flex items-center"><i class="fas fa-chart-line w-5 h-5 mr-3"></i> Reports</h1>
+            </div>
             <!-- Put your code here guys -->
           </div>
     </div>

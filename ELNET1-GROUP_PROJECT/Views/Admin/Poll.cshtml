@@ -1,0 +1,257 @@
+﻿@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Poll";
+}
+
+<div class="flex overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-72 p-4 py-6">
+        <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
+        <nav class="flex-1 space-y-3">
+            <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-home w-6"></i>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-calendar-check w-6"></i>
+                <span class="ml-3">Reservations</span>
+            </a>
+            <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-users w-6"></i>
+                <span class="ml-3">Homeowners & Staff Accounts</span>
+            </a>
+            <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-history w-6"></i>
+                <span class="ml-3">Bill Payment History</span>
+            </a>
+            <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-tools w-6"></i>
+                <span class="ml-3">Services</span>
+            </a>
+            <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-bullhorn w-6"></i>
+                <span class="ml-3">Announcements</span>
+            </a>
+            <a asp-controller="admin" asp-action="poll" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-poll w-6"></i>
+                <span class="ml-3">Poll</span>
+            </a>
+            <a asp-controller="admin" asp-action="reports" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-chart-line w-6"></i>
+                <span class="ml-3">Reports</span>
+            </a>
+        </nav>
+    </aside>
+    <div class="flex-1 p-3">
+        <div class="bg-white p-3 dark:bg-gray-900 rounded-lg shadow-md">
+            <div class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+                <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-poll w-6"></i> Poll</h1>
+            </div>
+
+            <div class="container mt-1">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <button class="btn status-tab btn-primary me-2 active" id="activeTab" data-status="active">Active</button>
+                        <button class="btn status-tab btn-outline-primary" id="inactiveTab" data-status="inactive">Inactive</button>
+                    </div>
+                </div>
+
+                <input type="text" class="form-control mb-3" id="pollSearch" placeholder="Search polls...">
+
+                <div id="loadingPolls" class="text-center my-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+
+                <div id="pollList" class="list-group overflow-auto" style="max-height: 520px;"></div>
+            </div>
+
+            <!-- View Poll Modal -->
+            <div class="modal fade" id="viewPollModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content rounded-4 p-3">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="viewPollTitle"></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" id="viewPollModalBody">
+                            <!-- Poll content will be dynamically injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allPolls = [];
+
+    async function loadPolls(status = 'active') {
+        const listContainer = document.getElementById('pollList');
+        const loadingIndicator = document.getElementById('loadingPolls');
+
+        // Show loading
+        loadingIndicator.style.display = 'block';
+        listContainer.innerHTML = '';
+
+        try {
+            const res = await fetch(`/admin/getpolls?status=${status}`);
+            const polls = await res.json();
+
+            // Store for search
+            allPolls = polls;
+
+            // Hide loading
+            loadingIndicator.style.display = 'none';
+
+            // Render polls
+            console.log(polls)
+            renderPolls(polls);
+        } catch (error) {
+            console.error('Failed to fetch polls:', error);
+            listContainer.innerHTML = '<p class="text-danger text-center">Failed to load polls.</p>';
+            loadingIndicator.style.display = 'none';
+        }
+    }
+
+    // Convert a date string to 'MM/DD/YYYY' format
+    function formatDate(dateStr) {
+        const options = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        };
+        const date = new Date(dateStr);
+        return date.toLocaleString('en-US', options);
+    }
+
+    function capitali(text) {
+        if (text.length === 0) return text;
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function renderPolls(polls) {
+        const listContainer = document.getElementById('pollList');
+        listContainer.innerHTML = '';
+
+        if (polls.length === 0) {
+            listContainer.innerHTML = '<p class="text-center text-muted my-3">No polls found.</p>';
+            return;
+        }
+
+        for (const poll of polls) {
+            const pollItem = document.createElement('div');
+            pollItem.className = 'list-group-item list-group-item-action position-relative d-flex justify-content-between align-items-center p-3';
+            pollItem.style.cursor = 'pointer';  // Add pointer cursor
+            pollItem.innerHTML = `
+                <div>
+                    <h5 class="mb-1">${capitali(poll.title)}</h5>         
+                </div>
+                <div class="text-right">
+                    <small class="text-muted justify-end">From ${formatDate(poll.startDate)} to ${formatDate(poll.endDate)}</small>
+                </div>
+            `;
+
+            // Add hover effect
+            pollItem.addEventListener('mouseenter', () => {
+                pollItem.querySelector('.hover-actions').style.display = 'flex';
+                pollItem.style.backgroundColor = '#f8f9fa'; // Light hover color
+            });
+
+            pollItem.addEventListener('mouseleave', () => {
+                pollItem.querySelector('.hover-actions').style.display = 'none';
+                pollItem.style.backgroundColor = ''; // Remove hover color
+            });
+
+            pollItem.addEventListener('click', () => openViewModal(poll.pollId));
+            listContainer.appendChild(pollItem);
+        }
+    }
+
+    async function openViewModal(pollId) {
+        try {
+            const [pollRes, choicesRes] = await Promise.all([
+                fetch(`/admin/getpoll?pollId=${pollId}`),
+                fetch(`/admin/getchoices?pollId=${pollId}`)
+            ]);
+            const poll = await pollRes.json();
+            const choices = await choicesRes.json();
+
+            // Set modal title and description
+            const modalTitle = document.getElementById('viewPollTitle');
+            const modalBody = document.getElementById('viewPollModalBody');
+            modalTitle.innerText = poll.title;
+
+            modalBody.innerHTML = `
+                <p class="text-lg font-medium">${capitali(poll.description)}</p>
+                <p><strong>Start Date:</strong> ${formatDate(poll.startDate)}</p>
+                <p><strong>End Date:</strong> ${formatDate(poll.endDate)}</p>
+                <hr />
+            `;
+
+            // Add choices and percentages
+            for (const choice of choices) {
+                const percentage = await fetch(`/admin/getvotepercentage?choiceId=${choice.choiceId}`).then(r => r.json());
+
+                modalBody.innerHTML += `
+                    <div class="mb-3">
+                        <p><strong>${choice.choice}</strong></p>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: ${percentage.percentage}%">
+                                ${percentage.percentage.toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('viewPollModal'));
+            modal.show();
+        } catch (err) {
+            console.error('Failed to open poll:', err);
+            showToast('Failed to load poll details.', 'red');
+        }
+    }
+
+    document.getElementById('pollSearch').addEventListener('input', function () {
+        const keyword = this.value.trim().toLowerCase();
+
+        const filtered = allPolls.filter(poll =>
+            poll.title.toLowerCase().includes(keyword) ||
+            poll.description.toLowerCase().includes(keyword)
+        );
+
+        renderPolls(filtered);
+    });
+
+    function setupTabSwitching() {
+        document.querySelectorAll('.status-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.status-tab').forEach(b => {
+                    b.classList.remove('active', 'btn-primary');
+                    b.classList.add('btn-outline-primary');
+                });
+
+                btn.classList.add('active', 'btn-primary');
+                btn.classList.remove('btn-outline-primary');
+
+                const status = btn.dataset.status;
+                loadPolls(status);
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadPolls('active');
+        setupTabSwitching();
+    });
+</script>

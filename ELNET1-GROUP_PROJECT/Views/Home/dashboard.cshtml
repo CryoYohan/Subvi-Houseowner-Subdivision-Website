@@ -350,14 +350,26 @@
         }
 
         async function loadCalendarData(date) {
-            const eventList = `
-                <div class="h-22 p-2 border rounded-lg transition-colors bg-blue-50 border-blue-200 text-sm flex items-center gap-2">
-                    <i class="fas fa-circle text-xs text-blue-500"></i>
-                    <span>Sample Event</span>
-                    <span class="text-gray-500 ml-auto text-sm">${date}</span>
-                </div>
-            `;
-            document.getElementById('calendar-list-content').innerHTML = eventList;
+            try {
+                const response = await fetch(`/api/getevents?date=${date}`);
+                const data = await response.json();
+
+                const content = data.length > 0
+                    ? data.map(event => `
+                        <div class="h-22 p-2 border rounded-lg transition-colors bg-blue-50 border-blue-200 text-sm flex items-center gap-2">
+                            <i class="fas fa-circle text-xs text-blue-500"></i>
+                            <span>${event.description}</span>
+                        </div>
+                    `).join('')
+                    : `<div class="text-sm text-gray-500 p-2">No events for this day.</div>`;
+
+                document.getElementById('calendar-list-content').innerHTML = content;
+
+            } catch (error) {
+                console.error('Error loading calendar data:', error);
+                document.getElementById('calendar-list-content').innerHTML =
+                    `<div class="text-sm text-red-500 p-2">Failed to load events.</div>`;
+            }
         }
 
         // Function to load announcements dynamically
@@ -488,204 +500,190 @@
             pollsContainer.classList.remove('hidden');
         }
 
-        async function showPollDetail(pollId) {
+                async function showPollDetail(pollId) {
             document.getElementById('poll-question').classList.add('hidden');
             const detailPanel = document.getElementById('poll-detail-panel');
             detailPanel.classList.remove('hidden');
             detailPanel.style.opacity = '0';
             detailPanel.style.transform = 'translateX(20px)';
 
-            // Animate detail panel entry
             setTimeout(() => {
                 detailPanel.style.opacity = '1';
                 detailPanel.style.transform = 'translateX(0)';
             }, 50);
 
             const poll = allPolls.find(p => p.pollId === pollId);
-            if (poll) {
-                try {
-                    document.getElementById('poll-title').textContent = poll.title;
-                    document.getElementById('poll-description').textContent = poll.description;
+            if (!poll) return;
 
-                    const [choicesData, voteStatusData] = await Promise.all([
-                        fetch(`/api/polls/${pollId}/choices`).then(res => res.json()),
-                        fetch(`/api/polls/vote-status/${pollId}`).then(res => res.json())
-                    ]);
+            try {
+                document.getElementById('poll-title').textContent = poll.title;
+                document.getElementById('poll-description').textContent = poll.description;
 
-                    const pollChoicesContainer = document.getElementById('poll-choices');
-                    pollChoicesContainer.innerHTML = '';
+                const [choicesData, voteStatusData] = await Promise.all([
+                    fetch(`/api/polls/${pollId}/choices`).then(res => res.json()),
+                    fetch(`/api/polls/vote-status/${pollId}`).then(res => res.json())
+                ]);
 
-                    // Fetch percentages for all choices if user has voted
-                    let percentages = {};
-                    if (voteStatusData.choiceId) {
-                        const percentagePromises = choicesData.map(choice =>
-                            fetch(`/api/polls/vote-percentage/${choice.choiceId}`).then(res => res.json())
-                        );
-                        const percentageResults = await Promise.all(percentagePromises);
-                        percentageResults.forEach(result => {
-                            percentages[result.choiceId] = result.percentage;
-                        });
-                    }
+                const pollChoicesContainer = document.getElementById('poll-choices');
+                pollChoicesContainer.innerHTML = '';
 
-                    for (const choice of choicesData) {
-                        const isVoted = voteStatusData.choiceId === choice.choiceId;
-                        const choiceElement = document.createElement('div');
-                        choiceElement.classList.add(
-                            'poll-choice', 'p-6', 'bg-white', 'rounded-xl', 'shadow-sm',
-                            'border', 'border-gray-100', 'hover:shadow-md', 'transition-all',
-                            'duration-300', 'relative', 'overflow-hidden', 'animate-choice-entry',
-                            'cursor-pointer', 'hover:bg-gray-50'
-                        );
+                let percentages = {};
+                let hasVoted = !!voteStatusData.choiceId;
 
-                        choiceElement.innerHTML = `
-                            <div class="flex items-center justify-between">
-                                <h4 class="font-semibold text-gray-800 text-base">${choice.choice}</h4>
-                                ${isVoted ? `
-                                    <span class="text-blue-600 text-sm">
-                                        <i class="fas fa-check-circle mr-1"></i>Your Vote
-                                    </span>
-                                ` : ''}
-                            </div>
-                            <div class="percentage-bar mt-4 ${isVoted ? 'block' : 'hidden'}">
-                                <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
-                                    <span>Vote Progress</span>
-                                    <span class="percentage-text">${isVoted ? percentages[choice.choiceId]?.toFixed(1) || '0.0' : '0.0'}%</span>
-                                </div>
-                                <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
-                                    <div class="vote-bar h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
-                                         style="width: ${isVoted ? percentages[choice.choiceId]?.toFixed(1) || '0' : '0'}%"></div>
-                                </div>
-                            </div>
-                        `;
+                if (hasVoted) {
+                    const allPercentages = await fetch(`/api/polls/${pollId}/percentages`).then(res => res.json());
+                    allPercentages.forEach(item => {
+                        percentages[item.choiceId] = item.percentage;
+                    });
+                }
 
-                        choiceElement.addEventListener('click', async () => {
-                            // Visual feedback
-                            choiceElement.classList.add('active', 'scale-[0.98]');
-                            setTimeout(() => choiceElement.classList.remove('scale-[0.98]'), 200);
+                for (const choice of choicesData) {
+                    const isUserChoice = voteStatusData.choiceId === choice.choiceId;
+                    const choiceElement = document.createElement('div');
+                    choiceElement.classList.add(
+                        'poll-choice', 'p-6', 'bg-white', 'rounded-xl', 'shadow-sm',
+                        'border', 'border-gray-100', 'hover:shadow-md', 'transition-all',
+                        'duration-300', 'relative', 'overflow-hidden', 'animate-choice-entry',
+                        'cursor-pointer', 'hover:bg-gray-50'
+                    );
 
-                            const isChangingVote = voteStatusData.choiceId && voteStatusData.choiceId !== choice.choiceId;
-                            const isSameVote = voteStatusData.choiceId === choice.choiceId;
+                    const percentage = hasVoted ? (percentages[choice.choiceId]?.toFixed(1) || '0.0') : '0.0';
 
-                            if (isSameVote) {
-                                showToast("You already voted for this choice.", 'green');
-                                return;
+                    choiceElement.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-semibold text-gray-800 text-base">${choice.choice}</h4>
+                            ${isUserChoice ? `
+                                <span class="text-blue-600 text-sm">
+                                    <i class="fas fa-check-circle mr-1"></i>Your Vote
+                                </span>` : ''
                             }
+                        </div>
+                        <div class="percentage-bar mt-4 ${hasVoted ? 'block' : 'hidden'}">
+                            <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+                                <span>Vote Progress</span>
+                                <span class="percentage-text">${percentage}%</span>
+                            </div>
+                            <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="vote-bar h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                                     style="width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                    `;
 
-                            if (isChangingVote) {
-                                const modal = document.getElementById('changevotemodal');
-                                const confirmBtn = modal.querySelector('.confirm-btn');
-                                const cancelBtn = modal.querySelector('.cancel-btn');
-                                const modalContent = modal.querySelector('div.rounded-2xl');
+                    // Handle vote click
+                    choiceElement.addEventListener('click', async () => {
+                        choiceElement.classList.add('active', 'scale-[0.98]');
+                        setTimeout(() => choiceElement.classList.remove('scale-[0.98]'), 200);
 
-                                // Show modal
-                                modal.classList.remove('hidden');
-                                setTimeout(() => {
-                                    modalContent.classList.remove('scale-95', 'opacity-0');
-                                    modalContent.classList.add('scale-100', 'opacity-100');
-                                }, 50);
+                        const isChangingVote = voteStatusData.choiceId && voteStatusData.choiceId !== choice.choiceId;
+                        const isSameVote = voteStatusData.choiceId === choice.choiceId;
 
-                                // Replace buttons to clear previous listeners
-                                const newConfirmBtn = confirmBtn.cloneNode(true);
-                                const newCancelBtn = cancelBtn.cloneNode(true);
-                                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-                                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+                        if (isSameVote) {
+                            showToast("You already voted for this choice.", 'green');
+                            return;
+                        }
 
-                                // Confirm Vote Change
-                                newConfirmBtn.onclick = async () => {
-                                    newConfirmBtn.innerHTML = `
-                                        <div class="flex items-center gap-2">
-                                            <i class="fas fa-spinner fa-spin"></i>
-                                            Updating...
-                                        </div>
-                                    `;
+                        if (isChangingVote) {
+                            const modal = document.getElementById('changevotemodal');
+                            const confirmBtn = modal.querySelector('.confirm-btn');
+                            const cancelBtn = modal.querySelector('.cancel-btn');
+                            const modalContent = modal.querySelector('div.rounded-2xl');
 
-                                    try {
-                                        const voteResponse = await fetch(`/api/polls/vote`, {
-                                            method: 'PUT',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ pollId: poll.pollId, choiceId: choice.choiceId })
-                                        });
+                            modal.classList.remove('hidden');
+                            setTimeout(() => {
+                                modalContent.classList.remove('scale-95', 'opacity-0');
+                                modalContent.classList.add('scale-100', 'opacity-100');
+                            }, 50);
 
-                                        if (!voteResponse.ok) throw new Error('Vote update failed');
+                            const newConfirmBtn = confirmBtn.cloneNode(true);
+                            const newCancelBtn = cancelBtn.cloneNode(true);
+                            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+                            cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
 
-                                        showToast("Vote Updated Successfully!", 'green');
+                            newConfirmBtn.onclick = async () => {
+                                newConfirmBtn.innerHTML = `
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-spinner fa-spin"></i> Updating...
+                                    </div>
+                                `;
 
-                                        // Reset button text after success
-                                        newConfirmBtn.innerHTML = "Yes, Change It";
-
-                                        // Refresh poll view
-                                        showPollDetail(poll.pollId);
-
-                                        // Hide modal
-                                        modalContent.classList.remove('scale-100', 'opacity-100');
-                                        modalContent.classList.add('scale-95', 'opacity-0');
-                                        setTimeout(() => modal.classList.add('hidden'), 300);
-
-                                    } catch (error) {
-                                        console.error('Error:', error);
-                                        showToast("Something went wrong. Please try again.", 'red');
-                                        newConfirmBtn.innerHTML = "Yes, Change It";
-                                    }
-                                };
-
-                                // Cancel action
-                                newCancelBtn.onclick = () => {
-                                    modalContent.classList.remove('scale-100', 'opacity-100');
-                                    modalContent.classList.add('scale-95', 'opacity-0');
-                                    setTimeout(() => modal.classList.add('hidden'), 300);
-                                };
-
-                            } else {
-                                // First-time vote
                                 try {
                                     const voteResponse = await fetch(`/api/polls/vote`, {
-                                        method: 'POST',
+                                        method: 'PUT',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({ pollId: poll.pollId, choiceId: choice.choiceId })
                                     });
 
-                                    if (!voteResponse.ok) throw new Error('Vote failed');
+                                    if (!voteResponse.ok) throw new Error('Vote update failed');
 
-                                    // Floating checkmark
-                                    const checkmark = document.createElement('div');
-                                    checkmark.className = 'absolute inset-0 flex items-center justify-center bg-blue-500 bg-opacity-10 animate-checkmark';
-                                    checkmark.innerHTML = `<i class="fas fa-check text-4xl text-blue-600"></i>`;
-                                    choiceElement.appendChild(checkmark);
-                                    setTimeout(() => checkmark.remove(), 1000);
+                                    showToast("Vote Updated Successfully!", 'green');
+                                    newConfirmBtn.innerHTML = "Yes, Change It";
+                                    showPollDetail(poll.pollId);
 
-                                    setTimeout(() => showPollDetail(poll.pollId), 800);
-
+                                    modalContent.classList.remove('scale-100', 'opacity-100');
+                                    modalContent.classList.add('scale-95', 'opacity-0');
+                                    setTimeout(() => modal.classList.add('hidden'), 300);
                                 } catch (error) {
-                                    console.error('Error voting:', error);
-                                    showToast("Failed to cast vote. Try again.", 'red');
+                                    console.error('Error:', error);
+                                    showToast("Something went wrong. Please try again.", 'red');
+                                    newConfirmBtn.innerHTML = "Yes, Change It";
                                 }
+                            };
+
+                            newCancelBtn.onclick = () => {
+                                modalContent.classList.remove('scale-100', 'opacity-100');
+                                modalContent.classList.add('scale-95', 'opacity-0');
+                                setTimeout(() => modal.classList.add('hidden'), 300);
+                            };
+                        } else {
+                            // First-time vote
+                            try {
+                                const voteResponse = await fetch(`/api/polls/vote`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ pollId: poll.pollId, choiceId: choice.choiceId })
+                                });
+
+                                if (!voteResponse.ok) throw new Error('Vote failed');
+
+                                const checkmark = document.createElement('div');
+                                checkmark.className = 'absolute inset-0 flex items-center justify-center bg-blue-500 bg-opacity-10 animate-checkmark';
+                                checkmark.innerHTML = `<i class="fas fa-check text-4xl text-blue-600"></i>`;
+                                choiceElement.appendChild(checkmark);
+                                setTimeout(() => checkmark.remove(), 1000);
+
+                                setTimeout(() => showPollDetail(poll.pollId), 800);
+                            } catch (error) {
+                                console.error('Error voting:', error);
+                                showToast("Failed to cast vote. Try again.", 'red');
                             }
-                        });
-                       if (isVoted) {
-                            const percentage = percentages[choice.choiceId].toFixed(1);
-                            const voteBar = choiceElement.querySelector('.vote-bar');
-                            const percentageText = choiceElement.querySelector('.percentage-text');
+                        }
+                    });
+
+                    // Animate progress bars after insertion
+                    if (hasVoted) {
+                        const voteBar = choiceElement.querySelector('.vote-bar');
+                        const percentageText = choiceElement.querySelector('.percentage-text');
+
+                        setTimeout(() => {
+                            voteBar.style.width = `${percentage}%`;
+                            percentageText.textContent = `${percentage}%`;
+
+                            voteBar.style.animation = 'barShine 1.2s ease-out forwards';
+                            voteBar.parentElement.style.animation = 'barBounce 0.6s ease-out';
 
                             setTimeout(() => {
-                                voteBar.style.width = `${percentage}%`;
-                                percentageText.textContent = `${percentage}%`;
-
-                                voteBar.style.animation = 'barShine 1.2s ease-out forwards';
-                                voteBar.parentElement.style.animation = 'barBounce 0.6s ease-out';
-
-                                setTimeout(() => {
-                                    voteBar.style.animation = '';
-                                    voteBar.parentElement.style.animation = '';
-                                    choiceElement.classList.add('voted');
-                                }, 1200);
-                            }, 200);
-                        }
-
-                        pollChoicesContainer.appendChild(choiceElement);
+                                voteBar.style.animation = '';
+                                voteBar.parentElement.style.animation = '';
+                                choiceElement.classList.add('voted');
+                            }, 1200);
+                        }, 200);
                     }
-                } catch (error) {
-                    console.error('Error loading poll details:', error);
+
+                    pollChoicesContainer.appendChild(choiceElement);
                 }
+            } catch (error) {
+                console.error('Error loading poll details:', error);
             }
         }
 
@@ -700,7 +698,7 @@
                 setTimeout(() => {
                     toast.classList.add('translate-y-20', 'opacity-0');
                     setTimeout(() => toast.remove(), 500);
-                }, 2000);
+                }, 4000);
             }, 50);
         }
 

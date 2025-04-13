@@ -146,10 +146,17 @@
 
         <!-- Search and Add Discussion Button -->
         <div class="d-flex justify-content-between mb-4">
-            <input id="searchInput" type="text" class="form-control w-75 shadow-sm" placeholder="Search discussions...">
-            <button id="searchBtn" class="btn btn-primary shadow-sm">
+            <div class="d-flex flex-column position-relative w-75 " placeholder="Enter Search.." id="search-wrapper">
+                <div class="form-control d-flex flex-wrap align-items-center shadow-sm" id="searchInput" contenteditable="true" style="min-height: 40px;"></div>
+                <ul id="searchMentionSuggestions" class="list-group position-absolute top-100 start-0 z-3 w-100 d-none" style="max-height: 200px; overflow-y: auto;"></ul>
+            </div>
+            <button id="searchBtn" class="btn btn-primary shadow-sm mt-2">
                 <i class="bi bi-search"></i> Search
             </button>
+
+            <!-- Hidden input for storing the actual query value -->
+            <input type="hidden" id="searchHiddenInput" />
+            <input type="hidden" id="mentionHiddenInput" />
             <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addDiscussionModal">
                 <i class="bi bi-plus-circle"></i> Add Discussion
             </button>
@@ -219,14 +226,41 @@
         <div id="forum-posts">
             @foreach (var post in Model)
             {
+                // Extract unique @mentions from Hashtag field
+                var mentions = post.Hashtag?
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(tag => tag.Trim('[', ']', ' ')) // Remove brackets and trim spaces
+                .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                .Distinct(); // Ensure only unique mentions
+
                 <div class="card mb-3 post-item">
                     <div class="card-body">
                         <div class="d-flex align-items-start">
                             <div class="user-avatar p-4 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold;">
-                                @post.Firstname[0]@post.Lastname[0]
+                                @if (!string.IsNullOrEmpty(post.Profile))
+                                {
+                                    <img src="@post.Profile" alt="@post.FullName's Profile Picture" class="img-fluid rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    @post.Firstname[0]
+
+                                    @post.Lastname[0]
+                                }
                             </div>
                             <div class="w-100 ps-3">
                                 <h5 class="card-title font-semibold">@post.Title</h5>
+
+                                @if (mentions != null && mentions.Any())
+                                {
+                                    <div class="mt-2">
+                                        @foreach (var mention in mentions)
+                                        {
+                                            <span class="badge bg-light text-primary border border-primary me-2">@($"@{mention}")</span>
+                                        }
+                                    </div>
+                                }
+
                                 <p class="text-muted">Posted by @post.FullName on @post.DatePosted.ToString("MMMM dd, yyyy")</p>
                                 <p class="card-text">@post.Content</p>
                                 <div class="d-flex justify-content-end gap-3">
@@ -239,7 +273,7 @@
                                     <!-- Comment Button -->
                                     <a href="@Url.Action("Comments", "Home", new { id = post.PostId, title = GetTruncatedTitle(post.Title) })" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
                                         <i class="bi bi-chat"></i>
-                                        <span>@post.RepliesDisplay</span>
+                                        <span>@post.RepliesDisplay replies</span>
                                     </a>
                                 </div>
                             </div>
@@ -263,13 +297,30 @@
                                 <label for="title" class="form-label">Title</label>
                                 <input type="text" class="form-control" id="title" name="title" required>
                             </div>
+                            <div class="mb-3 position-relative">
+                                <label for="mentionInput" class="form-label">Mention Announcement (Optional)</label>
+
+                                <div id="mentionInput"
+                                     contenteditable="true"
+                                     class="form-control mention-box"
+                                     oninput="handleTyping(event)"
+                                     onkeydown="handleKeyDown(event); handleBackspace(event)"
+                                     onclick="focusMentionInput()">
+                                </div>
+
+                                <ul id="mentionSuggestions"
+                                    class="list-group position-absolute w-100 mt-1 d-none mention-suggestions">
+                                </ul>
+
+                                <input type="hidden" name="Hashtag" id="hashtagHiddenInput" />
+                            </div>
                             <div class="mb-3">
                                 <label for="content" class="form-label">Content</label>
                                 <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">Post</button>
                         </div>
                     </form>
@@ -279,96 +330,4 @@
     </div>
 </div>
 
-<script>
-    // Simulate loading
-    document.addEventListener("DOMContentLoaded", () => {
-        setTimeout(() => {
-            document.getElementById('loading-placeholder').style.display = 'none';
-            document.getElementById('forum-posts').style.display = 'block';
-        }, 1000);
-    });
-
-        // Toggle Like/Unlike
-    async function toggleLike(postId) {
-        try {
-            const response = await fetch(`/home/ToggleLike?postId=${postId}`, { method: 'POST' });
-            if (!response.ok) {
-                console.error('Failed to toggle like');
-                return;
-            }
-
-            // Get the elements
-            const likeIcon = document.getElementById(`like-icon-${postId}`);
-            const likeCount = document.getElementById(`like-count-${postId}`);
-
-            // Read current likes from data-likes (fallback to displayed number if missing)
-            let currentLikes = parseInt(likeCount.getAttribute('data-likes')) || parseInt(likeCount.textContent) || 0;
-
-            // Toggle the icon and color
-            if (likeIcon.classList.contains('bi-hand-thumbs-up')) {
-                likeIcon.classList.remove('bi-hand-thumbs-up', 'text-secondary');
-                likeIcon.classList.add('bi-hand-thumbs-up-fill', 'text-primary');
-                currentLikes++;
-            } else {
-                likeIcon.classList.remove('bi-hand-thumbs-up-fill', 'text-primary');
-                likeIcon.classList.add('bi-hand-thumbs-up', 'text-secondary');
-                if (currentLikes > 0) currentLikes--; // Prevent negative numbers
-            }
-
-            // Update like count and display with 'K' format
-            likeCount.setAttribute('data-likes', currentLikes);
-            likeCount.textContent = formatLikes(currentLikes);
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    }
-
-    // Format likes to display 'K' for thousands
-    function formatLikes(likes) {
-        if (likes >= 1000) {
-            return (likes / 1000).toFixed(likes % 1000 !== 0 ? 1 : 0) + 'K';
-        }
-        return likes;
-    }
-
-    document.getElementById('searchBtn').addEventListener('click', function () {
-        var searchTerm = document.getElementById('searchInput').value.trim();
-
-        if (searchTerm.length > 0) {
-            fetch(`/Home/SearchDiscussions?query=${searchTerm}`)
-                .then(response => response.json())
-                .then(data => {
-                    var forumPosts = document.getElementById('forum-posts');
-                    var loadingPlaceholder = document.getElementById('loading-placeholder');
-                    var resultsDiv = document.getElementById('forum-posts');
-                    resultsDiv.innerHTML = ''; // Clear previous posts
-                    loadingPlaceholder.style.display = 'none';
-                    forumPosts.style.display = 'block';
-
-                    if (data.length > 0) {
-                        data.forEach(post => {
-                            var postElement = document.createElement('div');
-                            postElement.classList.add('card', 'mb-3');
-                            postElement.innerHTML = `
-                                <div class="card-body">
-                                    <div class="d-flex align-items-start">
-                                        <img src="/images/user-placeholder.png" class="rounded-circle me-3" alt="${post.FullName}" width="50" height="50">
-                                        <div class="w-100">
-                                            <h5 class="card-title">${post.Title}</h5>
-                                            <p class="text-muted">Posted by ${post.Firstname} ${post.Lastname} on ${post.DatePosted}</p>
-                                            <p class="card-text">${post.Content}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                            resultsDiv.appendChild(postElement);
-                        });
-                    } else {
-                        resultsDiv.innerHTML = '<p>No results found.</p>';
-                    }
-                });
-        } else {
-            document.getElementById('forum-posts').innerHTML = '<p>Please enter a search term.</p>';
-        }
-    });
-</script>
+<script src="~/js/forum.js"></script>

@@ -28,7 +28,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
-            ViewData["Layout"] = "_AdminLayout";
+            ViewData["Layout"] = "_HomeLayout";
             _payMongoServices = payMongoServices;
         }
 
@@ -110,7 +110,17 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 return RedirectToAction("landing"); // Redirect unauthorized users
             }
 
-            return View(); // Load the `dashboard.cshtml` view
+            var Iduser = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(Iduser, out int userId))
+            {
+                return RedirectToAction("landing");
+            }
+            var profilePath = _context.User_Accounts
+                                .FirstOrDefault(u => u.Id == userId)?.Profile;
+
+            ViewBag.ProfilePath = profilePath;
+
+            return View();
         }
 
         private IActionResult RedirectToRoleDashboard(string role)
@@ -143,7 +153,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             var Iduser = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(Iduser, out int userId))
             {
-                return RedirectToAction("Login");
+                return RedirectToAction("landing");
             }
 
             var bills = _context.Bill.Where(b => b.UserId == userId).ToList();
@@ -240,7 +250,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             var Iduser = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(Iduser, out int userId))
             {
-                return RedirectToAction("Login");
+                return RedirectToAction("landing");
             }
 
             var bill = _context.Bill.FirstOrDefault(b => b.BillId == billId && b.UserId == userId);
@@ -423,7 +433,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             var Iduser = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(Iduser, out int userId))
             {
-                return RedirectToAction("Login");
+                return RedirectToAction("landing");
             }
 
             var rawPosts = await _context.Forum
@@ -434,9 +444,11 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     {
                         f.PostId,
                         f.Title,
+                        f.Hashtag,
                         f.Content,
                         f.DatePosted,
                         f.UserId,
+                        u.Profile,
                         u.Firstname,
                         u.Lastname
                     })
@@ -448,9 +460,11 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 {
                     PostId = f.PostId,
                     Title = char.ToUpper(f.Title[0]) + f.Title.Substring(1),
+                    Hashtag = f.Hashtag ?? null,
                     Content = f.Content,
                     DatePosted = f.DatePosted,
                     UserId = f.UserId,
+                    Profile = f.Profile,
                     Firstname = char.ToUpper(f.Firstname[0]) + f.Firstname.Substring(1),
                     Lastname = char.ToUpper(f.Lastname[0]) + f.Lastname.Substring(1),
                     FullName = char.ToUpper(f.Firstname[0]) + f.Firstname.Substring(1) + " " + char.ToUpper(f.Lastname[0]) + f.Lastname.Substring(1),
@@ -464,43 +478,77 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return View(posts);
         }
 
-        [HttpGet]
-        public IActionResult SearchDiscussions(string query)
+        public IActionResult SearchDiscussions(string? query, string? mention)
         {
             RefreshJwtCookies();
-            var searchResults = _context.Forum
-                .Where(f => f.Title.Contains(query) || f.Content.Contains(query)) // Search by Title or Content
-                .Join(_context.User_Accounts, f => f.UserId, u => u.Id, (f, u) => new
-                {
-                    f.PostId,
-                    Title = char.ToUpper(f.Title[0]) + f.Title.Substring(1),
-                    f.Content,
-                    f.DatePosted,
-                    Firstname = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
-                    Lastname = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
-                    FullName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
-                })
+            var Iduser = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(Iduser, out int userId))
+            {
+                return RedirectToAction("landing");
+            }
+
+            var results = _context.Forum
+                .Include(fp => fp.UserAccount) // Include the related UserAccount data
+                .AsQueryable();
+
+            // Handle @mention if present
+            if (!string.IsNullOrWhiteSpace(mention))
+            {
+                string formattedMention = $"[{mention.Trim()}]";
+                results = results.Where(fp => fp.Hashtag.Contains(formattedMention));
+            }
+
+            // Handle free-text query (Title or Content)
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                results = results.Where(fp =>
+                    fp.Title.Contains(query) || fp.Content.Contains(query));
+            }
+
+            // Materialize results before calculating Likes/Replies to avoid EF function translation issues
+            var rawResults = results
+                .OrderByDescending(fp => fp.DatePosted)
                 .ToList();
 
-            return Json(searchResults); // Return the results as JSON
+            var data = rawResults
+                .Select(fp => new {
+                    fp.PostId,
+                    fp.Title,
+                    fp.Hashtag,
+                    fp.Content,
+                    DatePosted = fp.DatePosted.ToString("MMMM dd, yyyy"),
+                    fp.Profile,
+                    Firstname = char.ToUpper(fp.Firstname[0]) + fp.Firstname.Substring(1),
+                    Lastname = char.ToUpper(fp.Lastname[0]) + fp.Lastname.Substring(1),
+                    FullName = char.ToUpper(fp.Firstname[0]) + fp.Firstname.Substring(1) + " " + char.ToUpper(fp.Lastname[0]) + fp.Lastname.Substring(1),
+                    LikeCount = _context.Like.Count(l => l.PostId == fp.PostId),
+                    RepliesDisplay = _context.Replies.Count(r => r.PostId == fp.PostId),
+                    IsLiked = _context.Like.Any(l => l.PostId == fp.PostId && l.UserId == userId)
+                }).ToList();
+
+            return Json(data);
+        }
+
+        //Mention Announcement Title
+        [HttpGet]
+        public IActionResult GetAnnouncementTitles()
+        {
+            var titles = _context.Announcement.Select(a => a.Title).ToList();
+            return Json(titles);
         }
 
         // Add a new post
         [HttpPost]
-        public async Task<IActionResult> AddPost(string title, string content)
+        public async Task<IActionResult> AddPost(string title, string content, string? hashtag)
         {
             RefreshJwtCookies();
             var Iduser = HttpContext.Request.Cookies["Id"];
 
             if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(content))
-            {
                 return BadRequest("Title and Content cannot be empty.");
-            }
 
             if (!int.TryParse(Iduser, out int userId))
-            {
                 return BadRequest("Invalid User ID.");
-            }
 
             try
             {
@@ -509,7 +557,8 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     Title = char.ToUpper(title[0]) + title.Substring(1),
                     Content = content,
                     DatePosted = DateTime.Now,
-                    UserId = userId  // Now properly converted to int
+                    UserId = userId,
+                    Hashtag = hashtag 
                 };
 
                 _context.Forum.Add(newPost);
@@ -571,6 +620,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 {
                     f.PostId,
                     Title = char.ToUpper(f.Title[0]) + f.Title.Substring(1),
+                    Hashtag = f.Hashtag ?? null,
                     f.Content,
                     f.DatePosted,
                     f.UserId,
@@ -623,7 +673,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             var Iduser = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(Iduser, out int userId))
             {
-                return RedirectToAction("Login");
+                return RedirectToAction("landing");
             }
 
             var reply = new Replies
@@ -688,7 +738,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             var Iduser = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(Iduser, out int userId))
             {
-                return RedirectToAction("Login");
+                return RedirectToAction("landing");
             }
 
             if (string.IsNullOrWhiteSpace(request.FeedbackType) || string.IsNullOrWhiteSpace(request.Description))
@@ -744,7 +794,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             var IduserStr = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(IduserStr, out int userId))
             {
-                return RedirectToAction("Login");
+                return RedirectToAction("landing");
             }
 
             using (var context = _context)
@@ -758,6 +808,128 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
                 return Json(new { memberCount, resolvedIssuesCount });
             }
+        }
+
+        public IActionResult Settings()
+        {
+            RefreshJwtCookies();
+            var role = GetUserRoleFromToken();
+            if (string.IsNullOrEmpty(role) || role != "Homeowner")
+            {
+                return RedirectToAction("Landing");
+            }
+            return View();
+        }
+
+        public async Task<IActionResult> GetUser()
+        {
+            var Iduser = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(Iduser, out int userId))
+            {
+                return Unauthorized();
+            }
+        ;
+            var user = await _context.User_Accounts
+                .Where(u => u.Id == userId)
+                .Select(u => new
+                {
+                    Profile = u.Profile ?? "",
+                    u.Firstname,
+                    u.Lastname,
+                    u.Email,
+                    Contact = u.PhoneNumber,
+                    u.Address
+                })
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                return NotFound(new { message = "User not found." });
+
+            return Ok(user);
+        }
+
+        public async Task<IActionResult> UploadProfileImage(IFormFile file)
+        {
+            var userIdStr = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(userIdStr, out int userId))
+                return Unauthorized();
+
+            var user = await _context.User_Accounts.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            var ext = Path.GetExtension(file.FileName);
+            var name = $"{char.ToUpper(user.Firstname[0])}{user.Lastname}-{userId}{ext}";
+            var savePath = Path.Combine("wwwroot/assets/userprofile", name);
+            var relativePath = $"/assets/userprofile/{name}";
+
+            using (var stream = new FileStream(savePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            user.Profile = relativePath;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { path = relativePath });
+        }
+
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+        {
+            var userIdStr = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(userIdStr, out int userId))
+                return Unauthorized();
+
+            var user = await _context.User_Accounts.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            // Email check
+            var existingEmail = await _context.User_Accounts
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower() && u.Id != userId);
+            if (existingEmail != null)
+                return Conflict(new { message = "Email already in use by another user." });
+
+            // Full name check
+            var nameExists = await _context.User_Accounts
+                .FirstOrDefaultAsync(u => u.Firstname.ToLower() == request.Firstname.ToLower() &&
+                                          u.Lastname.ToLower() == request.Lastname.ToLower() &&
+                                          u.Id != userId);
+            if (nameExists != null)
+                return Conflict(new { message = "Another user already has the same full name." });
+
+            // Contact check
+            var contactExists = await _context.User_Accounts
+                .FirstOrDefaultAsync(u => u.PhoneNumber == request.Contact && u.Id != userId);
+            if (contactExists != null)
+                return Conflict(new { message = "Contact already in use." });
+
+            // Update fields
+            user.Firstname = request.Firstname;
+            user.Lastname = request.Lastname;
+            user.Email = request.Email;
+            user.Address = request.Address;
+            user.PhoneNumber = request.Contact;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Profile updated successfully." });
+        }
+
+        public async Task<IActionResult> ChangePassword([FromBody] PasswordChangeRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Password))
+                return BadRequest("Password is required");
+
+            var userIdStr = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(userIdStr, out int userId))
+                return Unauthorized();
+            var user = await _context.User_Accounts.FindAsync(userId);
+
+            if (user == null)
+                return NotFound();
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Password changed successfully" });
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

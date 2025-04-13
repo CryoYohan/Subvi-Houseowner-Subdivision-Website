@@ -17,10 +17,10 @@ namespace ELNET1_GROUP_PROJECT.Models
         public string Description { get; set; }
         [Column("START_DATE")]
         [Required]
-        public DateTime StartDate { get; set; }
+        public string StartDate { get; set; }
         [Column("END_DATE")]
         [Required]
-        public DateTime EndDate { get; set; }
+        public string EndDate { get; set; }
         [Column("STATUS")]
         [Required]
         public bool Status { get; set; }

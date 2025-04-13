@@ -39,6 +39,11 @@
                 <i class="fas fa-bullhorn w-6"></i>
                 <span class="ml-3">Announcements</span>
             </a>
+            <a asp-controller="admin" asp-action="poll" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-poll w-6"></i>
+                <span class="ml-3">Poll</span>
+            </a>
             <a asp-controller="admin" asp-action="reports" style="text-decoration: none;"
                class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active-item" : "transition ease-in-out")">
                 <i class="fas fa-chart-line w-6"></i>
@@ -70,7 +75,8 @@
         <table class="w-full border shadow-lg rounded overflow-hidden" id="billTable">
             <thead class="bg-blue-800 text-white">
                 <tr>
-                    <th class="p-3 text-left">BILL NAME</th>
+                    <th class="p-3 text-left">BILLER FULLNAME</th>
+                    <th class="p-3 text-center">BILL NAME</th>
                     <th class="p-3 text-center">DUE DATE</th>
                     <th class="p-3 text-center">STATUS</th>
                     <th class="p-3 text-right">BILL AMOUNT</th>
@@ -132,38 +138,48 @@
       }
     }
 
-     function renderBills(bills) {
-       const tableBody = document.getElementById('billTableBody');
-       tableBody.innerHTML = "";
+         function renderBills(bills) {
+      const tableBody = document.getElementById('billTableBody');
+      tableBody.innerHTML = "";
 
-       bills.forEach(bill => {
-         const displayStatus = bill.status === 'Paid' ? 'Fully Paid' : 'Not Fully Paid';
-         const row = document.createElement("tr");
-         row.classList.add("hover:bg-gray-100", "cursor-pointer");
+      if (bills.length === 0) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td colspan="4" class="p-4 text-center text-gray-500">No bills found.</td>
+        `;
+        tableBody.appendChild(row);
+        return;
+      }
 
-         row.innerHTML = `
-           <td class="p-3">${bill.billName}</td>
-           <td class="p-3 text-center">${new Date(bill.dueDate).toLocaleDateString('en-US')}</td>
-           <td class="p-3 text-center">${displayStatus}</td>
-           <td class="p-3 text-right">₱ ${parseFloat(bill.billAmount).toFixed(2)}</td>
-         `;
+      bills.forEach(bill => {
+        const displayStatus = bill.status === 'Paid' ? 'Fully Paid' : 'Not Fully Paid';
+        const row = document.createElement("tr");
+        row.classList.add("hover:bg-gray-100", "cursor-pointer");
 
-         // Click event to toggle dropdown and highlight
-         row.addEventListener("click", () => {
-           if (selectedRow) selectedRow.classList.remove("bg-blue-100");
-           if (selectedRow === row) {
-             selectedRow = null; // Unselect if clicked again
-           } else {
-             row.classList.add("bg-blue-100");
-             selectedRow = row;
-           }
+        row.innerHTML = `
+          <td class="p-3">${bill.fullName}</td>
+          <td class="p-3 text-center">${bill.billName}</td>
+          <td class="p-3 text-center">${new Date(bill.dueDate).toLocaleDateString('en-US')}</td>
+          <td class="p-3 text-center">${displayStatus}</td>
+          <td class="p-3 text-right">₱ ${parseFloat(bill.billAmount).toFixed(2)}</td>
+        `;
 
-           toggleDropdown(bill.billId, row, bill.status);
-         });
+        // Click event to toggle dropdown and highlight
+        row.addEventListener("click", () => {
+          if (selectedRow) selectedRow.classList.remove("bg-blue-100");
+          if (selectedRow === row) {
+            selectedRow = null; // Unselect if clicked again
+          } else {
+            row.classList.add("bg-blue-100");
+            selectedRow = row;
+          }
 
-         tableBody.appendChild(row);
-       });
-     }
+          toggleDropdown(bill.billId, row, bill.status);
+        });
+
+        tableBody.appendChild(row);
+      });
+    }
 
      async function toggleDropdown(billId, clickedRow, status) {
         const existingDropdown = clickedRow.nextElementSibling;

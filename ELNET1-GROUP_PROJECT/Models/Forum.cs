@@ -13,6 +13,9 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("TITLE")]
         public string Title { get; set; }
 
+        [Column("HASHTAG")]
+        public string? Hashtag { get; set; }
+
         [Column("CONTENT")]
         public string Content { get; set; }
 
@@ -21,5 +24,16 @@ namespace ELNET1_GROUP_PROJECT.Models
 
         [Column("USER_ID")]
         public int UserId { get; set; }
+
+        // Foreign key relation to User_Accounts
+        [ForeignKey("UserId")]
+        public User_Account UserAccount { get; set; }
+
+        // Not mapped convenience props for display
+        [NotMapped]
+        public string Profile => $"{UserAccount?.Profile}";
+        public string Firstname => $"{UserAccount?.Firstname}";
+        public string Lastname => $"{UserAccount?.Lastname}";
+        public string FullName => $"{UserAccount?.Firstname} {UserAccount?.Lastname}";
     }
 }

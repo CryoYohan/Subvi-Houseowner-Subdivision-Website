@@ -31,6 +31,7 @@
     --reservation-text-color: #fce3e1;
     --reservation-text-title-color: #fcd5d2;
     --selected-date-bg: #3fa2f2;
+    --border-color: #2d3748;
 }
 
 body {
@@ -123,6 +124,18 @@ body {
     background-color: var(--selected-date-bg);
 }
 
+/* Dropdown css in home layout */
+[data-dropdown] {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+    [data-dropdown].active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
 #login-modal .modal-content {
     background-color: #ffffff;
     color: var(--text-color);
@@ -207,3 +220,13 @@ body {
         width: 100%;
         left: 0;
     }
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}

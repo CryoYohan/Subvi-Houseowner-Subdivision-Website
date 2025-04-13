@@ -1,0 +1,819 @@
+﻿@{
+    Layout = "_StaffLayout";
+    ViewData["Title"] = "Staff | Poll Management";
+}
+
+<div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
+    <!-- Sidebar -->
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
+        <!-- Sidebar Header -->
+        <div class="px-6 py-8 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
+        </div>
+
+        <!-- Navigation Links -->
+        <ul class="flex-1 px-4 py-6 space-y-2">
+            <li class="nav-item">
+                <a href="/staff/dashboard" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-home w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/pass/visitors" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VisitorsPass" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tasks w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Visitors Pass</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/vehicle/registration" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VehicleRegistration" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Vehicle Registration</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/reservation" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ReservationRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-bell w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Reservation Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/services" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ServiceRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tools w-6"></i>
+                    <span class="font-medium">Service Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/bills_and_payments" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "BillsAndPayments" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-file-invoice-dollar w-6"></i>
+                    <span class="font-medium">Bills & Payments</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/poll_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-poll w-6"></i>
+                    <span class="font-medium">Poll Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/reports" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Reports</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-2 overflow-y-auto fade-in">
+        <div class="bg-white p-3 dark:bg-gray-900 rounded-lg shadow-md">
+            <div class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+                <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-poll w-6"></i> Poll Management</h1>
+            </div>
+
+            <div class="container mt-1">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <button class="btn status-tab btn-primary me-2 active" id="activeTab" data-status="active">Active</button>
+                        <button class="btn status-tab btn-outline-primary" id="inactiveTab" data-status="inactive">Inactive</button>
+                    </div>
+                    <button class="btn btn-success" id="add-poll-btn">+ Add New Poll</button>
+                </div>
+
+                <input type="text" class="form-control mb-3" id="pollSearch" placeholder="Search polls...">
+
+                <div id="loadingPolls" class="text-center my-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+
+                <div id="pollList" class="list-group overflow-auto" style="max-height: 520px;"></div>
+            </div>
+
+            <!-- View Poll Modal -->
+            <div class="modal fade" id="viewPollModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content rounded-4 p-3">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="viewPollTitle"></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" id="viewPollModalBody">
+                            <!-- Poll content will be dynamically injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add/Edit Poll Modal -->
+            <div class="modal fade" id="pollFormModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content rounded-4 p-4">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="pollModalTitle">Add Poll</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form id="pollForm">
+                            <p id="pollFormError" class="text-danger mt-2 mb-0" style="display: none;">Please fill out all required fields.</p>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label font-medium">Title</label>
+                                    <input type="text" class="form-control" name="title" id="title" required />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label font-medium">Description</label>
+                                    <textarea class="form-control" name="description" id="description" required></textarea>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label font-medium">Start Date</label>
+                                        <input type="date" class="form-control" name="start-date" id="start-date" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label font-medium">End Date</label>
+                                        <input type="date" class="form-control" name="end-date" id="end-date" required />
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <label class="form-label font-medium">Choices</label>
+                                    <p id="choiceError" class="text-danger mb-2" style="display: none;">Please add at least two valid choice.</p>
+                                    <div id="poll-choices-form"></div>
+                                    <button type="button" class="btn btn-sm btn-secondary mt-2" id="addChoiceBtn">+ Add another choice</button>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary" id="pollSubmitBtn">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="confirmSubmitModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content rounded-4 p-4">
+                        <div class="modal-body text-center">
+                            <p class="mb-3">Are you sure you want to add this poll?</p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <button type="button" class="btn btn-primary" id="confirmSubmitBtn">Yes, Save & Add</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmation Modal For Removing Choice in Modal -->
+            <div class="modal fade" id="deletionrowconfirmModal" tabindex="-1" aria-labelledby="deletionrowconfirmModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deletionrowconfirmModalLabel">Confirm Deletion</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to Remove this choice?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="confirmYesRemove">Yes, Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Confirmation Modal (for update) -->
+            <div class="modal fade" id="confirmModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content rounded-4 p-4">
+                        <div class="modal-body text-center">
+                            <p id="confirmMessage" class="mb-4">Are you sure you want to update Poll?</p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <button class="btn btn-danger" id="confirmYesUpdate">Yes, Update It</button>
+                                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmation Delete Modal -->
+            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to set this poll to be inactive?.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allPolls = [];
+
+    async function loadPolls(status = 'active') {
+        const listContainer = document.getElementById('pollList');
+        const loadingIndicator = document.getElementById('loadingPolls');
+
+        // Show loading
+        loadingIndicator.style.display = 'block';
+        listContainer.innerHTML = '';
+
+        try {
+            const res = await fetch(`/staff/polls?status=${status}`);
+            const polls = await res.json();
+
+            // Store for search
+            allPolls = polls;
+
+            // Hide loading
+            loadingIndicator.style.display = 'none';
+
+            // Render polls
+            renderPolls(polls);
+        } catch (error) {
+            console.error('Failed to fetch polls:', error);
+            listContainer.innerHTML = '<p class="text-danger text-center">Failed to load polls.</p>';
+            loadingIndicator.style.display = 'none';
+        }
+    }
+
+    // Convert a date string to 'MM/DD/YYYY' format
+    function formatDate(dateStr) {
+        const options = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        };
+        const date = new Date(dateStr);
+        return date.toLocaleString('en-US', options);
+    }
+
+    function capitali(text) {
+        if (text.length === 0) return text;
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function renderPolls(polls) {
+        const listContainer = document.getElementById('pollList');
+        listContainer.innerHTML = '';
+
+        if (polls.length === 0) {
+            listContainer.innerHTML = '<p class="text-center text-muted my-3">No polls found.</p>';
+            return;
+        }
+
+        for (const poll of polls) {
+            const pollItem = document.createElement('div');
+            pollItem.className = 'list-group-item list-group-item-action position-relative d-flex justify-content-between align-items-center';
+            pollItem.style.cursor = 'pointer';  // Add pointer cursor
+            pollItem.innerHTML = `
+                <div>
+                    <h5 class="mb-1">${capitali(poll.title)}</h5>
+                    <small class="text-muted">From ${formatDate(poll.startDate)} to ${formatDate(poll.endDate)}</small>
+                </div>
+                <div class="hover-actions position-absolute end-0 top-0 m-2 d-flex gap-2" style="display: none;">
+                    <button class="btn btn-sm btn-outline-primary edit-btn" title="Edit"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-outline-danger delete-btn" title="Delete"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+
+            // Add hover effect
+            pollItem.addEventListener('mouseenter', () => {
+                pollItem.querySelector('.hover-actions').style.display = 'flex';
+                pollItem.style.backgroundColor = '#f8f9fa'; // Light hover color
+            });
+
+            pollItem.addEventListener('mouseleave', () => {
+                pollItem.querySelector('.hover-actions').style.display = 'none';
+                pollItem.style.backgroundColor = ''; // Remove hover color
+            });
+
+            // Add event listeners for edit, delete, and opening the modal
+            pollItem.querySelector('.edit-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditModal(poll);
+            });
+
+            pollItem.querySelector('.delete-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                openDeleteModal(poll);
+            });
+
+            pollItem.addEventListener('click', () => openViewModal(poll.pollId));
+            listContainer.appendChild(pollItem);
+        }
+    }
+
+    async function openViewModal(pollId) {
+        try {
+            const [pollRes, choicesRes] = await Promise.all([
+                fetch(`/staff/polls/details/${pollId}`),
+                fetch(`/staff/polls/${pollId}/choices`)
+            ]);
+            const poll = await pollRes.json();
+            const choices = await choicesRes.json();
+
+            // Set modal title and description
+            const modalTitle = document.getElementById('viewPollTitle');
+            const modalBody = document.getElementById('viewPollModalBody');
+            modalTitle.innerText = poll.title;
+
+            modalBody.innerHTML = `
+                <p class="text-lg font-medium">${capitali(poll.description)}</p>
+                <p><strong>Start Date:</strong> ${formatDate(poll.startDate)}</p>
+                <p><strong>End Date:</strong> ${formatDate(poll.endDate)}</p>
+                <hr />
+            `;
+
+            // Add choices and percentages
+            for (const choice of choices) {
+                const percentage = await fetch(`/staff/polls/vote-percentage/${choice.choiceId}`).then(r => r.json());
+
+                modalBody.innerHTML += `
+                    <div class="mb-3">
+                        <p><strong>${choice.choice}</strong></p>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: ${percentage.percentage}%">
+                                ${percentage.percentage.toFixed(1)}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('viewPollModal'));
+            modal.show();
+        } catch (err) {
+            console.error('Failed to open poll:', err);
+            showToast('Failed to load poll details.', 'red');
+        }
+    }
+
+    document.getElementById('pollSearch').addEventListener('input', function () {
+        const keyword = this.value.trim().toLowerCase();
+
+        const filtered = allPolls.filter(poll =>
+            poll.title.toLowerCase().includes(keyword) ||
+            poll.description.toLowerCase().includes(keyword)
+        );
+
+        renderPolls(filtered);
+    });
+
+    function setupTabSwitching() {
+        document.querySelectorAll('.status-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.status-tab').forEach(b => {
+                    b.classList.remove('active', 'btn-primary');
+                    b.classList.add('btn-outline-primary');
+                });
+
+                btn.classList.add('active', 'btn-primary');
+                btn.classList.remove('btn-outline-primary');
+
+                const status = btn.dataset.status;
+                loadPolls(status);
+            });
+        });
+    }
+
+    function setupAddPoll() {
+        const addPollBtn = document.getElementById('add-poll-btn');
+        const pollFormModal = new bootstrap.Modal(document.getElementById('pollFormModal'));
+
+        addPollBtn.addEventListener('click', () => {
+            resetPollForm();
+            document.getElementById('pollModalTitle').textContent = 'Add New Poll';
+            document.getElementById('pollSubmitBtn').textContent = 'Add Poll';
+            document.getElementById('pollForm').onsubmit = handleAddPollSubmit;
+            pollFormModal.show();
+        });
+
+        document.getElementById('addChoiceBtn').addEventListener('click', () => {
+            addChoiceInput();
+        });
+
+            const startDateInput = document.getElementById('start-date');
+            const endDateInput = document.getElementById('end-date');
+
+            // Flag to track which field was changed first
+            let changedFirst = '';
+
+            startDateInput.addEventListener('change', () => {
+                const startDate = new Date(startDateInput.value);
+                changedFirst = changedFirst || 'start';
+
+                if (changedFirst === 'start') {
+                    endDateInput.min = startDate.toISOString().split('T')[0];
+                    endDateInput.removeAttribute('max');
+                } else {
+                    // End date was set first
+                    if (endDateInput.value) {
+                        const endDate = new Date(endDateInput.value);
+                        // If startDate is after endDate, clear startDate
+                        if (startDate > endDate) {
+                            startDateInput.value = '';
+                            alert("Start date cannot be after the end date.");
+                        }
+                    }
+                    startDateInput.max = endDateInput.value;
+                }
+            });
+
+            endDateInput.addEventListener('change', () => {
+                const endDate = new Date(endDateInput.value);
+                changedFirst = changedFirst || 'end';
+
+                if (changedFirst === 'end') {
+                    startDateInput.max = endDate.toISOString().split('T')[0];
+                    startDateInput.removeAttribute('min');
+                } else {
+                    // Start date was set first
+                    if (startDateInput.value) {
+                        const startDate = new Date(startDateInput.value);
+                        if (endDate < startDate) {
+                            endDateInput.value = '';
+                            alert("End date cannot be before the start date.");
+                        }
+                    }
+                    endDateInput.min = startDateInput.value;
+                }
+            });
+    }
+
+    function addChoiceInput(value = '') {
+        const container = document.getElementById('poll-choices-form');
+
+        const row = document.createElement('div');
+        row.className = 'input-group mt-2';
+
+        const input = document.createElement('input');
+        input.className = 'form-control choice-input';
+        input.placeholder = 'Enter choice';
+        input.value = value;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-outline-danger';
+        deleteBtn.type = 'button';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.onclick = () => row.remove();
+
+        row.appendChild(input);
+        row.appendChild(deleteBtn);
+        container.appendChild(row);
+    }
+
+    async function handleAddPollSubmit(e) {
+        e.preventDefault();
+        const isValid = validatePollForm();
+        if (!isValid) return;
+
+        const confirmModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmSubmitModal'));
+        const pollFormModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('pollFormModal'));
+        confirmModal.show();
+
+        const confirmBtn = document.getElementById('confirmSubmitBtn');
+
+        confirmBtn.onclick = null;
+
+        confirmBtn.onclick = async () => {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Adding...`;
+
+            let startDate = document.getElementById('start-date').value;
+            let endDate = document.getElementById('end-date').value;
+            startDate = new Date(startDate).toISOString().split('T')[0]; 
+            endDate = new Date(endDate).toISOString().split('T')[0];
+
+            const formData = {
+                title: document.getElementById('title').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                startDate: startDate,
+                endDate: endDate,
+                choices: Array.from(document.querySelectorAll('.choice-input')).map(c => c.value.trim()).filter(Boolean)
+            };
+
+            try {
+                const res = await fetch('/staff/polls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = 'Yes, Add it';
+
+                if (res.status === 409) {
+                    const data = await res.json();
+                    document.getElementById('pollFormError').textContent = data.message;
+                    document.getElementById('pollFormError').style.display = 'block';
+                    return;
+                }
+
+                if (!res.ok) throw new Error();
+
+                confirmModal.hide();
+                pollFormModal.hide();
+
+                // Reset form
+                document.getElementById('pollForm').reset();
+                document.getElementById('poll-choices-form').innerHTML = '';
+
+                showToast('Poll added successfully!', 'green');
+                loadPolls('active');
+            } catch (err) {
+                confirmModal.hide();
+                pollFormModal.show();
+                showToast('Something went wrong. Please try again later.', 'red');
+            }
+        };
+    }
+
+    function resetPollForm() {
+        document.getElementById('pollForm').reset();
+        document.getElementById('poll-choices-form').innerHTML = '';
+        document.getElementById('pollFormError').style.display = 'none';
+        document.getElementById('choiceError').style.display = 'none';
+        addChoiceInput(); // add one default input
+    }
+
+    function validatePollForm() {
+        const title = document.getElementById('title').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+        const choices = Array.from(document.querySelectorAll('.choice-input')).map(c => c.value.trim()).filter(Boolean);
+
+        let isValid = true;
+
+        if (!title || !description || !startDate || !endDate) {
+            document.getElementById('pollFormError').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('pollFormError').style.display = 'none';
+        }
+
+        if (choices.filter(Boolean).length < 2) {
+            document.getElementById('choiceError').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('choiceError').style.display = 'none';
+        }
+
+        return isValid;
+    }
+
+        function openEditModal(poll) {
+        document.getElementById('pollModalTitle').textContent = 'Edit Poll';
+        document.getElementById('pollSubmitBtn').textContent = 'Update Poll';
+        resetPollForm();
+
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        let changedFirst = '';
+
+        document.getElementById('title').value = poll.title;
+        document.getElementById('description').value = poll.description;
+        startDateInput.value = poll.startDate;
+        endDateInput.value = poll.endDate;
+
+        // Min/Max logic
+        if (poll.startDate && !poll.endDate) {
+            changedFirst = 'start';
+        } else if (!poll.startDate && poll.endDate) {
+            changedFirst = 'end';
+        } else {
+            changedFirst = 'start';
+        }
+
+        if (changedFirst === 'start') {
+            endDateInput.min = poll.startDate;
+            endDateInput.removeAttribute('max');
+        } else {
+            startDateInput.max = poll.endDate;
+            startDateInput.removeAttribute('min');
+        }
+
+        startDateInput.addEventListener('change', () => {
+            const startDate = new Date(startDateInput.value);
+            changedFirst = changedFirst || 'start';
+
+            if (changedFirst === 'start') {
+                endDateInput.min = startDate.toISOString().split('T')[0];
+                endDateInput.removeAttribute('max');
+            } else if (endDateInput.value) {
+                const endDate = new Date(endDateInput.value);
+                if (startDate > endDate) {
+                    startDateInput.value = '';
+                    alert("Start date cannot be after the end date.");
+                }
+                startDateInput.max = endDateInput.value;
+            }
+        });
+
+        endDateInput.addEventListener('change', () => {
+            const endDate = new Date(endDateInput.value);
+            changedFirst = changedFirst || 'end';
+
+            if (changedFirst === 'end') {
+                startDateInput.max = endDate.toISOString().split('T')[0];
+                startDateInput.removeAttribute('min');
+            } else if (startDateInput.value) {
+                const startDate = new Date(startDateInput.value);
+                if (endDate < startDate) {
+                    endDateInput.value = '';
+                    alert("End date cannot be before the start date.");
+                }
+                endDateInput.min = startDateInput.value;
+            }
+        });
+
+        // Load choices
+        fetch(`/staff/polls/${poll.pollId}/choices`)
+            .then(res => res.json())
+            .then(choices => {
+                const container = document.getElementById('poll-choices-form');
+                container.innerHTML = '';
+                choices.forEach(c => {
+                    const row = document.createElement('div');
+                    row.className = 'input-group mt-2';
+
+                    const input = document.createElement('input');
+                    input.className = 'form-control choice-input';
+                    input.value = c.choice;
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-outline-danger';
+                    deleteBtn.type = 'button';
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+    
+                    deleteBtn.onclick = () => {
+                        // Open confirmation modal
+                        const confirmModal = new bootstrap.Modal(document.getElementById('deletionrowconfirmModal'));
+                        confirmModal.show();
+
+                        // Get "Yes" button from modal and handle click event
+                        document.getElementById('confirmYesRemove').onclick = async () => {
+                            const hasVotes = await checkIfChoiceHasVotes(c.choiceId); // Assume we have c.choiceId or something unique
+
+                            if (hasVotes) {
+                                // Show error message under the input
+                                const errorMessage = document.createElement('div');
+                                errorMessage.className = 'text-danger mt-2';
+                                errorMessage.textContent = "The Choice already has voters, Can't remove";
+                                row.appendChild(errorMessage);
+                            } else {
+                                // Proceed with removing the row if no votes
+                                row.remove();
+                            }
+
+                            // Close the confirmation modal after action
+                            confirmModal.hide();
+                        };
+                    };
+
+                    row.appendChild(input);
+                    row.appendChild(deleteBtn);
+                    container.appendChild(row);
+                });
+
+                // Function to check if the choice has any voters
+                
+            });
+
+        const formModal = new bootstrap.Modal(document.getElementById('pollFormModal'));
+        formModal.show();
+
+        // Submit handling
+        document.getElementById('pollForm').onsubmit = (e) => {
+            e.preventDefault();
+            const isValid = validatePollForm();
+            if (!isValid) return;
+
+            // Show confirmation modal
+            const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            confirmModal.show();
+
+            // Attach one-time click listener
+            document.getElementById('confirmYesUpdate').onclick = async () => {
+                confirmModal.hide();
+
+                const startDate = new Date(startDateInput.value).toISOString().split('T')[0];
+                const endDate = new Date(endDateInput.value).toISOString().split('T')[0];
+
+                const data = {
+                    title: document.getElementById('title').value,
+                    description: document.getElementById('description').value,
+                    startDate: startDate,
+                    endDate: endDate,
+                    choices: Array.from(document.querySelectorAll('.choice-input')).map(c => c.value).filter(Boolean)
+                };
+
+                try {
+                    const res = await fetch(`/staff/polls/${poll.pollId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (res.status === 409) {
+                        const data = await res.json();
+                        document.getElementById('pollFormError').textContent = data.message;
+                        document.getElementById('pollFormError').style.display = 'block';
+                        return;
+                    }
+
+                    if (!res.ok) throw new Error();
+
+                    showToast('Poll updated successfully!', 'green');
+                    bootstrap.Modal.getInstance(document.getElementById('pollFormModal')).hide();
+                    loadPolls('active');
+                } catch (err) {
+                    showToast('Update failed.', 'red');
+                }
+            };
+        };
+    }
+
+    async function checkIfChoiceHasVotes(choiceId) {
+             const res = await fetch(`/staff/check-votes/${choiceId}`);
+             const data = await res.json();
+               return data.hasVotes;
+        }
+
+    function openDeleteModal(poll) {
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+
+        const confirmButton = document.getElementById('confirmDeleteBtn');
+        confirmButton.disabled = false; 
+        confirmButton.innerHTML = 'Confirm'; // Reset button text
+
+        // Handle the confirm delete action
+        document.getElementById('confirmDeleteBtn').onclick = async () => {
+            confirmButton.disabled = true; 
+            confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...'; // Show loading spinner
+
+            try {
+                // Sending a PATCH request to soft delete the poll
+                const res = await fetch(`/staff/polls/${poll.pollId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+
+                if (!res.ok) {
+                    throw new Error('Failed to deactivate poll.');
+                }
+
+                modal.hide();
+                showToast('Poll Inactivated Successfully.', 'red');
+                loadPolls('active'); // Reload active polls after deletion
+
+            } catch (err) {
+                // If an error occurs, show a toast and reset the button
+                showToast('Failed to delete poll.', 'red');
+                confirmButton.disabled = false; // Re-enable the button
+                confirmButton.innerHTML = 'Confirm'; // Reset button text
+            }
+        };
+    }
+
+    function showToast(message, color = 'green') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transform translate-y-20 opacity-0 transition-all z-50`;
+            toast.style.backgroundColor = color;
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }, 50);
+        }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadPolls('active');
+        setupTabSwitching();
+        setupAddPoll();
+    });
+</script>

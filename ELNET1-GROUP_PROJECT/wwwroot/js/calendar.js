@@ -10,7 +10,6 @@ async function fetchScheduleData() {
     try {
         const response = await fetch("/api/calendar/schedules");
         const Data = await response.json();
-        console.log(Data)
 
         if (Data) {
             scheduleData = Data;
@@ -177,7 +176,7 @@ function showSchedule(date) {
                                 </li>`;
                             }).join('')}
                         </ul>
-                    ` : `<div class="text-gray-600 text-center p-2">No Reservation</div>`}
+                    ` : `<div class="text-center p-2">No Reservation</div>`}
                 </div>
             </div>
         `;

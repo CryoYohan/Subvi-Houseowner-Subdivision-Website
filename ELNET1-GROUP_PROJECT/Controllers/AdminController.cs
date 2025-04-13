@@ -420,31 +420,36 @@ public class AdminController : Controller
         return View();
     }
 
-    public async Task<IActionResult> GetBills(string status = "Paid")  // Default to "Paid"
+    public async Task<IActionResult> GetBills(string status = "Paid")
     {
-        IQueryable<Bill> query = _context.Bill.OrderByDescending(b => b.BillId);
+        var billsWithUser = from bill in _context.Bill
+                            join user in _context.User_Accounts
+                                on bill.UserId equals user.Id
+                            where _context.Payment.Any(p => p.BillId == bill.BillId)
+                            select new
+                            {
+                                bill.BillId,
+                                bill.BillName,
+                                bill.DueDate,
+                                bill.Status,
+                                bill.BillAmount,
+                                FullName = char.ToUpper(user.Firstname[0]) + user.Firstname.Substring(1) + " " + char.ToUpper(user.Lastname[0]) + user.Lastname.Substring(1)
+                            };
 
         if (status == "Paid")
         {
-            query = query.Where(b => b.Status == "Paid");
+            billsWithUser = billsWithUser.Where(b => b.Status == "Paid");
         }
         else if (status == "Not Paid")
         {
-            query = query.Where(b => b.Status != "Paid");
+            billsWithUser = billsWithUser.Where(b => b.Status != "Paid");
         }
 
-        var bills = await query
-            .Select(b => new Bill
-            {
-                BillId = b.BillId,
-                BillName = b.BillName,
-                DueDate = b.DueDate,
-                Status = b.Status,
-                BillAmount = b.BillAmount
-            })
+        var result = await billsWithUser
+            .OrderByDescending(b => b.BillId)
             .ToListAsync();
 
-        return Ok(bills);
+        return Ok(result);
     }
 
     [HttpGet]
@@ -626,6 +631,60 @@ public class AdminController : Controller
         }
         return RedirectToAction("Announcements");
     }
+
+    public IActionResult Poll()
+    {
+        RefreshJwtCookies();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("Landing");
+        }
+        return View();
+    }
+
+    public async Task<IActionResult> GetPolls([FromQuery] string status = "active")
+    {
+        bool isActive = status.ToLower() != "inactive";
+        var polls = await _context.Poll
+            .Where(p => p.Status == isActive)
+            .OrderByDescending(p => p.StartDate)
+            .ToListAsync();
+
+        return Ok(polls);
+    }
+
+    public async Task<IActionResult> GetPoll(int pollId)
+    {
+        var poll = await _context.Poll.FindAsync(pollId);
+        if (poll == null) return NotFound();
+        return Ok(poll);
+    }
+
+    public async Task<IActionResult> GetChoices(int pollId)
+    {
+        var choices = await _context.Poll_Choice
+            .Where(c => c.PollId == pollId)
+            .ToListAsync();
+
+        return Ok(choices);
+    }
+
+    public async Task<IActionResult> GetVotePercentage(int choiceId)
+    {
+        var choice = await _context.Poll_Choice.FindAsync(choiceId);
+        if (choice == null) return NotFound();
+
+        int totalVotes = await _context.Vote
+            .CountAsync(v => v.PollId == choice.PollId);
+
+        int choiceVotes = await _context.Vote
+            .CountAsync(v => v.ChoiceId == choiceId);
+
+        double percentage = totalVotes == 0 ? 0.0 : (double)choiceVotes / totalVotes * 100;
+        return Ok(new { choiceId, percentage });
+    }
+
     public IActionResult Reports()
     {
         RefreshJwtCookies();
@@ -635,5 +694,127 @@ public class AdminController : Controller
             return RedirectToAction("landing", "Home");
         }
         return View();
+    }
+
+    public IActionResult Settings()
+    {
+        RefreshJwtCookies();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("Landing");
+        }
+        return View();
+    }
+
+    public async Task<IActionResult> GetUser()
+    {
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return Unauthorized();
+        }
+        ;
+        var user = await _context.User_Accounts
+            .Where(u => u.Id == userId)
+            .Select(u => new
+            {
+                Profile = u.Profile ?? "",
+                u.Firstname,
+                u.Lastname,
+                u.Email,
+                Contact = u.PhoneNumber,
+                u.Address
+            })
+            .FirstOrDefaultAsync();
+
+        if (user == null)
+            return NotFound(new { message = "User not found." });
+
+        return Ok(user);
+    }
+
+    public async Task<IActionResult> UploadProfileImage(IFormFile file)
+    {
+        var userIdStr = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(userIdStr, out int userId))
+            return Unauthorized();
+
+        var user = await _context.User_Accounts.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        var ext = Path.GetExtension(file.FileName);
+        var name = $"{char.ToUpper(user.Firstname[0])}{user.Lastname}-{userId}{ext}";
+        var savePath = Path.Combine("wwwroot/assets/userprofile", name);
+        var relativePath = $"/assets/userprofile/{name}";
+
+        using (var stream = new FileStream(savePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        user.Profile = relativePath;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { path = relativePath });
+    }
+
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+    {
+        var userIdStr = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(userIdStr, out int userId))
+            return Unauthorized();
+
+        var user = await _context.User_Accounts.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        // Email check
+        var existingEmail = await _context.User_Accounts
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower() && u.Id != userId);
+        if (existingEmail != null)
+            return Conflict(new { message = "Email already in use by another user." });
+
+        // Full name check
+        var nameExists = await _context.User_Accounts
+            .FirstOrDefaultAsync(u => u.Firstname.ToLower() == request.Firstname.ToLower() &&
+                                      u.Lastname.ToLower() == request.Lastname.ToLower() &&
+                                      u.Id != userId);
+        if (nameExists != null)
+            return Conflict(new { message = "Another user already has the same full name." });
+
+        // Contact check
+        var contactExists = await _context.User_Accounts
+            .FirstOrDefaultAsync(u => u.PhoneNumber == request.Contact && u.Id != userId);
+        if (contactExists != null)
+            return Conflict(new { message = "Contact already in use." });
+
+        // Update fields
+        user.Firstname = request.Firstname;
+        user.Lastname = request.Lastname;
+        user.Email = request.Email;
+        user.Address = request.Address;
+        user.PhoneNumber = request.Contact;
+
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Profile updated successfully." });
+    }
+
+    public async Task<IActionResult> ChangePassword([FromBody] PasswordChangeRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Password))
+            return BadRequest("Password is required");
+
+        var userIdStr = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(userIdStr, out int userId))
+            return Unauthorized();
+        var user = await _context.User_Accounts.FindAsync(userId);
+
+        if (user == null)
+            return NotFound();
+
+        user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Password changed successfully" });
     }
 }

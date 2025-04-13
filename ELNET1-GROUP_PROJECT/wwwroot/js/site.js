@@ -157,19 +157,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
 //This is the part where the user profile menu the open and close functionality
 document.addEventListener("DOMContentLoaded", function () {
-    const userMenuBtn = document.getElementById("user-menu-btn");
-    const userDropdown = document.getElementById("user-dropdown");
+    // Dropdown Toggles
+    const setupDropdown = (buttonId, dropdownId) => {
+        const btn = document.getElementById(buttonId);
+        const dropdown = document.getElementById(dropdownId);
 
-    userMenuBtn.addEventListener("click", function () {
-        userDropdown.classList.toggle("hidden");
-    });
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+            dropdown.classList.toggle('active');
+        });
 
-    // Close dropdown when clicking outside
-    document.addEventListener("click", function (event) {
-        if (!userMenuBtn.contains(event.target) && !userDropdown.contains(event.target)) {
-            userDropdown.classList.add("hidden");
-        }
-    });
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && e.target !== btn) {
+                dropdown.classList.add('hidden');
+                dropdown.classList.remove('active');
+            }
+        });
+    };
+
+    setupDropdown('profile-btn', 'profile-dropdown');
+    setupDropdown('notification-btn', 'notification-dropdown');
 });
 
 const currentPath = window.location.pathname;

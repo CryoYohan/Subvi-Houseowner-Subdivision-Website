@@ -9,6 +9,8 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Key]
         [Column("USER_ID")]
         public int Id { get; set; }
+        [Column("PROFILE")]
+        public string? Profile { get; set; }
         [Column("FIRSTNAME")]
         [Required]
         public string Firstname { get; set; }
@@ -32,5 +34,6 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("STATUS")]
         public string? Status { get; set; } = "ACTIVE";
 
+        public ICollection<Forum> Forum { get; set; }
     }
 }

@@ -4,17 +4,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ELNET1_GROUP_PROJECT.Models;
+using ELNET1_GROUP_PROJECT.Data;
 using System;
 using System.Linq;
-using ELNET1_GROUP_PROJECT.Data;
+using System.Text.Json;
 
 [Route("api")]
 [ApiController]
-public class AnnouncementController : ControllerBase
+public class HomeDashboardController : ControllerBase
 {
     private readonly MyAppDBContext _context;
 
-    public AnnouncementController(MyAppDBContext context)
+    public HomeDashboardController(MyAppDBContext context)
     {
         _context = context;
     }
@@ -45,23 +46,24 @@ public class AnnouncementController : ControllerBase
         int userId = int.Parse(userIdStr);
 
         var polls = await _context.Poll
-        .Select(p => new
-        {
-            p.PollId,
-            p.Title,
-            p.Description,
-            p.StartDate,
-            p.EndDate,
-            p.Status,
-            VotedChoice = _context.Vote
-                .Where(v => v.PollId == p.PollId && v.UserId == userId)
-                .Join(_context.Poll_Choice,
-                    vote => vote.ChoiceId,
-                    choice => choice.ChoiceId,
-                    (vote, choice) => choice.Choice)
-                .FirstOrDefault()
-        })
-        .ToListAsync();
+            .Where(p => p.Status)
+            .Select(p => new
+            {
+                p.PollId,
+                p.Title,
+                p.Description,
+                p.StartDate,
+                p.EndDate,
+                p.Status,
+                VotedChoice = _context.Vote
+                    .Where(v => v.PollId == p.PollId && v.UserId == userId)
+                    .Join(_context.Poll_Choice,
+                        vote => vote.ChoiceId,
+                        choice => choice.ChoiceId,
+                        (vote, choice) => choice.Choice)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
 
         return Ok(polls);
     }
@@ -116,7 +118,8 @@ public class AnnouncementController : ControllerBase
         {
             PollId = voteRequest.PollId,
             ChoiceId = voteRequest.ChoiceId,
-            UserId = userId
+            UserId = userId,
+            VoteDate = DateTime.Now
         };
 
         _context.Vote.Add(vote);
@@ -143,8 +146,10 @@ public class AnnouncementController : ControllerBase
             return BadRequest("You haven't voted yet.");
         }
 
-        // Update the existing vote with the new choice
+        // Update the existing vote with the new choice and the updated VoteDate
         existingVote.ChoiceId = voteRequest.ChoiceId;
+        existingVote.VoteDate = DateTime.Now; 
+
         _context.Vote.Update(existingVote);
         await _context.SaveChangesAsync();
 
@@ -174,45 +179,71 @@ public class AnnouncementController : ControllerBase
         }
     }
 
-    [HttpGet("polls/vote-percentage/{choiceId}")]
-    public async Task<IActionResult> GetVotePercentageForChoice(int choiceId)
+    [HttpGet("polls/{pollId}/percentages")]
+    public async Task<IActionResult> GetAllVotePercentagesForPoll(int pollId)
     {
         try
         {
-            var pollId = await _context.Poll_Choice
-                .Where(pc => pc.ChoiceId == choiceId)
-                .Select(pc => pc.PollId)
-                .FirstOrDefaultAsync();
+            // Get all choices for this poll
+            var choices = await _context.Poll_Choice
+                .Where(pc => pc.PollId == pollId)
+                .ToListAsync();
 
-            if (pollId == 0)
-                return NotFound(new { message = "Choice not found." });
+            if (choices == null || choices.Count == 0)
+                return NotFound(new { message = "No choices found for this poll." });
 
-            // Calculate the total number of voters (e.g., users with an active "Homeowner" role)
+            // Total voters with active homeowner role
             var totalVoters = await _context.User_Accounts
                 .Where(u => u.Role == "Homeowner" && u.Status == "ACTIVE")
                 .CountAsync();
 
-            // Count the number of votes for the given choiceId
-            var choiceVotes = await _context.Vote
-                .Where(v => v.ChoiceId == choiceId)
-                .CountAsync();
-
-            // Calculate the percentage of votes for this choice
-            double percentage = totalVoters > 0 ? ((double)choiceVotes / totalVoters) * 100 : 0;
-
-            return Ok(new
+            // For each choice, count votes
+            var result = new List<object>();
+            foreach (var choice in choices)
             {
-                choiceId,
-                pollId,
-                totalVoters,
-                choiceVotes,
-                percentage
-            });
+                var voteCount = await _context.Vote
+                    .Where(v => v.ChoiceId == choice.ChoiceId)
+                    .CountAsync();
+
+                double percentage = totalVoters > 0 ? ((double)voteCount / totalVoters) * 100 : 0;
+
+                result.Add(new
+                {
+                    choiceId = choice.ChoiceId,
+                    choice = choice.Choice,
+                    pollId = pollId,
+                    voteCount,
+                    percentage
+                });
+            }
+
+            return Ok(result);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred.", error = ex.Message });
+            return StatusCode(500, new { message = "Something went wrong.", error = ex.Message });
         }
+    }
+
+    [HttpGet("getevents")]
+    public IActionResult GetEventsByDate(string date)
+    {
+        if (!DateTime.TryParse(date, out DateTime selectedDate))
+        {
+            return BadRequest("Invalid date format.");
+        }
+
+        var events = _context.Event_Calendar
+            .Where(e => e.DateTime.Date == selectedDate.Date)
+            .OrderByDescending(e => e.DateTime)
+            .Select(e => new
+            {
+                e.Description,
+                DateTime = e.DateTime.ToString("MM/dd/yyyy")
+            })
+            .ToList();
+
+        return Ok(events);
     }
 
 }

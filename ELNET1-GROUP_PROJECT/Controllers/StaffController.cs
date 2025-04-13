@@ -7,6 +7,7 @@ using System.Data;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using ELNET1_GROUP_PROJECT.Controllers;
+using System.Security.Claims;
 
 [Route("staff")]
 public class StaffController : Controller
@@ -74,13 +75,28 @@ public class StaffController : Controller
     [HttpGet("dashboard")]
     public IActionResult Dashboard()
     {
+        RefreshJwtCookies();
         var role = GetUserRoleFromToken();
-        if (string.IsNullOrEmpty(role) || role != "Staff")
+        if (string.IsNullOrWhiteSpace(role) || role != "Staff")
         {
             return RedirectToAction("Landing");
         }
+
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return RedirectToAction("landing");
+        }
+        var profilePath = _context.User_Accounts
+            .Where(u => u.Id == userId)
+            .Select(u => u.Profile)
+            .FirstOrDefault();
+
+        ViewBag.ProfilePath = profilePath;
+
         return View();
     }
+
 
     [HttpGet("pass/visitors")]
     public IActionResult VisitorsPass()
@@ -521,32 +537,180 @@ public class StaffController : Controller
         return View();
     }
 
-    [HttpGet("bills/data/{status}")]
-    public async Task<IActionResult> GetBills(string status = "Paid")  // Default to "Paid"
+    //-------------- BILLS -----------------//
+    [HttpGet("bills/get")]
+    public IActionResult ModificationGetBills(string status = "Upcoming")
     {
-        IQueryable<Bill> query = _context.Bill.OrderByDescending(b => b.BillId);
+        var today = DateTime.Today;
+
+        // Make sure DbSets are not null
+        var bills = _context.Bill?.ToList();
+        var users = _context.User_Accounts?.ToList();
+
+        if (bills == null || users == null)
+        {
+            return StatusCode(500, "Failed to load bills or user accounts.");
+        }
+
+        // Update statuses first
+        foreach (var bill in bills)
+        {
+            if (bill.Status == "Deleted" || bill.Status == "Paid")
+                continue;
+
+            if (DateTime.TryParse(bill.DueDate, out DateTime dueDate))
+            {
+                if (dueDate.Date < today && bill.Status != "Overdue")
+                {
+                    bill.Status = "Overdue";
+                }
+                else if (dueDate.Date == today && bill.Status != "Due Now")
+                {
+                    bill.Status = "Due Now";
+                }
+                else if (dueDate.Date > today && bill.Status != "Upcoming")
+                {
+                    bill.Status = "Upcoming";
+                }
+            }
+        }
+
+        _context.SaveChanges();
+
+        // Join manually after fetching
+        var result = (from bill in bills
+                      join user in users
+                          on bill.UserId equals user.Id
+                      select new
+                      {
+                          bill.BillId,
+                          bill.BillName,
+                          bill.DueDate,
+                          bill.Status,
+                          BillAmount = bill.BillAmount,
+                          FullName = char.ToUpper(user.Firstname[0]) + user.Firstname.Substring(1) + " " +
+                                     char.ToUpper(user.Lastname[0]) + user.Lastname.Substring(1)
+                      }).ToList();
+
+        // Apply filter
+        if (status == "Upcoming")
+        {
+            result = result.Where(b => b.Status == "Upcoming").ToList();
+        }
+        else if (status == "Due Now")
+        {
+            result = result.Where(b => b.Status == "Due Now").ToList();
+        }
+        else if (status == "Overdue")
+        {
+            result = result.Where(b => b.Status == "Overdue").ToList();
+        }
+
+        return Ok(result.OrderByDescending(b => b.BillId));
+    }
+
+    [HttpGet("homeowners")]
+    public IActionResult GetActiveHomeowners()
+    {
+        var homeowners = _context.User_Accounts
+            .Where(u => u.Role == "Homeowner" && u.Status == "ACTIVE")
+            .Select(u => new {
+                userId = u.Id,
+                fullName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " +
+                                     char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                email = u.Email
+            })
+            .ToList();
+
+        return Ok(homeowners);
+    }
+
+    [HttpPost("bills/add")]
+    public IActionResult AddBill([FromBody] Bill model)
+    {
+        model.Status = GetBillStatus(model.DueDate);
+        _context.Bill.Add(model);
+        _context.SaveChanges();
+        return Ok(new { message = "Bill added successfully!" });
+    }
+
+    [HttpGet("bills/getbyid/{id}")]
+    public IActionResult GetBillById(int id)
+    {
+        var bill = _context.Bill.FirstOrDefault(b => b.BillId == id);
+        if (bill == null) return NotFound();
+        return Ok(bill);
+    }
+
+    [HttpPut("bills/update")]
+    public IActionResult UpdateBill([FromBody] Bill updated)
+    {
+        var bill = _context.Bill.FirstOrDefault(b => b.BillId == updated.BillId);
+        if (bill == null) return NotFound();
+
+        bill.BillName = updated.BillName;
+        bill.DueDate = updated.DueDate;
+        bill.BillAmount = updated.BillAmount;
+        bill.Status = GetBillStatus(updated.DueDate);
+        bill.UserId = updated.UserId;
+        _context.SaveChanges();
+
+        return Ok(new { message = "Bill updated successfully!" }); 
+    }
+
+    [HttpDelete("bills/delete/{id}")]
+    public IActionResult DeleteBill(int id)
+    {
+        var bill = _context.Bill.FirstOrDefault(b => b.BillId == id);
+        if (bill == null) return NotFound();
+
+        bill.Status = "Deleted";
+        _context.SaveChanges();
+        return Ok();
+    }
+
+    // Helper
+    private string GetBillStatus(string dueDate)
+    {
+        var date = DateTime.Parse(dueDate).Date;
+        if (date > DateTime.Today) return "Upcoming";
+        if (date == DateTime.Today) return "Due Now";
+        return "Overdue";
+    }
+
+    //-------------- PAYMENTS --------------//
+
+    [HttpGet("bills/data/{status}")]
+    public async Task<IActionResult> GetBills(string status = "Paid")
+    {
+        var billsWithUser = from bill in _context.Bill
+                            join user in _context.User_Accounts
+                                on bill.UserId equals user.Id
+                            where _context.Payment.Any(p => p.BillId == bill.BillId)
+                            select new
+                            {
+                                bill.BillId,
+                                bill.BillName,
+                                bill.DueDate,
+                                bill.Status,
+                                bill.BillAmount,
+                                FullName = char.ToUpper(user.Firstname[0]) + user.Firstname.Substring(1) + " " + char.ToUpper(user.Lastname[0]) + user.Lastname.Substring(1)
+                            };
 
         if (status == "Paid")
         {
-            query = query.Where(b => b.Status == "Paid");
+            billsWithUser = billsWithUser.Where(b => b.Status == "Paid");
         }
         else if (status == "Not Paid")
         {
-            query = query.Where(b => b.Status != "Paid");
+            billsWithUser = billsWithUser.Where(b => b.Status != "Paid");
         }
 
-        var bills = await query
-            .Select(b => new Bill
-            {
-                BillId = b.BillId,
-                BillName = b.BillName,
-                DueDate = b.DueDate,
-                Status = b.Status,
-                BillAmount = b.BillAmount
-            })
+        var result = await billsWithUser
+            .OrderByDescending(b => b.BillId)
             .ToListAsync();
 
-        return Ok(bills);
+        return Ok(result);
     }
 
     // GET: api/BillPayment/by-bill/5
@@ -574,6 +738,278 @@ public class StaffController : Controller
         return Ok(new { Payments = payments, TotalAmountPaid = totalAmountPaid });
     }
 
+    [HttpGet("poll_management")]
+    public IActionResult Poll()
+    {
+        RefreshJwtCookies();
+        var role = GetUserRoleFromToken();
+        if (string.IsNullOrEmpty(role) || role != "Staff")
+        {
+            return RedirectToAction("Landing");
+        }
+        return View();
+    }
+
+    [HttpGet("polls")]
+    public async Task<IActionResult> GetPolls([FromQuery] string status = "active")
+    {
+        bool isActive = status.ToLower() != "inactive";
+        var now = DateTime.Now;
+
+        var allPolls = await _context.Poll.ToListAsync();
+
+        foreach (var poll in allPolls)
+        {
+            if (DateTime.TryParse(poll.EndDate, out DateTime endDate))
+            {
+                if (endDate < now && poll.Status == true) // if active but expired
+                {
+                    poll.Status = false; // set to inactive
+                }
+            }
+        }
+
+        await _context.SaveChangesAsync();
+
+        var filteredPolls = allPolls
+            .Where(p => p.Status == isActive)
+            .OrderByDescending(p => DateTime.TryParse(p.StartDate, out var start) ? start : DateTime.MinValue)
+            .ToList();
+
+        return Ok(filteredPolls);
+    }
+
+    [HttpPost("polls")]
+    public async Task<IActionResult> AddPoll([FromBody] PollCreateRequest request)
+    {
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return Unauthorized();
+        }
+
+        var normalizedTitle = request.Title.Trim().ToLower();
+        var normalizedDescription = request.Description.Trim().ToLower();
+        var newChoices = request.Choices.Select(c => c.Trim().ToLower()).OrderBy(c => c).ToList();
+
+        // Get polls with same title + description
+        var similarPolls = await _context.Poll
+            .Where(p => p.Title.ToLower() == normalizedTitle && p.Description.ToLower() == normalizedDescription)
+            .Select(p => new
+            {
+                p.PollId,
+                Choices = _context.Poll_Choice
+                    .Where(pc => pc.PollId == p.PollId)
+                    .Select(pc => pc.Choice.Trim().ToLower())
+                    .ToList()
+            })
+            .ToListAsync();
+
+        foreach (var poll in similarPolls)
+        {
+            var existingChoices = poll.Choices.OrderBy(c => c).ToList();
+            if (newChoices.SequenceEqual(existingChoices))
+            {
+                return Conflict(new { message = "The Poll Already Added. Please check first the data before trying again." });
+            }
+        }
+
+        // Create new poll
+        var newPoll = new Poll
+        {
+            Title = request.Title,
+            Description = request.Description,
+            StartDate = request.StartDate,
+            EndDate = request.EndDate,
+            Status = true,
+            UserId = userId
+        };
+
+        _context.Poll.Add(newPoll);
+        await _context.SaveChangesAsync();
+
+        foreach (var choice in request.Choices)
+        {
+            _context.Poll_Choice.Add(new Poll_Choice
+            {
+                Choice = choice.Trim(),
+                PollId = newPoll.PollId
+            });
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Poll created successfully." });
+    }
+
+    [HttpPut("polls/{pollId}")]
+    public async Task<IActionResult> UpdatePoll(int pollId, [FromBody] PollCreateRequest request)
+    {
+        var poll = await _context.Poll.FindAsync(pollId);
+        if (poll == null) return NotFound();
+
+        var normalizedTitle = request.Title.Trim().ToLower();
+        var normalizedDescription = request.Description.Trim().ToLower();
+        var newChoicesRaw = request.Choices
+            .Where(c => !string.IsNullOrWhiteSpace(c))
+            .Select(c => c.Trim())
+            .ToList();
+
+        var newChoicesNormalized = newChoicesRaw
+            .Select(c => c.ToLower())
+            .OrderBy(c => c)
+            .ToList();
+
+        // Duplicate detection
+        var similarPolls = await _context.Poll
+            .Where(p => p.PollId != pollId &&
+                        p.Title.ToLower() == normalizedTitle &&
+                        p.Description.ToLower() == normalizedDescription)
+            .Select(p => new
+            {
+                p.PollId,
+                Choices = _context.Poll_Choice
+                    .Where(pc => pc.PollId == p.PollId)
+                    .Select(pc => pc.Choice.Trim().ToLower())
+                    .ToList()
+            })
+            .ToListAsync();
+
+        foreach (var otherPoll in similarPolls)
+        {
+            var existingChoices = otherPoll.Choices.OrderBy(c => c).ToList();
+            if (newChoicesNormalized.SequenceEqual(existingChoices))
+            {
+                return Conflict(new { message = "Another poll with the same data. Please check poll data before trying again." });
+            }
+        }
+
+        // Update main fields
+        poll.Title = request.Title;
+        poll.Description = request.Description;
+        poll.StartDate = request.StartDate;
+        poll.EndDate = request.EndDate;
+
+        // Fetch existing choices
+        var existingChoicesDetails = await _context.Poll_Choice
+            .Where(c => c.PollId == pollId)
+            .ToListAsync();
+
+        // === Update choices: rename-safe ===
+        // Map normalized text -> existing entity
+        var existingChoiceMap = existingChoicesDetails.ToDictionary(
+            c => c.Choice.Trim().ToLower(),
+            c => c
+        );
+
+        var updatedChoiceIds = new HashSet<int>();
+
+        foreach (var (newRaw, index) in newChoicesRaw.Select((val, i) => (val, i)))
+        {
+            var normalized = newRaw.ToLower();
+
+            // 1. If exact match exists — keep it
+            if (existingChoiceMap.TryGetValue(normalized, out var existing))
+            {
+                updatedChoiceIds.Add(existing.ChoiceId);
+                continue;
+            }
+
+            // 2. Else: try match by position — rename existing
+            if (index < existingChoicesDetails.Count)
+            {
+                var toRename = existingChoicesDetails[index];
+                toRename.Choice = newRaw;
+                updatedChoiceIds.Add(toRename.ChoiceId);
+            }
+            else
+            {
+                // 3. Add new
+                _context.Poll_Choice.Add(new Poll_Choice
+                {
+                    PollId = pollId,
+                    Choice = newRaw
+                });
+            }
+        }
+
+        // Remove old choices that were not reused/renamed, but if someone already voted it will not delete
+        foreach (var existing in existingChoicesDetails)
+        {
+            if (!updatedChoiceIds.Contains(existing.ChoiceId))
+            {
+                // Check if votes exist for this choice
+                bool hasVotes = await _context.Vote
+                    .AnyAsync(v => v.ChoiceId == existing.ChoiceId);
+
+                if (hasVotes)
+                {
+                    continue;
+                }
+
+                _context.Poll_Choice.Remove(existing);
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Poll updated successfully." });
+    }
+
+    //Check if Choice has Already voters
+    [HttpGet("check-votes/{choiceId}")]
+    public async Task<IActionResult> CheckIfChoiceHasVotes(int choiceId)
+    {
+        var hasVotes = await _context.Vote
+            .AnyAsync(v => v.ChoiceId == choiceId);
+
+        return Ok(new { hasVotes });
+    }
+
+    //Soft Delete 
+    [HttpPatch("polls/{pollId}")]
+    public async Task<IActionResult> SoftDeletePoll(int pollId)
+    {
+        var poll = await _context.Poll.FindAsync(pollId);
+        if (poll == null) return NotFound();
+
+        poll.Status = false;  // Mark as Inactive
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Poll deactivated." });
+    }
+
+    [HttpGet("polls/details/{pollId}")]
+    public async Task<IActionResult> GetPoll(int pollId)
+    {
+        var poll = await _context.Poll.FindAsync(pollId);
+        if (poll == null) return NotFound();
+        return Ok(poll);
+    }
+
+    [HttpGet("polls/{pollId}/choices")]
+    public async Task<IActionResult> GetChoices(int pollId)
+    {
+        var choices = await _context.Poll_Choice
+            .Where(c => c.PollId == pollId)
+            .ToListAsync();
+
+        return Ok(choices);
+    }
+
+    [HttpGet("polls/vote-percentage/{choiceId}")]
+    public async Task<IActionResult> GetVotePercentage(int choiceId)
+    {
+        var choice = await _context.Poll_Choice.FindAsync(choiceId);
+        if (choice == null) return NotFound();
+
+        int totalVotes = await _context.Vote
+            .CountAsync(v => v.PollId == choice.PollId);
+
+        int choiceVotes = await _context.Vote
+            .CountAsync(v => v.ChoiceId == choiceId);
+
+        double percentage = totalVotes == 0 ? 0.0 : (double)choiceVotes / totalVotes * 100;
+        return Ok(new { choiceId, percentage });
+    }
+
     [HttpGet("reports")]
     public IActionResult Reports()
     {
@@ -584,6 +1020,132 @@ public class StaffController : Controller
             return RedirectToAction("Landing");
         }
         return View();
+    }
+
+    [HttpGet("profile/settings")]
+    public IActionResult Settings()
+    {
+        RefreshJwtCookies();
+        var role = GetUserRoleFromToken();
+        if (string.IsNullOrEmpty(role) || role != "Staff")
+        {
+            return RedirectToAction("Landing");
+        }
+        return View();
+    }
+
+    [HttpGet("get-user")]
+    public async Task<IActionResult> GetUser()
+    {
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return Unauthorized();
+        };
+        var user = await _context.User_Accounts
+            .Where(u => u.Id == userId)
+            .Select(u => new
+            {
+                Profile = u.Profile ?? "",
+                u.Firstname,
+                u.Lastname,
+                u.Email,
+                Contact = u.PhoneNumber,
+                u.Address
+            })
+            .FirstOrDefaultAsync();
+
+        if (user == null)
+            return NotFound(new { message = "User not found." });
+
+        return Ok(user);
+    }
+
+    [HttpPost("upload-profile")]
+    public async Task<IActionResult> UploadProfileImage(IFormFile file)
+    {
+        var userIdStr = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(userIdStr, out int userId))
+            return Unauthorized();
+
+        var user = await _context.User_Accounts.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        var ext = Path.GetExtension(file.FileName);
+        var name = $"{char.ToUpper(user.Firstname[0])}{user.Lastname}-{userId}{ext}";
+        var savePath = Path.Combine("wwwroot/assets/userprofile", name);
+        var relativePath = $"/assets/userprofile/{name}";
+
+        using (var stream = new FileStream(savePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        user.Profile = relativePath;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { path = relativePath });
+    }
+
+    [HttpPut("update-info")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+    {
+        var userIdStr = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(userIdStr, out int userId))
+            return Unauthorized();
+
+        var user = await _context.User_Accounts.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        // Email check
+        var existingEmail = await _context.User_Accounts
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower() && u.Id != userId);
+        if (existingEmail != null)
+            return Conflict(new { message = "Email already in use by another user." });
+
+        // Full name check
+        var nameExists = await _context.User_Accounts
+            .FirstOrDefaultAsync(u => u.Firstname.ToLower() == request.Firstname.ToLower() &&
+                                      u.Lastname.ToLower() == request.Lastname.ToLower() &&
+                                      u.Id != userId);
+        if (nameExists != null)
+            return Conflict(new { message = "Another user already has the same full name." });
+
+        // Contact check
+        var contactExists = await _context.User_Accounts
+            .FirstOrDefaultAsync(u => u.PhoneNumber == request.Contact && u.Id != userId);
+        if (contactExists != null)
+            return Conflict(new { message = "Contact already in use." });
+
+        // Update fields
+        user.Firstname = request.Firstname;
+        user.Lastname = request.Lastname;
+        user.Email = request.Email;
+        user.Address = request.Address;
+        user.PhoneNumber = request.Contact;
+
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Profile updated successfully." });
+    }
+
+    [HttpPut("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] PasswordChangeRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Password))
+            return BadRequest("Password is required");
+
+        var userIdStr = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(userIdStr, out int userId))
+            return Unauthorized();
+        var user = await _context.User_Accounts.FindAsync(userId);
+
+        if (user == null)
+            return NotFound();
+
+        user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Password changed successfully" });
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -28,9 +28,10 @@ document.getElementById("login-form").addEventListener("submit", async function 
         password: document.getElementById("login-password").value
     };
 
-    const messageElem = document.getElementById("login-message");
-    messageElem.classList.add("hidden");
-    messageElem.textContent = "";
+    const errormessageElem = document.getElementById("login-message-error");
+    const successmessageElem = document.getElementById("login-message-success");
+    errormessageElem.textContent = "";
+    successmessageElem.textContent = "";
 
     try {
         const response = await fetch("/api/auth/login", {
@@ -40,17 +41,20 @@ document.getElementById("login-form").addEventListener("submit", async function 
         });
 
         if (response.ok) {
+
             const data = await response.json();
             document.getElementById("login-form").reset();
             window.location.href = data.redirectUrl;
+            successmessageElem.textContent = "Login Successful. Redirecting.."
+            successmessageElem.classList.remove("hidden");
         } else {
             const errorData = await response.json(); 
-            messageElem.textContent = errorData.message || "Invalid Credentials. Please check your email or password.";
-            messageElem.classList.remove("hidden");
+            errormessageElem.textContent = errorData.message || "Invalid Credentials. Please check your email or password.";
+            errormessageElem.classList.remove("hidden");
         }
     } catch (err) {
-        messageElem.textContent = "Something went wrong. Please try again.";
-        messageElem.classList.remove("hidden");
+        errormessageElem.textContent = "Something went wrong. Please try again.";
+        errormessageElem.classList.remove("hidden");
         console.error(err);
     }
 });

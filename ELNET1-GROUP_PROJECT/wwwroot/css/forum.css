@@ -90,3 +90,62 @@
         #forum-posts::-webkit-scrollbar-thumb:hover {
             background: #0056b3;
         }
+
+/* Mentions Design */
+.mention-badge {
+    background-color: #e0e7ff;
+    color: #1e3a8a;
+    padding: 4px 8px;
+    border-radius: 16px;
+    margin: 2px;
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+    font-size: 14px;
+    position: relative;
+}
+    .mention-badge {
+        padding-right: 0.5rem;
+        position: relative;
+        cursor: default;
+    }
+
+    .mention-badge:hover {
+        filter: brightness(0.95);
+    }
+
+    .mention-badge .remove-btn {
+        margin-left: 6px;
+        font-weight: bold;
+        color: #1e3a8a;
+        display: none;
+        cursor: pointer;
+    }
+
+    .mention-badge:hover .remove-btn {
+        display: inline;
+    }
+
+    .mention-badge.removing {
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 150ms ease, transform 150ms ease;
+    }
+
+#mentionSuggestions {
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    position: absolute;
+    z-index: 1000;
+    margin-top: 5px;
+}
+
+    #mentionSuggestions li {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+
+        #mentionSuggestions li:hover {
+            background-color: #f0f0f0;
+        }

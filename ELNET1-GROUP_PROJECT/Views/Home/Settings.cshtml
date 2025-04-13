@@ -1,0 +1,523 @@
+﻿@{
+    Layout = "_HomeLayout";
+    ViewData["Title"] = "Subvi | Profile Settings";
+}
+
+<div class="flex flex-col items-center justify-center bg-gray-50 p-4">
+    <div class="w-full bg-white rounded-2xl shadow-lg p-4 transition-all duration-300 hover:shadow-xl">
+        <!-- Profile Header Section -->
+        <div class="text-center mb-10">
+            <div class="relative inline-block group cursor-pointer" onclick="$('#profileModal').modal('show')">
+                <div class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center overflow-hidden border-4 border-white shadow-xl transition-transform duration-300 hover:scale-105">
+                    <img id="profilePreview" src="" class="w-full h-full object-cover" alt="Profile" style="display: none;">
+                    <i class="fas fa-user-circle text-7xl text-gray-300" id="defaultIcon"></i>
+                </div>
+                <div class="absolute inset-0 bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <i class="fas fa-camera text-2xl text-white"></i>
+                </div>
+            </div>
+            <div id="profileNameWrapper" class="mt-3">
+                <h2 class="text-3xl font-bold text-gray-800 mt-4" id="profileName">Loading...</h2>
+            </div>
+        </div>
+
+        <!-- Profile Form -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <!-- Left Column - Personal Info -->
+            <div class="space-y-6">
+                <div class="border-b border-gray-200 pb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">
+                        <i class="fas fa-user-circle text-blue-500 mr-2"></i>
+                        Personal Information
+                    </h2>
+                </div>
+
+                <div id="profileSection" class="space-y-2">
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-gray-700">First Name</label>
+                        <input id="firstname" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" disabled />
+                        <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-gray-700">Last Name</label>
+                        <input id="lastname" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" disabled />
+                        <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-gray-700">Email Address</label>
+                        <input id="email" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="email" disabled />
+                        <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-gray-700">Contact Number</label>
+                        <input id="contact" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="tel" disabled />
+                        <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-gray-700">Address</label>
+                        <input id="address" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" disabled />
+                        <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4 pt-4">
+                    <button id="editBtn" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-secondary px-6 py-2.5" onclick="toggleEditMode()">
+                        <i class="fas fa-edit mr-2"></i>Edit Profile
+                    </button>
+                    <button id="cancelBtn" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-outline-gray px-6 py-2.5" style="display: none" onclick="toggleEditMode()">
+                        Cancel Changes
+                    </button>
+                    <button id="updateinfo" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-primary px-6 py-2.5" style="display: none" onclick="submitProfile()">
+                        <span class="btn-text">Save Changes</span>
+                        <i class="fas fa-spinner fa-spin loading-icon ml-2" style="display: none"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column - Password Section -->
+            <div class="space-y-6">
+                <div class="border-b border-gray-200 pb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">
+                        <i class="fas fa-lock text-blue-500 mr-2"></i>
+                        Password Management
+                    </h2>
+                </div>
+
+                <div id="passwordSection" class="space-y-6">
+                    <div id="passwordFields" class="hidden space-y-6">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-gray-700">New Password</label>
+                            <input id="newPassword" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="password" />
+                            <div class="password-strength transition-all duration-300 mt-3">
+                                <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="strength-bar shadow-sm h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                                <div class="strength-text text-xs font-medium mt-2 text-gray-600"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-gray-700">Confirm Password</label>
+                            <input id="confirmPassword" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="password" />
+                            <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4 mt-1"></div>
+                        </div>
+
+                        <div class="flex gap-4 pt-2">
+                            <button class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-primary px-6 py-2.5" onclick="submitNewPassword()">
+                                Update Password
+                            </button>
+                            <button class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-outline-gray px-6 py-2.5" onclick="togglePasswordEdit(false)">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="changePasswordBtn" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-outline-primary w-full py-2.5" onclick="togglePasswordEdit(true)">
+                        <i class="fas fa-key mr-2"></i>Change Password
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Profile Image Modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-2xl overflow-hidden">
+                <div class="border-b-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6">
+                    <h5 class="modal-title text-xl font-bold">Update Profile Picture</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-6">
+                    <div class="text-center space-y-6">
+                        <!-- Profile Image Section -->
+                        <div id="profileImageContainer" class="border-4 border-dashed border-gray-200 transition-all duration-300 hover:border-blue-400 bg-gray-100 rounded-lg overflow-hidden" style="min-height: 400px;">
+                            <img id="preview" class="w-full h-full object-contain" style="display: none;">
+                            <div id="uploadPrompt" class="upload-prompt text-center py-20">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-500">Drag and drop or click to upload</p>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="flex justify-center gap-4 mt-4">
+                            <input type="file" id="fileInput" class="hidden" accept="image/*">
+                            <button id="uploadBtn" class="btn-secondary">
+                                <i class="fas fa-upload mr-2"></i>Choose Image
+                            </button>
+                            <button id="confirmCrop" class="btn-success hidden" onclick="saveProfileImage()">
+                                <i class="fas fa-check mr-2"></i>Ok
+                            </button>
+                            <button id="cancelCrop" class="btn-secondary hidden" onclick="cancelCrop()">
+                                <i class="fas fa-times mr-2"></i>Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
+
+<script>
+    // Global variable to store original user data
+    let originalUserData = {};
+
+    async function initializeProfile() {
+        try {
+            const res = await fetch('/home/getuser');
+            const user = await res.json();
+            originalUserData = { ...user };
+
+            // Populate the form fields and disable them
+            ['firstname', 'lastname', 'email', 'contact', 'address', 'password'].forEach(field => {
+                const input = document.getElementById(field);
+                if (input) {
+                    input.value = user[field] || '';
+                    input.disabled = true;
+                }
+            });
+
+            // Set profile name
+            const nameElement = document.getElementById('profileName');
+            nameElement.textContent = `${user.firstname} ${user.lastname}`;
+            nameElement.classList.remove('opacity-0');
+            nameElement.classList.add('opacity-100', 'transition-opacity', 'duration-300');
+            console.log(user.profile);
+
+            // Handle profile image
+            const profilePreview = document.getElementById('profilePreview');
+            const defaultIcon = document.getElementById('defaultIcon');
+            if (user.profile) {
+                profilePreview.src = `${user.profile}`;
+                profilePreview.style.display = 'block';
+                defaultIcon.style.display = 'none';
+            } else {
+                profilePreview.style.display = 'none';
+                defaultIcon.style.display = 'block';
+            }
+
+            // Button visibility
+            document.getElementById('editBtn').style.display = 'block';
+            document.getElementById('cancelBtn').style.display = 'none';
+            document.getElementById('updateinfo').style.display = 'none';
+
+        } catch (error) {
+            showToast('Failed to load profile data', 'red');
+        }
+    }
+
+    function toggleEditMode() {
+        const editBtn = document.getElementById('editBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const updateBtn = document.getElementById('updateinfo');
+        const inputs = document.querySelectorAll('.form-input');
+
+        const isEditing = editBtn.style.display === 'none';
+
+        if (isEditing) {
+            // Switch to view mode (cancel)
+            inputs.forEach(input => {
+                input.disabled = true;
+                if (originalUserData[input.id] !== undefined) {
+                    input.value = originalUserData[input.id] || '';
+                }
+            });
+
+            editBtn.style.display = 'block';
+            cancelBtn.style.display = 'none';
+            updateBtn.style.display = 'none';
+        } else {
+            // Switch to edit mode
+            inputs.forEach(input => input.disabled = false);
+
+            editBtn.style.display = 'none';
+            cancelBtn.style.display = 'block';
+            updateBtn.style.display = 'block';
+        }
+    }
+
+    async function submitProfile() {
+        const btn = document.querySelector('.btn-primary');
+        btn.disabled = true;
+        btn.querySelector('.btn-text').textContent = 'Updating...';
+        btn.querySelector('.loading-icon').style.display = 'inline';
+
+        try {
+            const formData = {
+                firstname: document.getElementById('firstname').value.trim(),
+                lastname: document.getElementById('lastname').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                contact: document.getElementById('contact').value.trim(),
+                address: document.getElementById('address').value.trim()
+            };
+
+            const res = await fetch('/home/updateprofile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (!res.ok) throw new Error('Profile update failed');
+
+            showToast('Profile updated successfully!', 'green');
+
+            initializeProfile();
+
+            // Lock fields again after update
+            document.querySelectorAll('.form-input').forEach(input => input.disabled = true);
+            document.getElementById('editBtn').style.display = 'block';
+            document.getElementById('cancelBtn').style.display = 'none';
+            document.getElementById('updateinfo').style.display = 'none';
+
+        } catch (error) {
+            showToast(error.message, 'red');
+        } finally {
+            btn.disabled = false;
+            btn.querySelector('.btn-text').textContent = 'Update Profile';
+            btn.querySelector('.loading-icon').style.display = 'none';
+        }
+    }
+
+    function togglePasswordEdit(isEdit) {
+        const passwordFields = document.getElementById('passwordFields');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const validationMessage = confirmPasswordInput.nextElementSibling;
+
+        if (isEdit) {
+            // Show password edit mode
+            passwordFields.classList.remove('hidden');
+            changePasswordBtn.style.display = 'none';
+
+            // Enable input fields
+            newPasswordInput.disabled = false;
+            confirmPasswordInput.disabled = false;
+
+            // Clear fields
+            newPasswordInput.value = '';
+            confirmPasswordInput.value = '';
+            validationMessage.textContent = '';
+            document.querySelector('.strength-bar').style.width = '0%';
+            document.querySelector('.strength-text').textContent = '';
+            document.querySelector('.password-strength').classList.add('hidden');
+
+        } else {
+            // Exit password edit mode
+            passwordFields.classList.add('hidden');
+            changePasswordBtn.style.display = 'inline-block';
+
+            // Disable input fields
+            newPasswordInput.disabled = true;
+            confirmPasswordInput.disabled = true;
+        }
+    }
+
+    // Enhanced Password Strength Check
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (password.match(/[A-Z]/)) strength++;
+        if (password.match(/[0-9]/)) strength++;
+        if (password.match(/[^A-Za-z0-9]/)) strength++;
+
+        const strengthText = ['Very Weak', 'Weak', 'Good', 'Strong', 'Very Strong'][strength];
+        const strengthWidth = [20, 40, 60, 80, 100][strength];
+
+        document.querySelector('.strength-bar').style.width = `${strengthWidth}%`;
+        document.querySelector('.strength-text').textContent = strengthText;
+    }
+
+    // Password Field Real-Time Validation
+    document.getElementById('newPassword').addEventListener('input', function () {
+        if (this.value.length > 0) {
+            document.querySelector('.password-strength').classList.remove('hidden');
+            checkPasswordStrength(this.value);
+        } else {
+            document.querySelector('.password-strength').classList.add('hidden');
+        }
+    });
+
+    async function submitNewPassword() {
+        const newPassword = document.getElementById('newPassword').value.trim();
+        const confirmPassword = document.getElementById('confirmPassword').value.trim();
+        const validationMessage = document.getElementById('confirmPassword').nextElementSibling;
+
+        if (newPassword.length < 8) {
+            validationMessage.textContent = 'Password must be at least 8 characters.';
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            validationMessage.textContent = 'Passwords must match.';
+            return;
+        }
+
+        try {
+            const response = await fetch('/home/changepassword', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password: newPassword })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                showToast('Password updated successfully.', 'green');
+                togglePasswordEdit(false);
+            } else {
+                showToast(result.message || 'Failed to update password.', 'red');
+            }
+        } catch (error) {
+            showToast('An error occurred while updating password.', 'red');
+        }
+    }
+
+    // Toast Notification Function
+    function showToast(message, color = 'green') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transform translate-y-20 opacity-0 transition-all z-50`;
+            toast.style.backgroundColor = color;
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }, 50);
+        }
+
+        let cropper = null; // Declare cropper globally
+
+    // Show profile image and setup crop functionality
+    document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+
+    // File input change event
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate the file type
+        if (!file.type.startsWith('image/')) {
+            alert("Please upload a valid image file.");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            // Show preview and hide the prompt
+            document.getElementById('preview').src = event.target.result;
+            document.getElementById('preview').style.display = 'block';
+            document.getElementById('uploadPrompt').style.display = 'none';
+
+            // Show crop buttons
+            document.getElementById('confirmCrop').classList.remove('hidden');
+            document.getElementById('cancelCrop').classList.remove('hidden');
+
+            // Initialize cropper if not already
+            if (cropper) cropper.destroy(); // Destroy the previous instance if exists
+            cropper = new Cropper(document.getElementById('preview'), {
+                aspectRatio: 1,  // Make the crop circular
+                viewMode: 2,     // Restrict the crop area to the image
+                autoCropArea: 0.8,
+                guides: false,
+                highlight: false,
+                background: false,
+            });
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Save the cropped image
+    async function saveProfileImage() {
+        if (!cropper) return; // Ensure cropper exists before proceeding
+
+        const canvas = cropper.getCroppedCanvas({
+            width: 200,    // Set width and height of the final image
+            height: 200
+        });
+
+        const base64Image = canvas.toDataURL('image/jpeg');
+
+        // Send the image to the backend
+        const formData = new FormData();
+        formData.append('file', dataURItoBlob(base64Image), 'profile.jpg');
+
+        try {
+            const response = await fetch('/home/uploadprofileimage', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                // Update profile image UI
+                document.getElementById('profileImageContainer').innerHTML = `<img src="${result.path}" class="w-full h-full object-contain" style="border-radius: 50%;">`;
+                showToast('Profile image updated successfully.', 'success');
+                resetModal();
+                initializeProfile();
+                document.getElementById('confirmCrop').classList.add('hidden');
+                document.getElementById('cancelCrop').classList.add('hidden');
+
+            } else {
+                showToast('Failed to update profile image.', 'error');
+            }
+        } catch (error) {
+            showToast('An error occurred while uploading the profile image.', 'error');
+        }
+    }
+
+    // Cancel the crop and revert to original
+    function cancelCrop() {
+        resetModal();
+    }
+
+    // Reset the modal to the original state
+    function resetModal() {
+        // Hide preview and show upload prompt
+        document.getElementById('preview').style.display = 'none';
+        document.getElementById('uploadPrompt').style.display = 'block';
+
+        // Hide crop buttons
+        document.getElementById('confirmCrop').classList.add('hidden');
+        document.getElementById('cancelCrop').classList.add('hidden');
+
+        // Destroy the cropper instance
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+    }
+
+    // Convert Base64 to Blob
+    function dataURItoBlob(dataURI) {
+        const byteString = atob(dataURI.split(',')[1]);
+        const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], { type: mimeString });
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeProfile();
+        new bootstrap.Modal(document.getElementById('profileModal'));
+    });
+</script>
