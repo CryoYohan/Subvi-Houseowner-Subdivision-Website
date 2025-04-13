@@ -3,6 +3,8 @@
     ViewData["Title"] = "Staff | Report";
 }
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
     <!-- Sidebar -->
     <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
@@ -72,7 +74,217 @@
             <div class="mx-autospace-x-1 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md flex items-center justify-between">
                 <h1 class="text-2xl font-bold text-blue-900 flex items-center"><i class="fas fa-chart-line w-5 h-5 mr-3"></i> Reports</h1>
             </div>
-            <!-- Put your code here guys -->
-          </div>
+            
+            <ul class="nav nav-tabs" id="reportTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#analyticsPanel" type="button">Analytics</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#generatePanel" type="button">Generate Report</button>
+                </li>
+            </ul>
+
+            <div class="tab-content p-4 border rounded-bottom shadow-sm bg-white">
+                <!-- ANALYTICS -->
+                <div class="tab-pane fade show active" id="analyticsPanel">
+                    <h4 class="fw-bold text-primary mb-4">Analytics Dashboard</h4>
+                    <div class="row g-4">
+
+                        <!-- Line Chart for Reservations Over Time -->
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 rounded-4">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Reservation Trends</h6>
+                                    <canvas id="reservationChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bar Chart for Payment Revenue -->
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 rounded-4">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Monthly Revenue</h6>
+                                    <canvas id="paymentChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pie Chart for Feedback Ratings -->
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 rounded-4">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Feedback Rating Distribution</h6>
+                                    <canvas id="feedbackChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Doughnut Chart for Vehicle Type -->
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 rounded-4">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Vehicle Types Registered</h6>
+                                    <canvas id="vehicleChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- REPORT GENERATION -->
+                <div class="tab-pane fade" id="generatePanel">
+                    <h4 class="mb-3">Generate Reports</h4>
+                    <form id="reportForm" asp-controller="Staff" asp-action="GenerateReport" method="post">
+                        <div class="mb-3">
+                            <label for="reportType" class="form-label">Report Type</label>
+                            <select name="reportType" class="form-select" required>
+                                <option value="RESERVATIONS">Reservations</option>
+                                <option value="PAYMENT">Payments</option>
+                                <option value="FEEDBACK">Feedback</option>
+                                <option value="SERVICE_REQUEST">Service Requests</option>
+                                <option value="VEHICLE_REGISTRATION">Vehicle Registration</option>
+                                <option value="VISITOR_PASSES">Visitor Passes</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Generate</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast for Success -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="reportToast" class="toast align-items-center text-bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">Report generated successfully!</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    window.onload = function() {
+        // Reservation Trend Chart (Line chart)
+        var reservationCtx = document.getElementById('reservationChart').getContext('2d');
+        var reservationChart = new Chart(reservationCtx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.ReservationMonths)), // Labels for the months (e.g. "2023-01")
+                datasets: [{
+                    label: 'Reservations Trend',
+                    data: @Html.Raw(Json.Serialize(ViewBag.ReservationCounts)), // Data for the reservations per month
+                    borderColor: '#4e73df', // Line color
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)', // Background for the area under the line
+                    fill: true,
+                    tension: 0.4, // For smooth curves
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Payment Trend Chart (Bar chart)
+        var paymentCtx = document.getElementById('paymentChart').getContext('2d');
+        var paymentChart = new Chart(paymentCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.PaymentMonths)), // Labels for the months
+                datasets: [{
+                    label: 'Payments Trend',
+                    data: @Html.Raw(Json.Serialize(ViewBag.PaymentTotals)), // Data for the payment totals per month
+                    backgroundColor: '#1cc88a', // Bar color
+                    borderColor: '#1cc88a',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+           // Feedback Ratings Chart (Pie chart)
+            var feedbackData = @Html.Raw(Json.Serialize(ViewBag.FeedbackRatings));
+            console.log(feedbackData)
+            var feedbackCtx = document.getElementById('feedbackChart').getContext('2d');
+            var feedbackChart = new Chart(feedbackCtx, {
+                type: 'pie',
+                data: {
+                    labels: feedbackData.map(f => f.rating), // Feedback ratings (e.g., 1, 2, 3, etc.)
+                    datasets: [{
+                        label: 'Feedback Ratings Breakdown',
+                        data: feedbackData.map(f => f.count), // Count of each rating
+                        backgroundColor: ['#ff5733', '#ffbd33', '#75ff33', '#33aaff', '#5733ff'], // Segment colors
+                        borderColor: ['#ff5733', '#ffbd33', '#75ff33', '#33aaff', '#5733ff'], // Border colors
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+
+            // Vehicle Types Chart (Doughnut chart)
+            var vehicleData = @Html.Raw(Json.Serialize(ViewBag.VehicleTypes));
+            var vehicleCtx = document.getElementById('vehicleChart').getContext('2d');
+            var vehicleChart = new Chart(vehicleCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: vehicleData.map(v => v.type), // Vehicle types (e.g., Sedan, SUV, etc.)
+                    datasets: [{
+                        label: 'Vehicle Types Breakdown',
+                        data: vehicleData.map(v => v.count), // Count of each vehicle type
+                        backgroundColor: ['#ff6f61', '#6a5acd', '#ff1493', '#20b2aa', '#f0e68c'], // Segment colors
+                        borderColor: ['#ff6f61', '#6a5acd', '#ff1493', '#20b2aa', '#f0e68c'], // Border colors
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+    };
+
+    //Under Repair -----------------------
+    document.getElementById("reportForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const form = e.target;
+
+        fetch(form.action, {
+            method: "POST",
+            body: new FormData(form)
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Failed to generate report");
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "report.xlsx";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            const toast = new bootstrap.Toast(document.getElementById("reportToast"));
+            toast.show();
+        })
+        .catch(err => alert("Something went wrong: " + err));
+    });
+</script>

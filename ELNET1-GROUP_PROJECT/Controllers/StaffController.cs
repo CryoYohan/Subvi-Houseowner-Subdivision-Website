@@ -4,10 +4,12 @@ using ELNET1_GROUP_PROJECT.Data;
 using ELNET1_GROUP_PROJECT.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using ELNET1_GROUP_PROJECT.Controllers;
 using System.Security.Claims;
+using OfficeOpenXml;
 
 [Route("staff")]
 public class StaffController : Controller
@@ -71,8 +73,8 @@ public class StaffController : Controller
         return jwtToken?.Claims.FirstOrDefault(c => c.Type == "Role")?.Value;
     }
 
-    [HttpGet("")]
-    [HttpGet("dashboard")]
+    [Route("")]
+    [Route("dashboard")]
     public IActionResult Dashboard()
     {
         RefreshJwtCookies();
@@ -98,7 +100,7 @@ public class StaffController : Controller
     }
 
 
-    [HttpGet("pass/visitors")]
+    [Route("pass/visitors")]
     public IActionResult VisitorsPass()
     {
         RefreshJwtCookies();
@@ -263,7 +265,7 @@ public class StaffController : Controller
         return Json(new { success = false, message = "Visitor not found." });
     }
 
-    [HttpGet("vehicle/registration")]
+    [Route("vehicle/registration")]
     public IActionResult VehicleRegistration()
     {
         RefreshJwtCookies();
@@ -371,7 +373,7 @@ public class StaffController : Controller
         return Ok();
     }
 
-    [HttpGet("requests/reservation")]
+    [Route("requests/reservation")]
     public IActionResult ReservationRequests()
     {
         RefreshJwtCookies();
@@ -422,7 +424,7 @@ public class StaffController : Controller
         return Ok(new { message = $"Reservation {id} has been {request.Status.ToLower()}." });
     }
 
-    [HttpGet("requests/services")]
+    [Route("requests/services")]
     public IActionResult ServiceRequests()
     {
         RefreshJwtCookies();
@@ -525,7 +527,7 @@ public class StaffController : Controller
         }
     }
 
-    [HttpGet("bills_and_payments")]
+    [Route("bills_and_payments")]
     public IActionResult BillsAndPayments()
     {
         RefreshJwtCookies();
@@ -537,7 +539,7 @@ public class StaffController : Controller
         return View();
     }
 
-    //-------------- BILLS -----------------//
+    //-------------- BILLS REQ -----------------//
     [HttpGet("bills/get")]
     public IActionResult ModificationGetBills(string status = "Upcoming")
     {
@@ -738,7 +740,7 @@ public class StaffController : Controller
         return Ok(new { Payments = payments, TotalAmountPaid = totalAmountPaid });
     }
 
-    [HttpGet("poll_management")]
+    [Route("poll_management")]
     public IActionResult Poll()
     {
         RefreshJwtCookies();
@@ -1010,7 +1012,7 @@ public class StaffController : Controller
         return Ok(new { choiceId, percentage });
     }
 
-    [HttpGet("reports")]
+    [Route("reports")]
     public IActionResult Reports()
     {
         RefreshJwtCookies();
@@ -1019,10 +1021,109 @@ public class StaffController : Controller
         {
             return RedirectToAction("Landing");
         }
+
+        // Total Counts
+        ViewBag.TotalReservations = _context.Reservations.Count();
+        ViewBag.TotalPayments = _context.Payment.Count();
+        ViewBag.TotalFeedbacks = _context.Feedback.Count();
+        ViewBag.TotalServiceRequests = _context.Service_Request.Count();
+        ViewBag.TotalVehicles = _context.Vehicle_Registration.Count();
+        ViewBag.TotalVisitors = _context.Visitor_Pass.Count();
+
+        // Reservation Trends (Last 4 months)
+        var reservationTrends = _context.Reservations
+            .AsEnumerable() // Move to client-side processing
+            .GroupBy(r => r.DateTime.ToString("yyyy-MM")) // Group by formatted string (YYYY-MM)
+            .OrderBy(g => g.Key)
+            .TakeLast(4)
+            .Select(g => new { Month = g.Key, Count = g.Count() })
+            .ToList();
+
+        ViewBag.ReservationMonths = reservationTrends.Select(r => r.Month).ToList();
+        ViewBag.ReservationCounts = reservationTrends.Select(r => r.Count).ToList();
+
+        // Payments per Month
+        var paymentTrends = _context.Payment
+            .AsEnumerable() // Forces client-side evaluation
+            .Select(p => new
+            {
+                Month = DateTime.ParseExact(p.DatePaid, "yyyy-MM-dd", CultureInfo.InvariantCulture).ToString("yyyy-MM"),
+                AmountPaid = p.AmountPaid
+            })
+            .GroupBy(p => p.Month)
+            .OrderBy(g => g.Key)
+            .TakeLast(4)
+            .Select(g => new { Month = g.Key, Total = g.Sum(p => p.AmountPaid) })
+            .ToList();
+
+        ViewBag.PaymentMonths = paymentTrends.Select(p => p.Month).ToList();
+        ViewBag.PaymentTotals = paymentTrends.Select(p => p.Total).ToList();
+
+        // Feedback Ratings Breakdown
+        var feedbackRatings = _context.Feedback
+            .Where(f => f.FeedbackType == "Complement") // Filter by Type = 'Complement'
+            .GroupBy(f => f.Rating) // Group by Rating
+            .Select(g => new { Rating = g.Key, Count = g.Count() }) // Select Rating and Count
+            .ToList();
+
+        ViewBag.FeedbackRatings = feedbackRatings;
+
+        // Vehicle Types Breakdown
+        var vehicleTypes = _context.Vehicle_Registration
+            .GroupBy(v => v.Type)
+            .Select(g => new { Type = g.Key, Count = g.Count() })
+            .ToList();
+
+        ViewBag.VehicleTypes = vehicleTypes;
+
         return View();
     }
 
-    [HttpGet("profile/settings")]
+    //UNDER REPAIR-----------------------------
+    [HttpPost]
+    public IActionResult GenerateReport(string reportType)
+    {
+        var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Report");
+
+        switch (reportType)
+        {
+            case "RESERVATIONS":
+                var res = _context.Reservations.ToList();
+                sheet.Cells[1, 1].Value = "Reservation ID";
+                sheet.Cells[1, 2].Value = "DateTime";
+                sheet.Cells[1, 3].Value = "Status";
+                for (int i = 0; i < res.Count; i++)
+                {
+                    sheet.Cells[i + 2, 1].Value = res[i].ReservationId;
+                    sheet.Cells[i + 2, 2].Value = res[i].DateTime;
+                    sheet.Cells[i + 2, 3].Value = res[i].Status;
+                }
+                break;
+
+            case "PAYMENT":
+                var pay = _context.Payment.ToList();
+                sheet.Cells[1, 1].Value = "Payment ID";
+                sheet.Cells[1, 2].Value = "Amount Paid";
+                sheet.Cells[1, 3].Value = "Date Paid";
+                for (int i = 0; i < pay.Count; i++)
+                {
+                    sheet.Cells[i + 2, 1].Value = pay[i].PaymentId;
+                    sheet.Cells[i + 2, 2].Value = pay[i].AmountPaid;
+                    sheet.Cells[i + 2, 3].Value = pay[i].DatePaid;
+                }
+                break;
+
+                // Add more cases for other report types
+        }
+
+        var stream = new MemoryStream();
+        package.SaveAs(stream);
+        stream.Position = 0;
+        return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "report.xlsx");
+    }
+
+    [Route("profile/settings")]
     public IActionResult Settings()
     {
         RefreshJwtCookies();
