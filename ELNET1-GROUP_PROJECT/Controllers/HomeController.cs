@@ -140,11 +140,43 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             RefreshJwtCookies();
             return View();
         }
+        // There is a seperation controller api for this calendar
 
         public IActionResult Facilities()
         {
             RefreshJwtCookies();
             return View();
+        }
+
+        [HttpGet]
+        public IActionResult GetReservedTimeSlots(string facilityName, string selectedDate)
+        {
+            DateTime date = DateTime.Parse(selectedDate);
+
+            // Step 1: Get Facility ID
+            var facilityId = _context.Facility
+                .Where(f => f.FacilityName == facilityName)
+                .Select(f => f.FacilityId)
+                .FirstOrDefault();
+
+            if (facilityId == 0)
+            {
+                return Json(new List<object>()); // No such facility
+            }
+
+            var reservedSlots = _context.Reservations
+                .Where(r => r.FacilityId == facilityId && r.Status == "Approved")
+                .AsEnumerable() // This switches to in-memory filtering
+                .Where(r => DateTime.Parse(r.SchedDate.ToString()).Date == date.Date) 
+                .Select(r => new
+                {
+                    StartTime = r.StartTime,
+                    EndTime = r.EndTime
+                })
+                .ToList();
+
+
+            return Json(reservedSlots);
         }
 
         public IActionResult Bill()

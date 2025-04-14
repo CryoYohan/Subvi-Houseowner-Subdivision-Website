@@ -397,7 +397,9 @@ public class StaffController : Controller
                                 Id = r.ReservationId,
                                 FacilityName = char.ToUpper(f.FacilityName[0]) + f.FacilityName.Substring(1),
                                 RequestedBy = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
-                                DateTime = r.DateTime,
+                                SchedDate = r.SchedDate,
+                                StartTime = DateTime.Parse(r.StartTime), 
+                                EndTime = DateTime.Parse(r.EndTime),     
                                 Status = r.Status
                             }).ToList();
 
@@ -1032,8 +1034,13 @@ public class StaffController : Controller
 
         // Reservation Trends (Last 4 months)
         var reservationTrends = _context.Reservations
-            .AsEnumerable() // Move to client-side processing
-            .GroupBy(r => r.DateTime.ToString("yyyy-MM")) // Group by formatted string (YYYY-MM)
+            .AsEnumerable() // Forces client-side processing
+            .Select(r => new
+            {
+                // Convert JSType.Date to DateTime and format as YYYY-MM
+                Month = DateTime.Parse(r.SchedDate.ToString()).ToString("yyyy-MM")
+            })
+            .GroupBy(r => r.Month)
             .OrderBy(g => g.Key)
             .TakeLast(4)
             .Select(g => new { Month = g.Key, Count = g.Count() })
@@ -1096,7 +1103,9 @@ public class StaffController : Controller
                 for (int i = 0; i < res.Count; i++)
                 {
                     sheet.Cells[i + 2, 1].Value = res[i].ReservationId;
-                    sheet.Cells[i + 2, 2].Value = res[i].DateTime;
+                    sheet.Cells[i + 2, 2].Value = res[i].SchedDate;
+                    sheet.Cells[i + 2, 2].Value = res[i].StartTime;
+                    sheet.Cells[i + 2, 2].Value = res[i].EndTime;
                     sheet.Cells[i + 2, 3].Value = res[i].Status;
                 }
                 break;

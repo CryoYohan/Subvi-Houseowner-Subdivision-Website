@@ -99,7 +99,7 @@ public class AdminController : Controller
                         Id = r.ReservationId,
                         FacilityName = char.ToUpper(f.FacilityName[0]) + f.FacilityName.Substring(1),
                         RequestedBy = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
-                        DateTime = r.DateTime,
+                        SchedDate = r.SchedDate,
                         Status = r.Status
                     };
 

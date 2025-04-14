@@ -38,6 +38,10 @@
     }
 }
 
+@section Scripts {
+    <script src="~/js/facilities.js"></script>
+}
+
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
     <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
@@ -139,80 +143,39 @@
             <!-- Left Side: Facilities List as Card Containers -->
             <div class="col-md-7 p-lg-5" style="margin-top: -60px;">
                 <div class="bg-white rounded-lg shadow-md p-5">
-                    <b><h2 style="font-size: 30px; color: darkblue; margin-left: 250px;">List of Facilities</h2></b>
-                    <br>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5">
-                        <!-- Swimming Pool -->
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden" style="height: 400px;">
-                            <img src="/images/swimmingpool.jpg" alt="Swimming Pool" class="w-full h-48 object-cover">
-                            <div class="p-4">
-                                <h2 class="text-xl text-center font-semibold text-blue-800">Swimming Pool</h2>
-                                <p class="text-center text-gray-600">A refreshing pool for leisure and fitness.</p>
-                            </div>
-                            <div class="p-4 flex justify-center gap-4">
-                                <!-- View Button with Data Attributes for Modal -->
-                                <button class="px-6 py-2 border rounded-lg text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#facilityModal"
-                                        data-facility="Swimming Pool"
-                                        data-cleaner="John Doe"
-                                        data-time="9:30 AM - 4:30 PM">
-                                    View
-                                </button>
-                            </div>
-                        </div>
+                    <h2 class="text-3xl font-bold text-center text-blue-900 mb-6">List of Facilities</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        @{
+                            var facilities = new[]
+                            {
+                        new { Name = "Swimming Pool", Image = "/images/swimmingpool.jpg", Desc = "A refreshing pool for leisure and fitness.", Time = "9:30 AM - 4:30 PM" },
+                        new { Name = "Playground & Park", Image = "/images/playground.jpg", Desc = "A fun and safe area for children.",Time = "8:00 AM - 6:00 PM" },
+                        new { Name = "Basketball Court", Image = "/images/court.jpg", Desc = "A court for games and practice.", Time = "7:00 AM - 9:00 PM" },
+                        new { Name = "Fitness Gym", Image = "/images/gym.jpg", Desc = "A space for exercise and fitness.", Time = "6:00 AM - 10:00 PM" },
+                        };
+                        }
 
-                        <!-- Playground & Park -->
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                            <img src="/images/playground.jpg" alt="Playground & Park" class="w-full h-48 object-cover">
-                            <div class="p-4">
-                                <h2 class="text-center text-xl font-semibold text-blue-800" style="color:blue;">Playground & Park</h2>
-                                <p class="text-center text-gray-600">A fun and safe area for children.</p>
+                        @foreach (var f in facilities)
+                        {
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                                <img src="@f.Image" alt="@f.Name" class="w-full h-48 object-cover">
+                                <div class="p-4 text-center">
+                                    <h2 class="text-xl font-semibold text-blue-800">@f.Name</h2>
+                                    <p class="text-gray-600">@f.Desc</p>
+                                </div>
+                                <div class="p-4 flex justify-center">
+                                    <button class="px-6 py-2 border rounded-lg text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#facilityModal"
+                                            data-facility="@f.Name"
+                                            data-image="@f.Image"
+                                            data-description="@f.Desc"
+                                            data-time="@f.Time">
+                                        View
+                                    </button>
+                                </div>
                             </div>
-                            <div class="p-4 flex justify-center gap-4" style="margin-top: 20px;">
-                                <!-- View Button with Data Attributes for Modal -->
-                                <button class="px-6 py-2 border rounded-lg text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#playgroundModal"
-                                        data-facility="Playground"
-                                        data-cleaner="Maria Santos, Juan Dela Cruz"
-                                        data-time="8:00 AM – 6:00 PM">
-                                    View
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Basketball Court -->
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                            <img src="/images/court.jpg" alt="Basketball Court" class="w-full h-48 object-cover">
-                            <div class="p-4">
-                                <h2 class="text-center text-xl font-semibold text-blue-800">Basketball Court</h2>
-                                <p class="text-center text-gray-600">A sports court for games and practice.</p>
-                            </div>
-                            <div class="p-4 flex justify-center gap-4">
-                                <button class="px-6 py-2 border rounded-lg text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#basketballCourtModal">
-                                    View
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Fitness Gym -->
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                            <img src="/images/gym.jpg" alt="Fitness Gym" class="w-full h-48 object-cover">
-                            <div class="p-4">
-                                <h2 class="text-center text-xl font-semibold text-blue-800">Fitness Gym</h2>
-                                <p class="text-center text-gray-600">A well-equipped space for exercise.</p>
-                            </div>
-                            <div class="p-4 flex justify-center gap-4">
-                                <button class="px-6 py-2 border rounded-lg text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#fitnessGymModal">
-                                    View
-                                </button>
-                            </div>
-                        </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -383,202 +346,41 @@
     </div>
 
     <div class="modal fade" id="facilityModal" tabindex="-1" aria-labelledby="facilityModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" style="width: 1400px;">
+        <div class="modal-dialog modal-lg" style="width: 1000px;">
             <div class="modal-content" style="border-radius: 30px;">
-
                 <div class="modal-header p-0 border-0 position-absolute top-0 end-0 z-1">
-                    <button type="button" class="btn-close m-3 bg-white rounded-circle p-2 border border-2" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close m-3 rounded-circle p-2 border border-2" style="background-color: white"
+                            data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-
                 <div class="modal-body p-0">
-                    <img src="/images/swimmingpool.jpg" alt="Swimming Pool" class="w-full h-96 object-cover">
+                    <img id="modalImage" src="" alt="" class="w-full h-96 object-cover">
 
                     <div class="p-4" style="margin-top: -40px;">
-                        <h5 class="modal-title p-4" id="facilityModalLabel" style="font-size: 30px; color: darkblue;"><b>Swimming Pool</h5></b>
-                        <p class="text-gray-700" style="margin-top: -20px;">
-                            A well-maintained, crystal-clear pool designed for both relaxation and recreation. It features comfortable lounge chairs, shaded seating areas, and a serene ambiance, making it perfect for swimming, unwinding, and social gatherings with family and friends.
-                        </p>
+                        <h5 class="modal-title p-4 text-3xl text-blue-900 font-bold" id="modalTitle"></h5>
+                        <p id="modalDescription" class="text-gray-700 -mt-4 px-4"></p>
                     </div>
 
                     <div class="bg-white rounded-lg shadow-md p-5">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Assigned Cleaners -->
-                            <div>
-                                <h6 class="font-semibold text-lg" style="color: darkblue;">Assigned Cleaners</h6>
-                                <ul class="list-disc list-inside">
-                                    <li>Heavy Mogapayo - Cleaner</li>
-                                    <li>Angela Postrerio - Cleaner</li>
-                                </ul>
-                            </div>
-
-                            <!-- Reserve Facility (Aligned to the Right) -->
                             <div class="text-right">
-                                <h6 class="font-semibold text-lg" style="color: darkblue;">Reserve Facility</h6>
-                                <p class="text-gray-700">
-                                    <span class="text-blue-500">💬</span> Time Available: 9:30 AM – 4:30 PM
-                                </p>
+                                <h6 class="font-semibold text-lg text-blue-900">Reserve Facility</h6>
+                                <p class="text-gray-700"><span class="text-blue-500">💬</span> Time Available: <span id="modalTime"></span></p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Modal Footer with Reserve Button -->
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary px-5 py-2" style="margin-right: 240px; height: 50px; width: 300px;">Reserve Facility</button>
+                    <span id="facilityTime" data-start="08:00" data-end="18:00" style="display: none;"></span>
+                    <button type="button" class="btn btn-primary px-5 py-2" id="reserve-facility-btn" style="margin-right: 240px; height: 50px; width: 300px;">Reserve Facility</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Playground Modal -->
-    <div class="modal fade" id="playgroundModal" tabindex="-1" aria-labelledby="playgroundModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content" style="border-radius: 30px;">
-                <div class="modal-header p-0 border-0 position-absolute top-0 end-0 z-1">
-                    <button type="button" class="btn-close m-3 bg-white rounded-circle p-2 border border-2" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <!-- Modal Body -->
-                <div class="modal-body p-0">
-                    <!-- Full-Width Image -->
-                    <img src="/images/playground.jpg" alt="Playground" class="w-full h-96 object-cover">
-
-                    <!-- Description -->
-                    <div class="p-4" style="margin-top: -40px;">
-                        <b><h5 class="modal-title p-4" id="playgroundModalLabel" style="font-size: 30px; color: darkblue;">Playground</h5></b>
-                        <p class="text-gray-700" style="margin-top: -20px;">
-                            A vibrant and safe playground designed for children to play, explore, and have fun. It features swings, slides, climbing structures, and shaded seating areas for parents, making it a perfect spot for family outings and outdoor activities.
-                        </p>
-                    </div>
-
-                    <!-- Card Container -->
-                    <div class="bg-white rounded-lg shadow-md p-5">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Assigned Cleaners -->
-                            <div>
-                                <h6 class="font-semibold text-lg" style="color: darkblue;">Assigned Cleaners</h6>
-                                <ul class="list-disc list-inside">
-                                    <li>Maria Santos - Cleaner</li>
-                                    <li>Juan Dela Cruz - Cleaner</li>
-                                </ul>
-                            </div>
-
-                            <!-- Reserve Facility (Aligned to the Right) -->
-                            <div class="text-right">
-                                <h6 class="font-semibold text-lg" style="color: darkblue;">Reserve Facility</h6>
-                                <p class="text-gray-700">
-                                    <span class="text-blue-500">💬</span> Time Available: 8:00 AM – 6:00 PM
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary px-5 py-2" style="margin-right: 240px; height: 50px; width: 300px;">Reserve Facility</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Basketball Court Modal -->
-    <div class="modal fade" id="basketballCourtModal" tabindex="-1" aria-labelledby="basketballCourtModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content" style="border-radius: 30px;">
-                <div class="modal-header p-0 border-0 position-absolute top-0 end-0 z-1">
-                    <button type="button" class="btn-close m-3 bg-white rounded-circle p-2 border border-2" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <!-- Modal Body -->
-                <div class="modal-body p-0">
-                    <!-- Full-Width Image -->
-                    <img src="/images/court.jpg" alt="Basketball Court" class="w-full h-96 object-cover">
-
-                    <!-- Description -->
-                    <div class="p-4" style="margin-top: -40px;">
-                        <b><h5 class="modal-title p-4" id="basketballCourtModalLabel" style="font-size: 30px; color: darkblue;">Basketball Court</h5></b>
-                        <p class="text-gray-700" style="margin-top: -20px;">
-                            A sports court designed for basketball games and practice sessions. It features a well-maintained playing surface, basketball hoops, and seating areas for spectators, making it perfect for sports enthusiasts and team activities.
-                        </p>
-                    </div>
-
-                    <!-- Card Container -->
-                    <div class="bg-white rounded-lg shadow-md p-5">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Assigned Cleaners -->
-                            <div>
-                                <h6 class="font-semibold text-lg" style="color: darkblue;">Assigned Cleaners</h6>
-                                <ul class="list-disc list-inside">
-                                    <li>John Smith - Cleaner</li>
-                                    <li>Emily Johnson - Cleaner</li>
-                                </ul>
-                            </div>
-
-                            <!-- Reserve Facility (Aligned to the Right) -->
-                            <div class="text-right">
-                                <h6 class="font-semibold text-lg" style="color: darkblue;">Reserve Facility</h6>
-                                <p class="text-gray-700">
-                                    <span class="text-blue-500">💬</span> Time Available: 7:00 AM – 9:00 PM
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary px-5 py-2" style="margin-right: 240px; height: 50px; width: 300px;">Reserve Facility</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Fitness Gym Modal -->
-    <div class="modal fade" id="fitnessGymModal" tabindex="-1" aria-labelledby="fitnessGymModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content" style="border-radius: 30px;">
-                <div class="modal-header p-0 border-0 position-absolute top-0 end-0 z-1">
-                    <button type="button" class="btn-close m-3 bg-white rounded-circle p-2 border border-2" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <!-- Modal Body -->
-                <div class="modal-body p-0">
-                    <!-- Full-Width Image -->
-                    <img src="/images/gym.jpg" alt="Fitness Gym" class="w-full h-96 object-cover">
-
-                    <!-- Description -->
-                    <div class="p-4" style="margin-top: -40px;">
-                        <b><h5 class="modal-title p-4" id="fitnessGymModalLabel" style="font-size: 30px; color: darkblue;">Fitness Gym</h5></b>
-                        <p class="text-gray-700" style="margin-top: -20px;">
-                            A fully-equipped gym designed for fitness and wellness. It features modern exercise machines, free weights, and dedicated spaces for cardio and strength training, making it perfect for achieving your fitness goals.
-                        </p>
-                    </div>
-
-                    <!-- Card Container -->
-                    <div class="bg-white rounded-lg shadow-md p-5">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Assigned Cleaners -->
-                            <div>
-                                <h6 class="font-semibold text-lg" style="color: darkblue;">Assigned Cleaners</h6>
-                                <ul class="list-disc list-inside">
-                                    <li>Michael Brown - Cleaner</li>
-                                    <li>Sarah Davis - Cleaner</li>
-                                </ul>
-                            </div>
-
-                            <!-- Reserve Facility (Aligned to the Right) -->
-                            <div class="text-right">
-                                <h6 class="font-semibold text-lg" style="color: darkblue;">Reserve Facility</h6>
-                                <p class="text-gray-700">
-                                    <span class="text-blue-500">💬</span> Time Available: 6:00 AM – 10:00 PM
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary px-5 py-2" style="margin-right: 240px; height: 50px; width: 300px;">Reserve Facility</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl" style="max-width: 900px;">
+    <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true" style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(5px);">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content" style="height: 100%; border-radius: 30px;">
                 <!-- Modal Header with Close Button -->
                 <div class="modal-header p-0 border-0 position-absolute top-0 end-0 z-1">
@@ -590,29 +392,33 @@
                     <div class="flex" style="height: 100%;">
                         <!-- Left Side: Description and Reserve Button (40% width) -->
                         <div class="w3-fourty p-5" style="background-color: #f8f9fa; height: 100%; width: 40%; border-radius: 30px;">
-                            <h5 class="modal-title" style="font-size: 30px; color: darkblue;"><b>Reservation Page</b></h5>
-                            <p class="text-gray-700 mt-3">
-                                Reserve your spot at Subvi’s swimming pool for a refreshing and relaxing experience. Simply choose your preferred time, fill out the reservation form, and submit the small reservation fee to secure your spot. Our team will confirm your booking, and you’ll be ready to enjoy a day of fun and relaxation at the pool. Book today and dive in!
-                            </p>
+                            <h5 class="modal-title" style="font-size: 30px; color: darkblue;"><b id="reservationTitle"></b></h5>
+                            <p class="text-gray-700 mt-3" id="reservationDescription"></p>
+
+                            <div class="mt-5">
+                                <img id="reservationImage" src="" alt="Facility Image" style="width: 100%; height: auto; border-radius: 10px;">
+                            </div>
+                            <p id="reservationAvailableTime" class="mt-3"></p>
 
                             <!-- Reserve Facility Button -->
                             <div class="mt-5">
-                                <button type="button" class="btn btn-primary px-5 py-2" style="height: 50px; width: 300px;">Reserve Facility</button>
+                                <button type="button" class="btn btn-primary px-5 py-2" id="confirmReservationBtn" style="margin-right: 240px; height: 50px; width: 300px;">Confirm Reservation</button>
                             </div>
                         </div>
 
                         <!-- Right Side: Calendar for Schedule Date & Time (60% width) -->
                         <div class="w3-sixty p-5" style="height: 100%; overflow-y: auto; width: 60%;">
-                            <h6 class="font-semibold text-lg" style="color: darkblue;">Select a Date & Time</h6>
+                            <h5 class="font-semibold text-lg mb-3" style="color: darkblue;">Select a Date & Time</h5>
+
                             <!-- Calendar -->
-                            <div class="mt-4">
-                                <div class="flex justify-between items-center mb-4">
+                            <div class="calendar-section bg-light rounded p-3 mb-4 shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
                                     <button type="button" class="btn btn-outline-secondary" id="prevMonth">&lt;</button>
-                                    <h6 class="font-semibold text-lg" id="currentMonthYear">April 2024</h6>
+                                    <h6 class="font-semibold text-lg mb-0" id="currentMonthYear">April 2024</h6>
                                     <button type="button" class="btn btn-outline-secondary" id="nextMonth">&gt;</button>
                                 </div>
-                                <table class="w-full text-center" id="calendarTable">
-                                    <thead>
+                                <table class="table table-bordered text-center mb-0" id="calendarTable">
+                                    <thead class="thead-dark">
                                         <tr>
                                             <th>MON</th>
                                             <th>TUE</th>
@@ -628,6 +434,26 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            <!-- Time Slot Dropdowns -->
+                            <div class="time-slot-section bg-light rounded p-3 shadow-sm mt-4">
+                                <h6 class="font-semibold text-lg mb-3" style="color: darkblue;">Select Start & End Time</h6>
+
+                                <div class="row">
+                                    <div class="col">
+                                        <label for="startTimeSlot" class="form-label">Start Time</label>
+                                        <select class="form-select" id="startTimeSlot" aria-label="Select Start Time">
+                                            <!-- Start time slots will be populated dynamically -->
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <label for="endTimeSlot" class="form-label">End Time</label>
+                                        <select class="form-select" id="endTimeSlot" aria-label="Select End Time">
+                                            <!-- End time slots will be populated dynamically -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -635,165 +461,3 @@
         </div>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Swimming Pool Modal
-        var facilityModal = document.getElementById('facilityModal');
-        facilityModal.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget; // Button that triggered the modal
-            var facility = button.getAttribute('data-facility'); // Extract facility name
-            var cleaner = button.getAttribute('data-cleaner'); // Extract cleaner name
-            var time = button.getAttribute('data-time'); // Extract available time
-
-            // Update the modal's content
-            var modalFacilityName = facilityModal.querySelector('#modalFacilityName');
-            var modalCleaner = facilityModal.querySelector('#modalCleaner');
-            var modalTime = facilityModal.querySelector('#modalTime');
-
-            modalFacilityName.textContent = facility;
-            modalCleaner.textContent = cleaner;
-            modalTime.textContent = time;
-        });
-
-        // Playground Modal
-        var playgroundModal = document.getElementById('playgroundModal');
-        playgroundModal.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget; // Button that triggered the modal
-            var facility = button.getAttribute('data-facility'); // Extract facility name
-            var cleaner = button.getAttribute('data-cleaner'); // Extract cleaner name
-            var time = button.getAttribute('data-time'); // Extract available time
-
-            // Update the modal's content
-            var modalFacilityName = playgroundModal.querySelector('#playgroundModalLabel');
-            var modalCleaner = playgroundModal.querySelector('#modalCleaner');
-            var modalTime = playgroundModal.querySelector('#modalTime');
-
-            modalFacilityName.textContent = facility;
-            modalCleaner.textContent = cleaner;
-            modalTime.textContent = time;
-        });
-    });
-             document.addEventListener('DOMContentLoaded', function () {
-        // Get the Reserve button and Reservation modal
-        var reserveButton = document.querySelector('#facilityModal .btn-primary');
-        var reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
-
-        // Add click event to the Reserve button
-        reserveButton.addEventListener('click', function () {
-            // Close the current modal (facilityModal)
-            var facilityModal = bootstrap.Modal.getInstance(document.getElementById('facilityModal'));
-            facilityModal.hide();
-
-            // Open the reservation modal
-            reservationModal.show();
-        });
-
-        // Calendar Functionality
-        let currentDate = new Date();
-        let currentMonth = currentDate.getMonth();
-        let currentYear = currentDate.getFullYear();
-
-        const monthNames = [
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
-        ];
-
-        // Function to render the calendar
-        function renderCalendar(month, year) {
-            const calendarBody = document.querySelector('#calendarTable tbody');
-            const currentMonthYear = document.getElementById('currentMonthYear');
-
-            // Clear existing calendar
-            calendarBody.innerHTML = '';
-
-            // Set the current month and year
-            currentMonthYear.textContent = `${monthNames[month]} ${year}`;
-
-            // Get the first day of the month
-            const firstDay = new Date(year, month, 1);
-            const startingDay = firstDay.getDay(); // 0 (Sunday) to 6 (Saturday)
-
-            // Get the number of days in the month
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            let date = 1;
-            for (let i = 0; i < 6; i++) {
-                const row = document.createElement('tr');
-                for (let j = 0; j < 7; j++) {
-                    const cell = document.createElement('td');
-                    cell.style.padding = '10px';
-                    cell.style.cursor = 'pointer';
-                    cell.style.borderRadius = '5px';
-                    if (i === 0 && j < startingDay) {
-                        // Empty cells before the first day of the month
-                        cell.textContent = '';
-                    } else if (date > daysInMonth) {
-                        // Empty cells after the last day of the month
-                        cell.textContent = '';
-                    } else {
-                        // Fill in the dates
-                        cell.textContent = date;
-
-                        // Highlight the current date
-                        if (date === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear()) {
-                            cell.style.backgroundColor = '#007bff';
-                            cell.style.color = '#fff';
-                        }
-
-                        // Add hover effect
-                        cell.addEventListener('mouseover', function () {
-                            if (cell.textContent !== '') {
-                                cell.style.backgroundColor = '#f0f0f0';
-                            }
-                        });
-                        cell.addEventListener('mouseout', function () {
-                            if (cell.textContent !== '') {
-                                cell.style.backgroundColor = '';
-                                if (date === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear()) {
-                                    cell.style.backgroundColor = '#007bff';
-                                    cell.style.color = '#fff';
-                                }
-                            }
-                        });
-
-                        // Add click event
-                        cell.addEventListener('click', function () {
-                            // Highlight the selected date
-                            const selectedDate = new Date(year, month, date);
-                            alert(`Selected Date: ${selectedDate.toDateString()}`);
-                        });
-
-                        date++;
-                    }
-                    row.appendChild(cell);
-                }
-                calendarBody.appendChild(row);
-                if (date > daysInMonth) break;
-            }
-        }
-
-        // Initial render
-        renderCalendar(currentMonth, currentYear);
-
-        // Previous Month Button
-        document.getElementById('prevMonth').addEventListener('click', function () {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar(currentMonth, currentYear);
-        });
-
-        // Next Month Button
-        document.getElementById('nextMonth').addEventListener('click', function () {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            renderCalendar(currentMonth, currentYear);
-        });
-    });
-</script>
