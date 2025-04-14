@@ -1,4 +1,8 @@
 const facilityModal = document.getElementById('facilityModal');
+const facilityBootstrapModal = new bootstrap.Modal(facilityModal); // Add this line
+
+const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
+
 facilityModal.addEventListener('show.bs.modal', function (event) {
     const button = event.relatedTarget;
 
@@ -18,21 +22,128 @@ facilityModal.addEventListener('show.bs.modal', function (event) {
     const facilityTimeEl = document.getElementById('facilityTime');
     facilityTimeEl.setAttribute('data-start', startTime);
     facilityTimeEl.setAttribute('data-end', endTime);
-
-    // Set cleaner list
-    const cleanerList = facilityModal.querySelector('#modalCleaners');
-    cleanerList.innerHTML = '';
-    cleaner.split(',').forEach(name => {
-        const li = document.createElement('li');
-        li.textContent = name.trim();
-        cleanerList.appendChild(li);
-    });
 });
 
 document.addEventListener('DOMContentLoaded', function () {
     const facilityModal = document.getElementById('facilityModal');
-    const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
     const reserveBtn = document.getElementById('reserve-facility-btn');
+
+    //Fetch data for pending status schedule
+    function fetchPendingFacilities() {
+        const spinner = document.getElementById('PendingloadingSpinner');
+        const tableBody = document.getElementById('pendingFacilitiesTableBody');
+
+        // Show the loading spinner and clear previous data
+        spinner.style.display = 'block';
+        tableBody.innerHTML = '';
+
+        // Fetch the pending facilities data from API
+        fetch('/Home/GetPendingFacilities')
+            .then(response => response.json())
+            .then(data => {
+                // Hide spinner after fetching data
+                spinner.style.display = 'none';
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No pending facilities.</td></tr>`;
+                } else {
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.classList.add('fade-in'); // Add fade-in effect for row
+
+                        // Create a badge for the status
+                        let statusBadge = '';
+                        statusBadge = `<span class="badge bg-warning text-dark">${item.status}</span>`;
+
+                        row.innerHTML = `
+                        <td class="text-center">${item.reservationId}</td>
+                        <td class="text-center">${item.facilityName}</td>
+                        <td class="text-center">${item.dateRequested}</td>
+                        <td class="text-center">${item.startTime}</td>
+                        <td class="text-center">${item.endTime}</td>
+                        <td class="text-center">${statusBadge}</td>
+                    `;
+
+                        // Append the newly created row to the table body
+                        tableBody.appendChild(row);
+                    });
+                }
+            })
+            .catch(error => {
+                spinner.style.display = 'none';
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error fetching data. Please try again later.</td></tr>`;
+                console.error('Error fetching pending facilities:', error);
+            });
+    }
+    fetchPendingFacilities();
+
+    // For Filtering in Approved/Declined table data
+    const statusFilter = document.getElementById("statusFilter");
+    const pendingtableBody = document.getElementById("reservationHistoryTableBody");
+    const loadingSpinner = document.getElementById("ApprovedloadingSpinner");
+
+    //Fetching Approved/Declined Data
+    function fetchReservationData(status) {
+        const pendingtableBody = document.getElementById('reservationHistoryTableBody');
+        const loadingSpinner = document.getElementById('ApprovedloadingSpinner');
+
+        pendingtableBody.innerHTML = '';
+        loadingSpinner.style.display = "block"; // Show loading spinner
+
+        fetch(`/Home/GetFilteredReservations?status=${status}`)
+            .then(response => response.json())
+            .then(data => {
+                loadingSpinner.style.display = "none"; // Hide loading
+
+                if (data.length === 0) {
+                    pendingtableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted">No reservation records found for <strong>${status}</strong>.</td>
+                </tr>`;
+                    return;
+                }
+
+                data.forEach(item => {
+                    const row = document.createElement("tr");
+
+                    // Correct way to check status and display badge
+                    const statusBadge = item.status === "Approved"
+                        ? '<span class="badge bg-success px-3 py-2">Approved</span>'
+                        : '<span class="badge bg-danger px-3 py-2">Declined</span>';
+
+                    // Append content to the row
+                    row.innerHTML = `
+                    <td>${item.reservationId}</td>
+                    <td>${item.facilityName}</td>
+                    <td>${item.dateRequested}</td>
+                    <td>${item.startTime}</td>
+                    <td>${item.endTime}</td>
+                    <td>${statusBadge}</td>
+                `;
+
+                    // Append row to the table body
+                    pendingtableBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                loadingSpinner.style.display = "none";
+                console.error("Error fetching data:", error);
+                pendingtableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-danger text-center">Something went wrong while loading data.</td>
+            </tr>`;
+            });
+    }
+    fetchReservationData(statusFilter.value);
+
+    // On filter change
+    statusFilter.addEventListener("change", function () {
+        fetchReservationData(this.value);
+    });
+
+    function truncate(text, length) {
+        return text.length > length ? text.substring(0, length) + "..." : text;
+    }
 
     reserveBtn.addEventListener('click', function () {
         // Get data from the facility modal
@@ -110,63 +221,13 @@ document.addEventListener('DOMContentLoaded', function () {
             option.textContent = slot;
             endSelect.appendChild(option);
         });
+        const today = new Date();
+        const todayCell = [...document.querySelectorAll('#calendarTable td')].find(td => td.textContent == today.getDate());
+        if (todayCell) todayCell.classList.add('selected');
 
         // Show the reservation modal
         reservationModal.show();
     });
-
-    // Helper function to convert time (HH:MM) to minutes
-    function convertToMinutes(time) {
-        const [hours, minutes] = time.split(':').map(num => parseInt(num, 10));
-        return hours * 60 + minutes;
-    }
-
-    async function loadReservedSlots(facilityName, selectedDate) {
-        const response = await fetch(`/YourController/GetReservedTimeSlots?facilityName=${encodeURIComponent(facilityName)}&selectedDate=${selectedDate}`);
-        const reservations = await response.json();
-
-        const disabledMinutes = [];
-
-        // Convert all reservation ranges to minute ranges
-        reservations.forEach(({ StartTime, EndTime }) => {
-            const startMin = convertToMinutes12Hour(StartTime);
-            const endMin = convertToMinutes12Hour(EndTime);
-            for (let min = startMin; min < endMin; min += 30) {
-                disabledMinutes.push(min);
-            }
-        });
-
-        // Generate slots
-        const startTimeMin = convertToMinutes12Hour(startTime);
-        const endTimeMin = convertToMinutes12Hour(endTime);
-        const startSlots = generateTimeSlots(startTimeMin, endTimeMin);
-        const endSlots = generateTimeSlots(startTimeMin + 30, endTimeMin, true);
-
-        // Populate dropdowns
-        const startSelect = document.getElementById('startTimeSlot');
-        const endSelect = document.getElementById('endTimeSlot');
-        startSelect.innerHTML = '';
-        endSelect.innerHTML = '';
-
-        startSlots.forEach(slot => {
-            const minutes = convertToMinutes12Hour(slot);
-            const option = document.createElement('option');
-            option.value = slot;
-            option.textContent = slot;
-            if (disabledMinutes.includes(minutes)) option.disabled = true;
-            startSelect.appendChild(option);
-        });
-
-        endSlots.forEach(slot => {
-            const minutes = convertToMinutes12Hour(slot);
-            const option = document.createElement('option');
-            option.value = slot;
-            option.textContent = slot;
-            if (disabledMinutes.includes(minutes)) option.disabled = true;
-            endSelect.appendChild(option);
-        });
-    }
-
 
     // Calendar functionality
     let currentMonth = new Date().getMonth(); // Current month (0 - 11)
@@ -195,7 +256,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     const allCells = calendarTable.getElementsByTagName('td');
                     Array.from(allCells).forEach(cell => cell.classList.remove('selected'));
                     cell.classList.add('selected');
-                    console.log(`Selected Date: ${day}/${currentMonth + 1}/${currentYear}`);
                 });
                 row.appendChild(cell);
                 day++;
@@ -225,40 +285,55 @@ document.addEventListener('DOMContentLoaded', function () {
 
     generateCalendar(); // Initial calendar setup
 
+    let reserveFacilityBtn = document.getElementById('confirmReservationBtn');
 
-    // NOT DONE YET DO NOT TOUCH
-    document.getElementById('calendarTable').addEventListener('click', (e) => {
-        if (e.target.classList.contains('date-cell')) {
-            const selectedDate = e.target.dataset.date; // assume you store the date on cell
-            const facilityTitle = document.getElementById('reservationTitle').textContent;
-            loadReservedSlots(facilityTitle, selectedDate);
-        }
-    });
+    reserveFacilityBtn.addEventListener('click', async function () {
+        const selectedDateEl = document.querySelector('#calendarTable .selected');
+        const startTime = document.getElementById('startTimeSlot').value;
+        const endTime = document.getElementById('endTimeSlot').value;
 
-    // Reserve Facility button action
-    reserveFacilityBtn.addEventListener('click', function () {
-        const selectedDate = document.querySelector('#calendarTable .selected');
-        const selectedTimeSlot = document.getElementById('timeSlot').value;
-
-        if (!selectedDate) {
-            alert('Please select a date!');
+        if (!selectedDateEl || !startTime || !endTime) {
+            alert('Please select a date and both start and end time!');
             return;
         }
 
-        if (!selectedTimeSlot) {
-            alert('Please select a time slot!');
+        const selectedDay = selectedDateEl.textContent;
+        const selectedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+
+        // Validate time logic
+        const start = new Date(`1970-01-01T${startTime}`);
+        const end = new Date(`1970-01-01T${endTime}`);
+        if (start >= end) {
+            alert("Start time must be before end time.");
             return;
         }
 
-        const reservationData = {
-            facilityId: document.getElementById('reservationFacilityId').value,
-            title: document.getElementById('reservationTitle').textContent,
-            date: selectedDate.textContent,
-            timeSlot: selectedTimeSlot,
-        };
+        const facilityName = document.getElementById('reservationTitle').textContent;
 
-        console.log('Reservation Data:', reservationData);
-        // Perform API call or reservation logic here...
-        alert(`Reservation for ${reservationData.title} on ${reservationData.date} at ${reservationData.timeSlot}`);
+        // Check if there's an existing reservation
+        const checkResponse = await fetch(`/Home/CheckReservationConflict?facilityName=${facilityName}&selectedDate=${selectedDate}&startTime=${startTime}&endTime=${endTime}`);
+        const checkResult = await checkResponse.json();
+
+        if (!checkResult.success) {
+            alert(checkResult.message);
+            return;
+        }
+
+        // Proceed to insert reservation
+        const res = await fetch(`/Home/AddReservation`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ facilityName, selectedDate, startTime, endTime })
+        });
+
+        const result = await res.json();
+        if (result.success) {
+            alert("Reservation successfully added!");
+            fetchPendingFacilities();
+            facilityBootstrapModal.hide();
+            reservationModal.hide();
+        } else {
+            alert("Failed to add reservation.");
+        }
     });
 });

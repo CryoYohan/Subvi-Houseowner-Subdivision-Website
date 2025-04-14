@@ -57,7 +57,7 @@ namespace Subvi.Controllers
         public IActionResult GetDashboardData()
         {
             RefreshJwtCookies();
-            var facilityCount = _context.Facility.Count(f => f.Status == "PENDING");
+            var facilityCount = _context.Reservations.Count(f => f.Status == "PENDING");
             var totalUsers = _context.User_Accounts.Count();
             var adminCount = _context.User_Accounts.Count(u => u.Role == "Admin");
             var staffCount = _context.User_Accounts.Count(u => u.Role == "Staff");

@@ -102,7 +102,7 @@ function renderCalendar() {
         const reservationsDiv = document.createElement('div');
         reservationsDiv.className = "mt-1 text-left text-sm truncate text-blue-700";
         if (schedule.reservations > 0) {
-            reservationsDiv.innerHTML = `<div>📌<strong>Reservations: </strong> ${schedule.reservations} </div>`;
+            reservationsDiv.innerHTML = `<div>📌<strong>Reserve: </strong> ${schedule.reservations} </div>`;
         } else {
             reservationsDiv.innerHTML = "&nbsp;"; 
         }
@@ -165,14 +165,9 @@ function showSchedule(date) {
                 <div class="calendar-reservation-list-bg rounded-lg shadow-md">
                     ${data.reservationDateTime.length > 0 ? `
                         <ul class="p-2 space-y-1">
-                            ${data.reservationDateTime.map(time => {
-                                const formattedTime = new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
-                                    hour: 'numeric',
-                                    minute: '2-digit',
-                                    hour12: true
-                                });
+                            ${data.reservationDateTime.map(timeRange => {
                                 return `<li class="flex calendar-reservation-text-list-color items-center font-semibold">
-                                   🕒 ${formattedTime}
+                                    🕒 ${timeRange}
                                 </li>`;
                             }).join('')}
                         </ul>

@@ -44,7 +44,7 @@
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0 min-h-screen">
     @* Sidebar *@
-    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 ">
+    <div class="bg-white rounded-tr-2xl rounded-br-2xl shadow-md w-56 py-6 ">
         <ul class="space-y-4">
             <!-- Home (Dynamic) -->
             <li>
@@ -194,8 +194,21 @@
                 <!-- Requested Services -->
                 <div class="bg-white p-4 rounded-xl shadow-md">
                     <h2 class="text-xl font-bold mb-4 text-[#1E3A8A]">Requested Services</h2>
+
+                    <!-- Loading animation -->
+                    <div id="loadingSpinner" class="text-center hidden">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- No data message -->
+                    <div id="noDataMessage" class="text-center hidden text-gray-500">
+                        No service requests available.
+                    </div>
+
                     <div class="overflow-x-auto">
-                        <table class="min-w-full">
+                        <table class="min-w-full" id="serviceRequestTable">
                             <thead>
                                 <tr class="text-sm text-gray-500">
                                     <th class="text-left py-2">Services</th>
@@ -204,20 +217,8 @@
                                     <th class="text-left py-2">Staff Assigned</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-sm">
-                                <tr>
-                                    <td class="py-2">Clean-up</td>
-                                    <td class="py-2">11-12-24</td>
-                                    <td class="py-2"><span class="px-2 py-1 bg-yellow-100 text-yellow-600 rounded-full">Pending</span></td>
-                                    <td class="py-2 text-blue-500">John Doe</td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2">Security</td>
-                                    <td class="py-2">11-12-24</td>
-                                    <td class="py-2"><span class="px-2 py-1 bg-green-100 text-green-600 rounded-full">Approved</span></td>
-                                    <td class="py-2 text-blue-500">Jane Smith</td>
-                                </tr>
-                                <!-- Add more rows as needed -->
+                            <tbody class="text-sm" id="serviceRequestBody">
+                                <!-- Dynamic rows will be populated here -->
                             </tbody>
                         </table>
                     </div>

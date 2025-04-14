@@ -11,12 +11,6 @@ namespace ELNET1_GROUP_PROJECT.Models
 
         [Column("FACILITY_NAME")]
         public string FacilityName { get; set; }
-
-        [Column("SCHEDULE")]
-        public string Schedule { get; set; }
-
-        [Column("STATUS")]
-        public string Status { get; set; }
     }
 
 }

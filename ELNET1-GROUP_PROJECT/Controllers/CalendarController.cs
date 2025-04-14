@@ -52,18 +52,26 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 }
 
                 var reservations = await _context.Reservations
-                    .Where(r => r.UserId == userId && r.Status == "Approved")
-                    .Select(r => new { Date = r.DateTime.Date, Time = r.DateTime.ToString("HH:mm:ss") })
-                    .ToListAsync();
+                     .Where(r => r.UserId == userId && r.Status == "Approved")
+                     .Select(r => new
+                     {
+                         Date = r.SchedDate,
+                         StartTime = r.StartTime,
+                         EndTime = r.EndTime
+                     })
+                     .ToListAsync();
 
                 foreach (var res in reservations)
                 {
-                    string dateKey = res.Date.ToString("yyyy-MM-dd");
+                    string dateKey = res.Date.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd");
+
                     if (!schedules.ContainsKey(dateKey))
                         schedules[dateKey] = new ScheduleData();
 
                     schedules[dateKey].Reservations += 1;
-                    schedules[dateKey].ReservationDateTime.Add(res.Time); // Store Time
+
+                    // Combine directly since the format is already correct
+                    schedules[dateKey].ReservationDateTime.Add($"{res.StartTime} - {res.EndTime}");
                 }
 
                 return Ok(schedules);

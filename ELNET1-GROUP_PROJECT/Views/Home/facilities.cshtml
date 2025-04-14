@@ -44,7 +44,7 @@
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
-    <div class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-56 py-6 h-screen">
+    <div class="bg-white rounded-tr-2xl rounded-br-2xl shadow-md w-56 py-6 h-screen">
         <ul class="space-y-4">
             <!-- Home (Dynamic) -->
             <li>
@@ -135,6 +135,44 @@
                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
                 transition: box-shadow 0.3s ease-in-out;
             }
+
+        /* For table style */
+        .card {
+            background-color: #ffffff;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .table thead {
+            background-color: #007bff;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .table td, .table th {
+            vertical-align: middle;
+            padding: 12px 15px;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 4px;
+        }
+
+        .text-darkblue {
+            color: #003366;
+        }
+
+        .font-semibold {
+            font-weight: 600;
+        }
     </style>
 
     @* MainContent *@  
@@ -182,164 +220,67 @@
 
             <!-- Right Side: Requested Facilities & Reservation History -->
             <div class="col-md-5">
-                <div class="card mb-3 p-3">
-                    <h5>Requested Facilities</h5>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Facility</th>
-                                <th>Date Requested</th>
-                                <th>Status</th>
-                                <th>Staff Assigned</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>1</td>
-                                <td>Swimming Pool</td>
-                                <td>10-12-24</td>
-                                <td>Pending</td>
-                                <td>N/A</td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>Swimming Pool</td>
-                                <td>10-12-24</td>
-                                <td>Pending</td>
-                                <td>N/A</td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>Swimming Pool</td>
-                                <td>10-12-24</td>
-                                <td>Pending</td>
-                                <td>N/A</td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>Swimming Pool</td>
-                                <td>10-12-24</td>
-                                <td>Pending</td>
-                                <td>N/A</td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>Swimming Pool</td>
-                                <td>10-12-24</td>
-                                <td>Pending</td>
-                                <td>N/A</td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>Swimming Pool</td>
-                                <td>10-12-24</td>
-                                <td>Pending</td>
-                                <td>N/A</td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>Swimming Pool</td>
-                                <td>10-12-24</td>
-                                <td>Pending</td>
-                                <td>N/A</td>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>Swimming Pool</td>
-                                <td>10-12-24</td>
-                                <td>Pending</td>
-                                <td>N/A</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="card p-3 mb-3 shadow-lg rounded">
+                    <div id="PendingloadingSpinner" class="text-center my-3" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <h5 class="p-2 font-semibold text-darkblue" style="font-size: 1.25rem; margin-bottom: 20px;">Requested Reservation Facilities</h5>
+
+                    <div class="table-responsive" style="max-height: 230px; overflow-y: auto;">
+                        <table class="table table-striped table-hover table-bordered mb-0" style="border-collapse: separate; border-spacing: 0;">
+                            <thead class="thead-dark sticky-top" style="top: 0; z-index: 1;">
+                                <tr>
+                                    <th class="text-center">ID</th>
+                                    <th class="text-center">Facility</th>
+                                    <th class="text-center">Date Requested</th>
+                                    <th class="text-center">Start Time</th>
+                                    <th class="text-center">End Time</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingFacilitiesTableBody">
+                                <!-- Pending facility data will be dynamically inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="card p-3">
-                    <h5>Reservation History</h5>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Facility</th>
-                                <th>Date Completed</th>
-                                <th>Status</th>
-                                <th>Staff Assigned</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                            </tr>
-                            <tr>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                            </tr>
-                            <tr>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                            </tr>
-                            <tr>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                            </tr>
-                            <tr>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                            </tr>
-                            <tr>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                            </tr>
-                            <tr>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                            </tr>
-                            <tr>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                            </tr>
-                            <tr>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                            </tr>
-                            <tr>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                                <td>--</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="card p-4 shadow-sm rounded-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="p-2 font-semibold text-darkblue" style="font-size: 1.25rem; margin-bottom: 20px;">Reservation History</h4>
+                        <select class="form-select w-auto shadow-sm border-primary" id="statusFilter">
+                            <option value="Approved" selected>Approved</option>
+                            <option value="Declined">Declined</option>
+                        </select>
+                    </div>
+
+                    <div id="ApprovedloadingSpinner" class="text-center my-4" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Fetching reservations...</p>
+                    </div>
+
+                    <div style="overflow-x:auto; max-height: 220px; position: relative;">
+                        <table class="table table-hover table-striped align-middle text-center shadow-sm" style="width: 100%;">
+                            <thead class="thead-dark sticky-top" style="top: 0; z-index: 1;">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Facility</th>
+                                    <th>Date Requested</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reservationHistoryTableBody">
+                                <!-- Reservation rows will be dynamically added -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

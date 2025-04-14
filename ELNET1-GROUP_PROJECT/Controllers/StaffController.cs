@@ -397,11 +397,13 @@ public class StaffController : Controller
                                 Id = r.ReservationId,
                                 FacilityName = char.ToUpper(f.FacilityName[0]) + f.FacilityName.Substring(1),
                                 RequestedBy = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
-                                SchedDate = r.SchedDate,
-                                StartTime = DateTime.Parse(r.StartTime), 
-                                EndTime = DateTime.Parse(r.EndTime),     
+                                SchedDate = r.SchedDate.ToString("MM/dd/yyyy"),
+                                StartTime = r.StartTime, 
+                                EndTime = r.EndTime,     
                                 Status = r.Status
-                            }).ToList();
+                            })
+                            .OrderByDescending(r => r.Id)
+                            .ToList();
 
         return Json(reservations);
     }
@@ -415,7 +417,7 @@ public class StaffController : Controller
             return NotFound(new { message = "Reservation not found" });
         }
 
-        if (request.Status != "Scheduled" && request.Status != "Declined")
+        if (request.Status != "Approved" && request.Status != "Declined")
         {
             return BadRequest(new { message = "Invalid status" });
         }

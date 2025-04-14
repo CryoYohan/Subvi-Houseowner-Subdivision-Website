@@ -148,35 +148,140 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return View();
         }
 
+        // Fetch Pending data
         [HttpGet]
-        public IActionResult GetReservedTimeSlots(string facilityName, string selectedDate)
+        public IActionResult GetPendingFacilities()
         {
-            DateTime date = DateTime.Parse(selectedDate);
+            var Iduser = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(Iduser, out int userId))
+            {
+                return RedirectToAction("landing");
+            }
 
-            // Step 1: Get Facility ID
+            var pendingFacilities = _context.Reservations
+                .Where(r => r.Status == "Pending" && r.UserId == userId) // filter by current user
+                .Join(
+                    _context.Facility,
+                    r => r.FacilityId,
+                    f => f.FacilityId,
+                    (r, f) => new
+                    {
+                        r.ReservationId,
+                        f.FacilityName,
+                        DateRequested = r.SchedDate.ToString("MM/dd/yyyy"),
+                        r.StartTime,
+                        r.EndTime,
+                        r.Status
+                    }
+                )
+                .OrderByDescending(r => r.ReservationId)
+                .ToList();
+
+            return Json(pendingFacilities);
+        }
+
+        //Fetch Approved/Declined Data
+        [HttpGet]
+        public IActionResult GetFilteredReservations(string status)
+        {
+            var Iduser = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(Iduser, out int userId))
+                return RedirectToAction("landing");
+
+            var query = _context.Reservations
+                .Where(r => r.Status == status && r.UserId == userId)
+                .Join(_context.Facility,
+                    r => r.FacilityId,
+                    f => f.FacilityId,
+                    (r, f) => new
+                    {
+                        r.ReservationId,
+                        f.FacilityName,
+                        DateRequested = r.SchedDate.ToString("MM/dd/yyyy"),
+                        r.StartTime,
+                        r.EndTime,
+                        r.Status
+                    })
+                .OrderByDescending(r => r.ReservationId)
+                .ToList();
+
+            return Json(query);
+        }
+
+        // Check for existing facility data
+        [HttpGet]
+        public IActionResult CheckReservationConflict(string facilityName, string selectedDate, string startTime, string endTime)
+        {
+            if (!int.TryParse(HttpContext.Request.Cookies["Id"], out int userId))
+                return Json(new { success = false, message = "Invalid user session" });
+
             var facilityId = _context.Facility
                 .Where(f => f.FacilityName == facilityName)
                 .Select(f => f.FacilityId)
                 .FirstOrDefault();
 
-            if (facilityId == 0)
+            DateTime date = DateTime.Parse(selectedDate);
+
+            bool conflict = _context.Reservations.Any(r =>
+                r.UserId == userId &&
+                r.FacilityId == facilityId &&
+                r.SchedDate == DateOnly.FromDateTime(date) &&
+                r.StartTime == startTime &&
+                r.EndTime == endTime
+            );
+
+            if (conflict)
             {
-                return Json(new List<object>()); // No such facility
+                return Json(new { success = false, message = "You already reserved this time slot for the same facility." });
             }
 
-            var reservedSlots = _context.Reservations
-                .Where(r => r.FacilityId == facilityId && r.Status == "Approved")
-                .AsEnumerable() // This switches to in-memory filtering
-                .Where(r => DateTime.Parse(r.SchedDate.ToString()).Date == date.Date) 
-                .Select(r => new
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public IActionResult AddReservation([FromBody] ReservationDto reservation)
+        {
+            if (!int.TryParse(HttpContext.Request.Cookies["Id"], out int userId))
+                return Json(new { success = false, message = "User not authenticated." });
+
+            // Check if facility already exists
+            var existingFacility = _context.Facility
+                .FirstOrDefault(f => f.FacilityName == reservation.FacilityName);
+
+            int facilityId;
+
+            if (existingFacility == null)
+            {
+                // Add new facility
+                var newFacility = new Facility
                 {
-                    StartTime = r.StartTime,
-                    EndTime = r.EndTime
-                })
-                .ToList();
+                    FacilityName = reservation.FacilityName
+                };
 
+                _context.Facility.Add(newFacility);
+                _context.SaveChanges();
 
-            return Json(reservedSlots);
+                facilityId = newFacility.FacilityId; // Get generated ID
+            }
+            else
+            {
+                facilityId = existingFacility.FacilityId;
+            }
+
+            // Add reservation
+            _context.Reservations.Add(new Reservation
+            {
+                SchedDate = DateOnly.FromDateTime(DateTime.Parse(reservation.SelectedDate)),
+                StartTime = reservation.StartTime,
+                EndTime = reservation.EndTime,
+                Status = "Pending",
+                UserId = userId,
+                FacilityId = facilityId
+            });
+
+            _context.SaveChanges();
+
+            return Json(new { success = true, message = "Reservation added successfully." });
         }
 
         public IActionResult Bill()
@@ -456,6 +561,31 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         {
             RefreshJwtCookies();
             return View();
+        }
+
+        //Fetching Pending Service Req
+        public IActionResult GetPendingServiceRequests()
+        {
+            var userId = HttpContext.Request.Cookies["Id"];  // Retrieve the userId from cookies (or session, etc.)
+
+            if (!int.TryParse(userId, out int parsedUserId))
+            {
+                return BadRequest("User not authenticated.");  // Handle case where userId is not valid
+            }
+
+            var serviceRequests = _context.Service_Request
+                .Where(sr => sr.Status == "Pending" && sr.UserId == parsedUserId)  // Filter by UserId
+                .Join(_context.User_Accounts, sr => sr.UserId, u => u.Id, (sr, u) => new
+                {
+                    sr.ServiceRequestId,
+                    sr.ReqType,
+                    sr.Description,
+                    sr.DateSubmitted,
+                    sr.Status
+                })
+                .ToList();
+
+            return Json(serviceRequests);
         }
 
         [HttpGet]

@@ -102,3 +102,71 @@ function confirmRequest(serviceName) {
         }
     });
 }
+
+// Function to fetch pending service requests and populate the table
+async function fetchServiceRequests() {
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const noDataMessage = document.getElementById('noDataMessage');
+    const tableBody = document.getElementById('serviceRequestBody');
+
+    try {
+        // Show loading spinner while data is being fetched
+        loadingSpinner.classList.remove('hidden');
+        noDataMessage.classList.add('hidden');
+
+        // Fetching data from the backend
+        const response = await fetch('/Home/GetPendingServiceRequests');
+        const serviceRequests = await response.json();
+
+        // Clear any existing rows and hide the loading spinner
+        tableBody.innerHTML = '';
+        loadingSpinner.classList.add('hidden');
+
+        // If no data, show the "No data" message
+        if (serviceRequests.length === 0) {
+            noDataMessage.classList.remove('hidden');
+            return;
+        }
+
+        // Loop through the service requests and add rows
+        serviceRequests.forEach(request => {
+            const row = document.createElement('tr');
+
+            const reqTypeCell = document.createElement('td');
+            reqTypeCell.classList.add('py-2');
+            reqTypeCell.textContent = request.ReqType;
+            row.appendChild(reqTypeCell);
+
+            const dateRequestedCell = document.createElement('td');
+            dateRequestedCell.classList.add('py-2');
+            dateRequestedCell.textContent = new Date(request.DateSubmitted).toLocaleDateString();
+            row.appendChild(dateRequestedCell);
+
+            const statusCell = document.createElement('td');
+            statusCell.classList.add('py-2');
+            const statusSpan = document.createElement('span');
+            statusSpan.classList.add('px-2', 'py-1', 'rounded-full');
+            if (request.Status === 'Pending') {
+                statusSpan.classList.add('bg-yellow-100', 'text-yellow-600');
+                statusSpan.textContent = 'Pending';
+            }
+            row.appendChild(statusCell);
+            statusCell.appendChild(statusSpan);
+
+            const staffAssignedCell = document.createElement('td');
+            staffAssignedCell.classList.add('py-2', 'text-blue-500');
+            staffAssignedCell.textContent = request.StaffAssigned;
+            row.appendChild(staffAssignedCell);
+
+            // Append the row to the table body
+            tableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Error fetching service requests:', error);
+        loadingSpinner.classList.add('hidden');
+        noDataMessage.classList.remove('hidden');
+    }
+}
+
+// Call the function to fetch service requests when the page loads
+document.addEventListener('DOMContentLoaded', fetchServiceRequests);
