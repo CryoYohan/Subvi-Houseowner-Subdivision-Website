@@ -259,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
     searchInput.addEventListener("keydown", (e) => {
         if (e.key === "Backspace" && selectedSearchMention) {
             e.preventDefault();
-            clearSearchMention();
+            clearEachletterAndMention();
         }
     });
 
@@ -371,8 +371,6 @@ function showSearchMentionSuggestions() {
     // If user is typing after '@', filter suggestion list based on query
     const query = document.getElementById("searchInput").innerText.trim();
     const mentionSearchQuery = query.substring(query.lastIndexOf("@") + 1); // Get text after '@'
-
-    console.log("Filtering suggestions for:", mentionSearchQuery);
 
     // Filter announcements that match the mention query
     const filteredTitles = mentionTitles.filter(title => title.toLowerCase().includes(mentionSearchQuery.toLowerCase()));

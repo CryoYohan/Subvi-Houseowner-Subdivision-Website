@@ -34,6 +34,6 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("STATUS")]
         public string? Status { get; set; } = "ACTIVE";
 
-        public ICollection<Forum> Forum { get; set; }
+        public ICollection<Forum>? Forum { get; set; }
     }
 }

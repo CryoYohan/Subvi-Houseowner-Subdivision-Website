@@ -516,9 +516,18 @@ public class StaffController : Controller
             {
                 serviceRequest.RejectedReason = request.RejectedReason;
             }
-            else if (request.Status == "Scheduled")
+            else if (request.Status == "Scheduled" && !string.IsNullOrEmpty(request.ScheduleDate))
             {
-                serviceRequest.ScheduleDate = request.ScheduleDate;
+                // Parse the custom datetime format
+                if (DateTime.TryParseExact(request.ScheduleDate, "yyyy-MM-dd HH:mm:ss",
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+                {
+                    serviceRequest.ScheduleDate = parsedDate;
+                }
+                else
+                {
+                    return BadRequest(new { message = "Invalid date format. Use 'yyyy-MM-dd HH:mm:ss'." });
+                }
             }
 
             await _context.SaveChangesAsync();
