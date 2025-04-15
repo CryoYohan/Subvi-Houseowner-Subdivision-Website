@@ -143,7 +143,7 @@
         </div>
 
         <!-- Approval Confirmation Modal -->
-        <div id="approvalModal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div id="approvalModal" class="fixed z-40 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -188,7 +188,7 @@
         </div>
 
         <!-- Rejection Modal -->
-        <div id="rejectionModal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div id="rejectionModal" class="fixed z-40 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -570,11 +570,12 @@
                 if (!response.ok) throw new Error("Failed to update status");
                 approvalModal.classList.add("hidden");
                 loadRequests(currentStatus);
+                showToast("Successfully Approved the Service Request.","green");
             })
             .catch((err) => {
                 console.error("Error updating request:", err);
                 approvalModal.classList.add("hidden");
-                alert("Failed to approve request. Please try again.");
+                showToast("Something went wrong. Please try again later.", "red");
             });
         });
 
@@ -587,7 +588,7 @@
         confirmReject.addEventListener("click", () => {
             const reason = rejectionReason.value.trim();
             if (!reason) {
-                alert("Please provide a reason for rejecting this request.");
+                showToast("Please provide a reason for rejecting this request.", "red");
                 return;
             }
 
@@ -601,14 +602,15 @@
                 }),
             })
             .then((response) => {
-                if (!response.ok) throw new Error("Failed to update status");
+                if (!response.ok) throw new Error(showToast("Failed to update status. Please try again later.", "red"));
                 rejectionModal.classList.add("hidden");
                 loadRequests(currentStatus);
+                showToast("Successfully Rejected the Service Request.","green");
             })
             .catch((err) => {
                 console.error("Error rejecting request:", err);
                 rejectionModal.classList.add("hidden");
-                alert("Failed to reject request. Please try again.");
+                showToast("Something went wrong. Please try again later.", "red");
             });
         });
 
@@ -617,4 +619,20 @@
         // Initial load
         loadRequests(currentStatus);
     });
+
+    function showToast(message, color = 'green') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transform translate-y-20 opacity-0 transition-all z-50`;
+            toast.style.backgroundColor = color;
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }, 50);
+        }
 </script>
