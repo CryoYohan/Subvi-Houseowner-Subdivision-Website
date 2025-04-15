@@ -31,7 +31,10 @@
 
         document.getElementById("totalRequests").textContent = data.totalRequests || 0;
         document.getElementById("pendingRequests").textContent = data.pendingRequests || 0;
-        document.getElementById("approvedRequests").textContent = data.approvedRequests || 0;
+        document.getElementById("scheduledRequests").textContent = data.scheduledRequests || 0;
+        document.getElementById("ongoingRequests").textContent = data.ongoingRequests || 0;
+        document.getElementById("completedRequests").textContent = data.completedRequests || 0;
+        document.getElementById("cancelledRequests").textContent = data.cancelledRequests || 0;
         document.getElementById("declinedRequests").textContent = data.declinedRequests || 0;
     } catch (error) {
         console.error("Error loading dashboard data:", error);

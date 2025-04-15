@@ -57,21 +57,24 @@ namespace Subvi.Controllers
         public IActionResult GetDashboardData()
         {
             RefreshJwtCookies();
-            var facilityCount = _context.Reservations.Count(f => f.Status == "PENDING");
+            var facilityCount = _context.Reservations.Count(f => f.Status == "Pending");
             var totalUsers = _context.User_Accounts.Count();
             var adminCount = _context.User_Accounts.Count(u => u.Role == "Admin");
             var staffCount = _context.User_Accounts.Count(u => u.Role == "Staff");
             var homeownerCount = _context.User_Accounts.Count(u => u.Role == "Homeowner");
 
             var totalReservations = _context.Reservations.Count();
-            var pendingReservations = _context.Reservations.Count(r => r.Status == "PENDING");
-            var approvedReservations = _context.Reservations.Count(r => r.Status == "APPROVED");
-            var declinedReservations = _context.Reservations.Count(r => r.Status == "DECLINED");
+            var pendingReservations = _context.Reservations.Count(r => r.Status == "Pending");
+            var approvedReservations = _context.Reservations.Count(r => r.Status == "Approved");
+            var declinedReservations = _context.Reservations.Count(r => r.Status == "Declined");
 
             var totalRequests = _context.Service_Request.Count();
-            var pendingRequests = _context.Service_Request.Count(r => r.Status == "PENDING");
-            var approvedRequests = _context.Service_Request.Count(r => r.Status == "APPROVED");
-            var declinedRequests = _context.Service_Request.Count(r => r.Status == "DECLINED");
+            var pendingRequests = _context.Service_Request.Count(r => r.Status == "Pending");
+            var scheduledRequests = _context.Service_Request.Count(r => r.Status == "Scheduled");
+            var ongoingRequests = _context.Service_Request.Count(r => r.Status == "Ongoing");
+            var completedRequests = _context.Service_Request.Count(r => r.Status == "Completed");
+            var cancelledRequests = _context.Service_Request.Count(r => r.Status == "Cancelled");
+            var declinedRequests = _context.Service_Request.Count(r => r.Status == "Rejected");
 
             return Ok(new
             {
@@ -86,7 +89,10 @@ namespace Subvi.Controllers
                 declinedReservations,
                 totalRequests,
                 pendingRequests,
-                approvedRequests,
+                scheduledRequests,
+                ongoingRequests,
+                completedRequests,
+                cancelledRequests,
                 declinedRequests
             });
         }

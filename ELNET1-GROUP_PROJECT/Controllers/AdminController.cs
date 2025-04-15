@@ -521,7 +521,8 @@ public class AdminController : Controller
             var pendingCount = await _context.Service_Request.CountAsync(r => r.Status == "Pending");
             var scheduledCount = await _context.Service_Request.CountAsync(r => r.Status == "Scheduled");
             var ongoingCount = await _context.Service_Request.CountAsync(r => r.Status == "Ongoing");
-            var finishedCount = await _context.Service_Request.CountAsync(r => r.Status == "Finished");
+            var completedCount = await _context.Service_Request.CountAsync(r => r.Status == "Completed");
+            var cancelledCount = await _context.Service_Request.CountAsync(r => r.Status == "Cancelled");
             var rejectedCount = await _context.Service_Request.CountAsync(r => r.Status == "Rejected");
 
             return Json(new
@@ -529,7 +530,8 @@ public class AdminController : Controller
                 pendingCount,
                 scheduledCount,
                 ongoingCount,
-                finishedCount,
+                completedCount,
+                cancelledCount,
                 rejectedCount,
                 requests
             });

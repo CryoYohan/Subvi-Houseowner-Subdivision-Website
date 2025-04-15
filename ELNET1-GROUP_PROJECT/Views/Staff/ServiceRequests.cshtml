@@ -7,12 +7,12 @@
     <!-- Sidebar -->
     <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
         <!-- Sidebar Header -->
-        <div class="px-6 py-8 border-b border-gray-100">
+        <div class=" border-b border-gray-100">
             <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
         </div>
 
         <!-- Navigation Links -->
-        <ul class="flex-1 px-4 py-6 space-y-2">
+        <ul class="flex-1 space-y-1">
             <li class="nav-item">
                 <a href="/staff/dashboard" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
                     <i class="fas fa-home w-5 h-5 mr-3"></i>
@@ -107,14 +107,23 @@
                             </span>
                             <span id="ongoingCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
                         </button>
-                        <button class="status-tab" data-status="Finished">
+                        <button class="status-tab" data-status="Completed">
                             <span class="flex items-center">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
                                 Completed
                             </span>
-                            <span id="finishedCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
+                            <span id="completedCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
+                        </button>
+                        <button class="status-tab" data-status="Cancelled">
+                            <span class="flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Cancelled
+                            </span>
+                            <span id="cancelledCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
                         </button>
                         <button class="status-tab" data-status="Rejected">
                             <span class="flex items-center">
@@ -220,6 +229,105 @@
                 </div>
             </div>
         </div>
+
+        <!-- Change Status to Ongoing Confirmation Modal -->
+        <div id="changestatschedModal" class="fixed z-40 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Update Status to Ongoing</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">Are you sure you want to change or update this service schedule to ongoing?</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="button" id="changestatschedConfirm" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Update Status
+                        </button>
+                        <button type="button" id="changestatschedClose" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Status to Completed Confirmation Modal -->
+        <div id="changestatcompletedModal" class="fixed z-40 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Update Status to Completed</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">Are you sure you want to change or update this service schedule to completed?</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="button" id="changestatcompletedConfirm" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Update Status
+                        </button>
+                        <button type="button" id="changestatcompletedClose" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cancel Schedule Modal -->
+        <div id="cancelschedModal" class="fixed z-40 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Cancel Schedule</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">Are you sure you want to cancel the service schedule?</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="button" id="confirmCancelSched" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Cancel Schedule
+                        </button>
+                        <button type="button" id="closeCancelSched" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- CSS for Modal -->
@@ -308,12 +416,17 @@
 
         .badge-ongoing {
             background: #ede9fe;
-            color: #5b21b6;
+            color: blue;
         }
 
         .badge-completed {
             background: #d1fae5;
             color: #065f46;
+        }
+
+        .badge-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .badge-rejected {
@@ -338,6 +451,17 @@
         const cancelReject = document.getElementById("cancelReject");
         const rejectionReason = document.getElementById("rejectionReason");
 
+        const changestatschedModal = document.getElementById("changestatschedModal");
+        const changestatcompletedModal = document.getElementById("changestatcompletedModal");
+        const cancelschedModal = document.getElementById("cancelschedModal");
+        const changestatschedApprove = document.getElementById("changestatschedConfirm");
+        const changestatschedClose = document.getElementById("changestatschedClose");
+        const changestatcompletedApprove = document.getElementById("changestatcompletedConfirm");
+        const changestatcompletedClose = document.getElementById("changestatcompletedClose");
+        const confirmCancelSched = document.getElementById("confirmCancelSched");
+        const closeCancelSched = document.getElementById("closeCancelSched");
+        
+
         let currentStatus = "Pending";
         let selectedRequestId = null;
 
@@ -349,7 +473,8 @@
             const pendingBadge = document.getElementById('pendingCountBadge');
             const scheduledBadge = document.getElementById('scheduledCountBadge');
             const ongoingBadge = document.getElementById('ongoingCountBadge');
-            const finishedBadge = document.getElementById('finishedCountBadge');
+            const completedBadge = document.getElementById('completedCountBadge');
+            const cancelledBadge = document.getElementById('cancelledCountBadge');
             const rejectedBadge = document.getElementById('rejectedCountBadge');
 
             fetch(`/staff/getservicerequests?status=${status}`)
@@ -361,7 +486,7 @@
             })
             .then((data) => {
                 loadingIndicator.classList.add("hidden");
-                const { pendingCount, scheduledCount, ongoingCount, finishedCount, rejectedCount, requests } = data;
+                const { pendingCount, scheduledCount, ongoingCount, completedCount, cancelledCount, rejectedCount, requests } = data;
                 
                     if (pendingBadge) {
                         pendingBadge.textContent = pendingCount || 0;  
@@ -372,8 +497,11 @@
                     if (ongoingBadge) {
                         ongoingBadge.textContent = ongoingCount || 0;
                     }
-                    if (finishedBadge) {
-                        finishedBadge.textContent = finishedCount || 0;
+                    if (completedBadge) {
+                        completedBadge.textContent = completedCount || 0;
+                    }
+                    if (cancelledBadge) {
+                        cancelledBadge.textContent = cancelledCount || 0;
                     }
                     if (rejectedBadge) {
                         rejectedBadge.textContent = rejectedCount || 0;
@@ -476,12 +604,31 @@
                     case 'Scheduled':
                         statusBadge = `<span class="badge badge-scheduled p-3 text-base">Scheduled</span>`;
                         additionalInfo = `<p class="mt-2 text-sm text-gray-500"><strong>Scheduled Date:</strong> ${request.scheduleDate ? new Date(request.scheduleDate).toLocaleString() : "No Date"}</p>`;
+                        actionButtons = `
+                            <button type="button" class="changestatsched-btn inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" data-id="${request.serviceRequestId}">
+                                Mark as Ongoing
+                            </button>
+                            <button type="button" class="cancel-btn inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" data-id="${request.serviceRequestId}">
+                                Cancel Schedule
+                            </button>
+                        `;
                         break;
                     case 'Ongoing':
                         statusBadge = `<span class="badge badge-ongoing p-3 text-base">In Progress</span>`;
+                        actionButtons = `
+                            <button type="button" class="changestatcompleted-btn inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" data-id="${request.serviceRequestId}">
+                                Mark as Completed
+                            </button>
+                            <button type="button" class="cancel-btn inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" data-id="${request.serviceRequestId}">
+                                Cancel Schedule
+                            </button>
+                        `;
                         break;
-                    case 'Finished':
+                    case 'Completed':
                         statusBadge = `<span class="badge badge-completed p-3 text-base">Completed</span>`;
+                        break;
+                    case 'Cancelled':
+                        statusBadge = `<span class="badge badge-cancelled p-3 text-base">Cancelled</span>`;
                         break;
                     case 'Rejected':
                         statusBadge = `<span class="badge badge-rejected p-3 text-base">Rejected</span>`;
@@ -538,6 +685,15 @@
                 selectedRequestId = e.target.dataset.id;
                 rejectionModal.classList.remove("hidden");
                 rejectionReason.value = "";
+            } else if (e.target.classList.contains("changestatsched-btn")) {
+                selectedRequestId = e.target.dataset.id;
+                changestatschedModal.classList.remove("hidden");
+            } else if (e.target.classList.contains("changestatcompleted-btn")) {
+                selectedRequestId = e.target.dataset.id;
+                changestatcompletedModal.classList.remove("hidden");
+            } else if (e.target.classList.contains("cancel-btn")) {
+                selectedRequestId = e.target.dataset.id;
+                cancelschedModal.classList.remove("hidden");
             }
         });
 
@@ -615,6 +771,83 @@
         });
 
         cancelReject.addEventListener("click", () => rejectionModal.classList.add("hidden"));
+
+        // Change Sched Status to Ongoing
+        changestatschedConfirm.addEventListener("click", () => {
+
+            fetch(`/staff/updaterequeststatus`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    requestId: selectedRequestId,
+                    status: "Ongoing"
+                }),
+            })
+            .then((response) => {
+                if (!response.ok) throw new Error(showToast("Failed to update status. Please try again later.", "red"));
+                changestatschedModal.classList.add("hidden");
+                loadRequests(currentStatus);
+                showToast("Successfully Mark Schedule as Ongoing.","green");
+            })
+            .catch((err) => {
+                console.error("Error rejecting request:", err);
+                changestatschedModal.classList.add("hidden");
+                showToast("Something went wrong. Please try again later.", "red");
+            });
+        });
+
+        changestatcompletedClose.addEventListener("click", () => changestatcompletedModal.classList.add("hidden"));
+
+        // Change Sched Status to Completed
+        changestatcompletedConfirm.addEventListener("click", () => {
+
+            fetch(`/staff/updaterequeststatus`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    requestId: selectedRequestId,
+                    status: "Completed"
+                }),
+            })
+            .then((response) => {
+                if (!response.ok) throw new Error(showToast("Failed to update status. Please try again later.", "red"));
+                changestatcompletedModal.classList.add("hidden");
+                loadRequests(currentStatus);
+                showToast("Successfully Mark Schedule as Completed.","green");
+            })
+            .catch((err) => {
+                console.error("Error rejecting request:", err);
+                changestatcompletedModal.classList.add("hidden");
+                showToast("Something went wrong. Please try again later.", "red");
+            });
+        });
+
+        changestatcompletedClose.addEventListener("click", () => changestatcompletedModal.classList.add("hidden"));
+
+        // Change Sched Status to Cancelled
+        confirmCancelSched.addEventListener("click", () => {
+            fetch(`/staff/updaterequeststatus`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    requestId: selectedRequestId,
+                    status: "Cancelled"
+                }),
+            })
+            .then((response) => {
+                if (!response.ok) throw new Error(showToast("Failed to update status. Please try again later.", "red"));
+                cancelschedModal.classList.add("hidden");
+                loadRequests(currentStatus);
+                showToast("Successfully Cancelled Schedule.","gray");
+            })
+            .catch((err) => {
+                console.error("Error rejecting request:", err);
+                cancelschedModal.classList.add("hidden");
+                showToast("Something went wrong. Please try again later.", "red");
+            });
+        });
+
+        closeCancelSched.addEventListener("click", () => cancelschedModal.classList.add("hidden"));
 
         // Initial load
         loadRequests(currentStatus);

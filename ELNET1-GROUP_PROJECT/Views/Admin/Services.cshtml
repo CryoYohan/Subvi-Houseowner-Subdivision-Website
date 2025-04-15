@@ -89,14 +89,23 @@
                             </span>
                             <span id="ongoingCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
                         </button>
-                        <button class="status-tab" data-status="Finished">
+                        <button class="status-tab" data-status="Completed">
                             <span class="flex items-center">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
                                 Completed
                             </span>
-                            <span id="finishedCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
+                            <span id="completedCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
+                        </button>
+                        <button class="status-tab" data-status="Cancelled">
+                            <span class="flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Cancelled
+                            </span>
+                            <span id="cancelledCountBadge" class="status-badge bg-blue-100 text-blue-800">0</span>
                         </button>
                         <button class="status-tab" data-status="Rejected">
                             <span class="flex items-center">
@@ -224,6 +233,11 @@
         background: #fee2e2;
         color: #991b1b;
     }
+
+    .badge-cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+    }
 </style>
 
 <script>
@@ -252,7 +266,8 @@
             const pendingBadge = document.getElementById('pendingCountBadge');
             const scheduledBadge = document.getElementById('scheduledCountBadge');
             const ongoingBadge = document.getElementById('ongoingCountBadge');
-            const finishedBadge = document.getElementById('finishedCountBadge');
+            const completedBadge = document.getElementById('completedCountBadge');
+            const cancelledBadge = document.getElementById('cancelledCountBadge');
             const rejectedBadge = document.getElementById('rejectedCountBadge');
 
             fetch(`/admin/getservicerequests?status=${status}`)
@@ -264,7 +279,8 @@
             })
             .then((data) => {
                 loadingIndicator.classList.add("hidden");
-                const { pendingCount, scheduledCount, ongoingCount, finishedCount, rejectedCount, requests } = data;
+                console.log(data)
+                const { pendingCount, scheduledCount, ongoingCount, completedCount, cancelledCount, rejectedCount, requests } = data;
 
                     if (pendingBadge) {
                         pendingBadge.textContent = pendingCount || 0;
@@ -275,8 +291,11 @@
                     if (ongoingBadge) {
                         ongoingBadge.textContent = ongoingCount || 0;
                     }
-                    if (finishedBadge) {
-                        finishedBadge.textContent = finishedCount || 0;
+                    if (completedBadge) {
+                        completedBadge.textContent = completedCount || 0;
+                    }
+                    if (cancelledBadge) {
+                        cancelledBadge.textContent = cancelledCount || 0;
                     }
                     if (rejectedBadge) {
                         rejectedBadge.textContent = rejectedCount || 0;
@@ -374,8 +393,11 @@
                     case 'Ongoing':
                         statusBadge = `<span class="badge badge-ongoing p-3 text-base">In Progress</span>`;
                         break;
-                    case 'Finished':
+                    case 'Completed':
                         statusBadge = `<span class="badge badge-completed p-3 text-base">Completed</span>`;
+                        break;
+                    case 'Cancelled':
+                        statusBadge = `<span class="badge badge-cancelled p-3 text-base">Cancelled</span>`;
                         break;
                     case 'Rejected':
                         statusBadge = `<span class="badge badge-rejected p-3 text-base">Rejected</span>`;
