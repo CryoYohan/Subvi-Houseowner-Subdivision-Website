@@ -5,5 +5,6 @@
         public int RequestId { get; set; }
         public string Status { get; set; }
         public string RejectedReason { get; set; }
+        public DateTime ScheduleDate { get; set; }
     }
 }

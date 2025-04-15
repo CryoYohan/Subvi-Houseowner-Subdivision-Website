@@ -583,9 +583,75 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     sr.DateSubmitted,
                     sr.Status
                 })
+                .OrderByDescending(sr => sr.ServiceRequestId)
                 .ToList();
 
             return Json(serviceRequests);
+        }
+
+        //Fetching the Scheduled/Rejected Status Data
+        public IActionResult ServiceRequests(string status = "Scheduled")
+        {
+            var userIdString = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(userIdString, out int userId))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+
+            // Materialize the query first
+            var requestsRaw = _context.Service_Request
+                .Where(sr => sr.Status == status && sr.UserId == userId)
+                .ToList();
+
+            // Project to anonymous type after fetching from DB
+            var requests = requestsRaw
+                .Select(sr => new
+                {
+                    ServiceRequestId = sr.ServiceRequestId,
+                    RequestType = sr.ReqType,
+                    Description = sr.Description ?? "", // Handle possible null
+                    Status = sr.Status,
+                    DateSubmitted = DateTime.TryParse(sr.DateSubmitted, out var parsedDate)
+                        ? parsedDate.ToString("MM/dd/yyyy")
+                        : sr.DateSubmitted,
+                    ScheduleDate = sr.ScheduleDate?.ToString("MM/dd/yyyy hh:mm tt"),
+                    RejectedReason = sr.RejectedReason
+                })
+                .OrderByDescending(sr => sr.ServiceRequestId)
+                .ToList();
+
+            return Json(requests);
+        }
+
+        //Insert Service Req Data
+        [HttpPost]
+        public IActionResult SubmitServiceRequest([FromBody] ServiceRequestDTO request)
+        {
+            if (ModelState.IsValid)
+            {
+                // Get the UserId from the current session or context
+                var userIdString = HttpContext.Request.Cookies["Id"];
+                if (!int.TryParse(userIdString, out int userId))
+                {
+                    return Unauthorized("User not authenticated.");
+                }
+
+                var newRequest = new Service_Request
+                {
+                    ReqType = request.ServiceName,
+                    Description = request.Notes,
+                    DateSubmitted = DateTime.Now.ToString("yyyy-MM-dd"),
+                    Status = "Pending",
+                    UserId = userId  
+                };
+
+                _context.Service_Request.Add(newRequest);
+                _context.SaveChanges();
+
+                return Ok(new { message = "Request submitted successfully." });
+            }
+
+            return BadRequest("Invalid data.");
         }
 
         [HttpGet]

@@ -1,32 +1,11 @@
-﻿// Service staff assignments (you can fetch this from your backend)
-const serviceStaff = {
-    "Clean-up Service": ["John Doe", "Maria Garcia", "Robert Chen"],
-    "Maintenance Services": ["David Wilson", "Sarah Johnson", "Michael Brown"],
-    "Security Services": ["James Smith", "Emma Davis", "William Taylor"]
-};
-
-// Enhanced View Service Modal with staff listing
+﻿// Enhanced View Service Modal 
 function showServiceModal(imagePath, serviceName, serviceDescription) {
-    const staffList = serviceStaff[serviceName].map(staff =>
-        `<li class="py-1 flex items-center">
-            <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-            ${staff}
-        </li>`
-    ).join('');
-
     Swal.fire({
         title: serviceName,
         html: `
             <div class="text-left">
                 <img src="${imagePath}" alt="${serviceName}" class="w-full h-48 object-cover rounded-lg mb-4">
                 <p class="text-gray-600 mb-4">${serviceDescription}</p>
-                
-                <div class="bg-blue-50 p-4 rounded-lg mb-6">
-                    <h4 class="font-semibold text-blue-800 mb-2">Assigned Staff:</h4>
-                    <ul class="list-none pl-2 text-gray-700">
-                        ${staffList}
-                    </ul>
-                </div>
                 
                 <button onclick="Swal.close();confirmRequest('${serviceName}')" 
                         class="w-full bg-[#60A5FA] hover:bg-blue-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
@@ -44,12 +23,8 @@ function showServiceModal(imagePath, serviceName, serviceDescription) {
     });
 }
 
-// Enhanced Request Confirmation Modal with staff selection
+// Enhanced Request Confirmation Modal
 function confirmRequest(serviceName) {
-    const staffOptions = serviceStaff[serviceName].map(staff =>
-        `<option value="${staff}">${staff}</option>`
-    ).join('');
-
     Swal.fire({
         title: `Request ${serviceName}?`,
         html: `
@@ -57,8 +32,8 @@ function confirmRequest(serviceName) {
                 <p class="mb-4">You're requesting <b>${serviceName}</b>. Please complete the details below:</p>
                 
                 <div class="mb-4">
-                    <label for="requestNotes" class="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
-                    <textarea id="requestNotes" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Special instructions..."></textarea>
+                    <label for="requestNotes" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="requestNotes" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Provide the Description..."></textarea>
                 </div>
             </div>
         `,
@@ -71,34 +46,58 @@ function confirmRequest(serviceName) {
         background: '#ffffff',
         focusConfirm: false,
         preConfirm: () => {
-            return {
-                preferredStaff: document.getElementById('preferredStaff').value,
-                notes: document.getElementById('requestNotes').value
+            const notes = document.getElementById('requestNotes').value.trim();
+            if (!notes) {
+                Swal.showValidationMessage("Please enter description for the Service request.");
             }
+            return { notes };
         },
         customClass: {
             popup: 'rounded-xl',
             title: 'text-[#1E3A8A] text-xl font-bold mb-2'
         }
-    }).then((result) => {
+    }).then(async (result) => {
         if (result.isConfirmed) {
-            const { preferredStaff, notes } = result.value;
+            const { notes } = result.value;
 
-            // Simulate API call
-            setTimeout(() => {
+            try {
+                const response = await fetch('/Home/SubmitServiceRequest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        serviceName: serviceName,
+                        notes: notes
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Request failed");
+                }
+
+                fetchServiceRequests();
                 Swal.fire({
                     title: 'Request Submitted!',
                     html: `
                         <div class="text-left">
                             <p>Your <b>${serviceName}</b> request has been received.</p>
-                            ${preferredStaff ? `<p class="mt-2">Preferred Staff: ${preferredStaff}</p>` : ''}
-                            ${notes ? `<p class="mt-2">Notes: ${notes}</p>` : ''}
+                            ${notes ? `<p class="mt-2">Description: ${notes}</p>` : ''}
                         </div>
                     `,
                     icon: 'success',
                     confirmButtonColor: '#60A5FA'
                 });
-            }, 800);
+
+            } catch (error) {
+                console.error("Submission error:", error);
+                Swal.fire({
+                    title: 'Submission Failed',
+                    text: 'There was an error submitting your request. Please try again later.',
+                    icon: 'error',
+                    confirmButtonColor: '#EF4444'
+                });
+            }
         }
     });
 }
@@ -107,58 +106,73 @@ function confirmRequest(serviceName) {
 async function fetchServiceRequests() {
     const loadingSpinner = document.getElementById('loadingSpinner');
     const noDataMessage = document.getElementById('noDataMessage');
+    const tableHead = document.querySelector('#serviceRequestTable thead');
     const tableBody = document.getElementById('serviceRequestBody');
 
     try {
-        // Show loading spinner while data is being fetched
         loadingSpinner.classList.remove('hidden');
         noDataMessage.classList.add('hidden');
+        tableBody.innerHTML = '';
+        tableHead.innerHTML = '';
 
-        // Fetching data from the backend
+        // Fetch from the backend
         const response = await fetch('/Home/GetPendingServiceRequests');
         const serviceRequests = await response.json();
 
-        // Clear any existing rows and hide the loading spinner
-        tableBody.innerHTML = '';
         loadingSpinner.classList.add('hidden');
 
-        // If no data, show the "No data" message
         if (serviceRequests.length === 0) {
             noDataMessage.classList.remove('hidden');
             return;
         }
 
-        // Loop through the service requests and add rows
+        // Dynamically build table headers for pending status
+        tableHead.innerHTML = `
+    <tr class="text-sm text-gray-500 text-center">
+        <th class="py-2">ID</th>
+        <th class="py-2">Req Type</th>
+        <th class="py-2">Description</th>
+        <th class="py-2">Date Submitted</th>
+        <th class="py-2">Status</th>
+    </tr>
+`;
+
+        // Loop and generate rows
         serviceRequests.forEach(request => {
             const row = document.createElement('tr');
+            row.classList.add('text-center'); // ⬅️ Center align all columns in the row
+
+            const reqidCell = document.createElement('td');
+            reqidCell.classList.add('py-2');
+            reqidCell.textContent = request.serviceRequestId;
+            row.appendChild(reqidCell);
 
             const reqTypeCell = document.createElement('td');
             reqTypeCell.classList.add('py-2');
-            reqTypeCell.textContent = request.ReqType;
+            reqTypeCell.textContent = request.reqType;
             row.appendChild(reqTypeCell);
+
+            const descriptionCell = document.createElement('td');
+            descriptionCell.classList.add('py-2');
+            descriptionCell.textContent = request.description;
+            row.appendChild(descriptionCell);
 
             const dateRequestedCell = document.createElement('td');
             dateRequestedCell.classList.add('py-2');
-            dateRequestedCell.textContent = new Date(request.DateSubmitted).toLocaleDateString();
+            dateRequestedCell.textContent = new Date(request.dateSubmitted).toLocaleDateString();
             row.appendChild(dateRequestedCell);
 
             const statusCell = document.createElement('td');
             statusCell.classList.add('py-2');
             const statusSpan = document.createElement('span');
             statusSpan.classList.add('px-2', 'py-1', 'rounded-full');
-            if (request.Status === 'Pending') {
-                statusSpan.classList.add('bg-yellow-100', 'text-yellow-600');
+            if (request.status === 'Pending') {
+                statusSpan.classList.add('bg-yellow-100');
                 statusSpan.textContent = 'Pending';
             }
-            row.appendChild(statusCell);
             statusCell.appendChild(statusSpan);
+            row.appendChild(statusCell);
 
-            const staffAssignedCell = document.createElement('td');
-            staffAssignedCell.classList.add('py-2', 'text-blue-500');
-            staffAssignedCell.textContent = request.StaffAssigned;
-            row.appendChild(staffAssignedCell);
-
-            // Append the row to the table body
             tableBody.appendChild(row);
         });
     } catch (error) {
@@ -168,5 +182,144 @@ async function fetchServiceRequests() {
     }
 }
 
-// Call the function to fetch service requests when the page loads
-document.addEventListener('DOMContentLoaded', fetchServiceRequests);
+document.addEventListener("DOMContentLoaded", () => {
+    fetchServiceRequests();
+    const statusFilter = document.getElementById("statusFilter");
+    const searchInput = document.getElementById("searchInput");
+    const tableHead = document.getElementById("servicesTableHead");
+    const tableBody = document.getElementById("servicesTableBody");
+    const loading = document.getElementById("loadingAnimation");
+    const fullscreenBtn = document.getElementById("fullscreenToggle");
+    const container = document.getElementById("servicesHistoryContainer");
+
+    function renderServices(services, status) {
+        tableBody.innerHTML = ""; // Clear rows
+        tableHead.innerHTML = ""; // Clear headers
+
+        // Set dynamic column based on status
+        let dynamicHeader = status === "Scheduled"
+            ? "Schedule Date"
+            : "Rejected Reason";
+
+        // Create headers
+        tableHead.innerHTML = `
+        <tr class="text-sm text-gray-500">
+            <th class="text-center py-2">Id</th>
+            <th class="text-center py-2">Req Type</th>
+            <th class="text-center py-2">Date Submitted</th>
+            <th class="text-center py-2">Status</th>
+            <th class="text-center py-2">${dynamicHeader}</th>
+        </tr>
+    `;
+
+        // No records
+        if (services.length === 0) {
+            tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-gray-500 py-4">No service records found.</td>
+            </tr>`;
+            return;
+        }
+
+        // Create rows
+        services.forEach(s => {
+            let dynamicCell = status === "Scheduled"
+                ? (s.scheduleDate || "N/A")
+                : ((s.rejectedReason?.length > 20 ? s.rejectedReason.slice(0, 20) + "..." : s.rejectedReason) || "N/A");
+
+            // Choose badge color based on status
+            let statusColor = "";
+            switch (s.status) {
+                case "Pending":
+                    statusColor = "bg-yellow-100 text-yellow-700";
+                    break;
+                case "Scheduled":
+                    statusColor = "bg-blue-100 text-blue-700";
+                    break;
+                case "Ongoing":
+                    statusColor = "bg-blue-100 text-blue-700";
+                    break;
+                case "Rejected":
+                    statusColor = "bg-red-100 text-red-700";
+                    break;
+                case "Completed":
+                    statusColor = "bg-green-100 text-green-700";
+                    break;
+                default:
+                    statusColor = "bg-gray-100 text-gray-600";
+            }
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+            <td class="py-2 text-center">${s.serviceRequestId}</td>
+            <td class="py-2 text-center">${s.requestType}</td>
+            <td class="py-2 text-center">${s.dateSubmitted}</td>
+            <td class="py-2 text-center">
+                <span class="px-2 py-1 rounded-full text-sm font-medium ${statusColor}">
+                    ${s.status}
+                </span>
+            </td>
+            <td class="py-2 text-center">${dynamicCell}</td>
+        `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    async function fetchServices(status) {
+        loading.classList.remove("hidden");
+        tableBody.innerHTML = "";
+        statusMessage.textContent = ""; // Clear any previous message
+
+        try {
+            const response = await fetch(`/Home/ServiceRequests?status=${encodeURIComponent(status)}`);
+            if (!response.ok) throw new Error("Failed to fetch service requests");
+
+            const data = await response.json();
+
+            // Filter the data based on search input
+            const filtered = data.filter(item => {
+                // Assuming the "service" field exists, adjust this based on the actual field
+                const serviceType = item.reqType ? item.reqType.toLowerCase() : "";
+                const searchQuery = searchInput.value.toLowerCase();
+                return serviceType.includes(searchQuery);  // Match with search query
+            });
+
+            if (filtered.length === 0) {
+                statusMessage.textContent = "No service requests found.";
+            } else {
+                renderServices(filtered, status); // Pass filtered results to render
+            }
+        } catch (error) {
+            console.error("Error fetching service requests:", error);
+            statusMessage.textContent = "Something went wrong while fetching data.";
+        } finally {
+            loading.classList.add("hidden");
+        }
+    }
+
+    // Handle search
+    searchInput.addEventListener("input", () => {
+        fetchServices(statusFilter.value); 
+    });
+
+    // Handle dropdown change
+    statusFilter.addEventListener("change", () => {
+        fetchServices(statusFilter.value);
+    });
+
+    // Handle fullscreen toggle
+    let isFullscreen = false;
+    fullscreenBtn.addEventListener("click", () => {
+        container.classList.toggle("fixed");
+        container.classList.toggle("top-0");
+        container.classList.toggle("left-0");
+        container.classList.toggle("w-full");
+        container.classList.toggle("h-screen");
+        container.classList.toggle("z-50");
+        container.classList.toggle("bg-white");
+        isFullscreen = !isFullscreen;
+    });
+
+    // Load initial data
+    fetchServices("Scheduled");
+});

@@ -1,4 +1,4 @@
-@{
+﻿@{
     Layout = "_HomeLayout";
     ViewData["Title"] = "Subvi | Services";
 
@@ -195,64 +195,61 @@
                 <div class="bg-white p-4 rounded-xl shadow-md">
                     <h2 class="text-xl font-bold mb-4 text-[#1E3A8A]">Requested Services</h2>
 
-                    <!-- Loading animation -->
-                    <div id="loadingSpinner" class="text-center hidden">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-
-                    <!-- No data message -->
-                    <div id="noDataMessage" class="text-center hidden text-gray-500">
-                        No service requests available.
-                    </div>
-
                     <div class="overflow-x-auto">
                         <table class="min-w-full" id="serviceRequestTable">
                             <thead>
-                                <tr class="text-sm text-gray-500">
-                                    <th class="text-left py-2">Services</th>
-                                    <th class="text-left py-2">Date Requested</th>
-                                    <th class="text-left py-2">Status</th>
-                                    <th class="text-left py-2">Staff Assigned</th>
-                                </tr>
+                                <!-- Dynamic thead will be populated by JavaScript -->
                             </thead>
                             <tbody class="text-sm" id="serviceRequestBody">
-                                <!-- Dynamic rows will be populated here -->
+                                <!-- Dynamic rows will be populated by JavaScript -->
                             </tbody>
                         </table>
+
+                        <!-- Loading animation -->
+                        <div id="loadingSpinner" class="text-center hidden py-4">
+                            <div class="animate-spin inline-block w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full"></div>
+                            <p class="text-gray-500 mt-2">Loading service requests...</p>
+                        </div>
+
+                        <!-- No data message -->
+                        <div id="noDataMessage" class="text-center hidden text-gray-500 py-4">
+                            No service requests available.
+                        </div>
                     </div>
                 </div>
 
                 <!-- Services History -->
-                <div class="bg-white p-4 rounded-xl shadow-md">
-                    <h2 class="text-xl font-bold mb-4 text-[#1E3A8A]">Services History</h2>
+                <div class="bg-white p-4 rounded-xl shadow-md relative" id="servicesHistoryContainer">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-[#1E3A8A]">Services History</h2>
+                        <div class="flex items-center gap-3">
+                            <select id="statusFilter" class="border rounded px-2 py-1 text-sm">
+                                <option value="Scheduled" selected>Approved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                            <input id="searchInput" type="text" placeholder="Search services..." class="border rounded px-2 py-1 text-sm" />
+                            <button id="fullscreenToggle" class="text-[#1E3A8A] text-xl hover:scale-110 transition-transform">
+                                ⛶
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto">
                         <table class="min-w-full">
-                            <thead>
-                                <tr class="text-sm text-gray-500">
-                                    <th class="text-left py-2">Services</th>
-                                    <th class="text-left py-2">Date Completed</th>
-                                    <th class="text-left py-2">Status</th>
-                                    <th class="text-left py-2">Staff Assigned</th>
-                                </tr>
+                            <thead id="servicesTableHead">
+                                <!-- Header will be generated dynamically -->
                             </thead>
-                            <tbody class="text-sm">
-                                <tr>
-                                    <td class="py-2">Facilities</td>
-                                    <td class="py-2">11-12-24</td>
-                                    <td class="py-2"><span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full">Completed</span></td>
-                                    <td class="py-2 text-blue-500">John Doe</td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2">Security</td>
-                                    <td class="py-2">11-12-24</td>
-                                    <td class="py-2"><span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full">Completed</span></td>
-                                    <td class="py-2 text-blue-500">Jane Smith</td>
-                                </tr>
-                                <!-- Add more rows as needed -->
+                            <tbody id="servicesTableBody" class="text-sm">
+                                <!-- Dynamic rows here -->
                             </tbody>
                         </table>
+
+                        <div id="loadingAnimation" class="text-center py-8 hidden">
+                            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-blue-500 mx-auto mb-3"></div>
+                            <p class="text-gray-600">Loading services...</p>
+                        </div>
+
+                        <div id="statusMessage" class="text-center text-gray-500 mt-4"></div>
                     </div>
                 </div>
             </div>

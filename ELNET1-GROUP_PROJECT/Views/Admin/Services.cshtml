@@ -369,7 +369,7 @@
                         break;
                     case 'Scheduled':
                         statusBadge = `<span class="badge badge-scheduled p-3 text-base">Scheduled</span>`;
-                        additionalInfo = `<p class="mt-2 text-sm text-gray-500"><strong>Scheduled Date:</strong> ${new Date(request.scheduleDate).toLocaleString()}</p>`;
+                        additionalInfo = `<p class="mt-2 text-sm text-gray-500"><strong>Scheduled Date:</strong> ${request.scheduleDate ? new Date(request.scheduleDate).toLocaleString() : "No Date"}</p>`;
                         break;
                     case 'Ongoing':
                         statusBadge = `<span class="badge badge-ongoing p-3 text-base">In Progress</span>`;

@@ -518,7 +518,7 @@ public class StaffController : Controller
             }
             else if (request.Status == "Scheduled")
             {
-                serviceRequest.ScheduleDate = DateTime.Now;  // Set schedule date if needed
+                serviceRequest.ScheduleDate = request.ScheduleDate;
             }
 
             await _context.SaveChangesAsync();
