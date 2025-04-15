@@ -10,6 +10,17 @@ using Microsoft.EntityFrameworkCore;
 using ELNET1_GROUP_PROJECT.Controllers;
 using System.Security.Claims;
 using OfficeOpenXml;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Kernel.Colors;
+using iText.Kernel.Pdf;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using iText.Layout.Borders;
+using Syncfusion.DocIO;
+using Syncfusion.DocIO.DLS;
+using System.IO;
+using System.Reflection.Metadata;
 
 [Route("staff")]
 public class StaffController : Controller
@@ -1097,51 +1108,142 @@ public class StaffController : Controller
         return View();
     }
 
-    //UNDER REPAIR-----------------------------
-    [HttpPost]
-    public IActionResult GenerateReport(string reportType)
+    //For fetching data for report
+    [HttpPost("GetReportData")]
+    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string color)
     {
-        var package = new ExcelPackage();
-        var sheet = package.Workbook.Worksheets.Add("Report");
+        var result = new List<object>();
 
         switch (reportType)
         {
+            case "VEHICLE_REGISTRATION":
+                var vehicleQuery = _context.Vehicle_Registration
+                    .Join(_context.User_Accounts,
+                        vehicle => vehicle.UserId,
+                        user => user.Id,
+                        (vehicle, user) => new { vehicle, user })
+                    .AsQueryable();
+
+                if (!string.IsNullOrEmpty(vehicleType))
+                {
+                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.Type == vehicleType);
+                }
+
+                if (!string.IsNullOrEmpty(color))
+                {
+                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.Color == color);
+                }
+
+                result = vehicleQuery.Select(v => new
+                {
+                    v.vehicle.VehicleId,
+                    v.vehicle.PlateNumber,
+                    v.vehicle.Type,
+                    v.vehicle.Color,
+                    v.vehicle.Status,
+                    OwnerName = char.ToUpper(v.user.Firstname[0]) + v.user.Firstname.Substring(1).ToLower() + " " +
+                            char.ToUpper(v.user.Lastname[0]) + v.user.Lastname.Substring(1).ToLower()
+                }).ToList<object>();
+                break;
+
             case "RESERVATIONS":
-                var res = _context.Reservations.ToList();
-                sheet.Cells[1, 1].Value = "Reservation ID";
-                sheet.Cells[1, 2].Value = "DateTime";
-                sheet.Cells[1, 3].Value = "Status";
-                for (int i = 0; i < res.Count; i++)
-                {
-                    sheet.Cells[i + 2, 1].Value = res[i].ReservationId;
-                    sheet.Cells[i + 2, 2].Value = res[i].SchedDate;
-                    sheet.Cells[i + 2, 2].Value = res[i].StartTime;
-                    sheet.Cells[i + 2, 2].Value = res[i].EndTime;
-                    sheet.Cells[i + 2, 3].Value = res[i].Status;
-                }
+                DateTime.TryParse(startDate, out var startR);
+                DateTime.TryParse(endDate, out var endR);
+
+                var startDateOnly = DateOnly.FromDateTime(startR);
+                var endDateOnly = DateOnly.FromDateTime(endR);
+
+                var reservations = _context.Reservations
+                    .Join(_context.Facility,
+                        res => res.FacilityId,
+                        fac => fac.FacilityId,
+                        (res, fac) => new { res, fac })
+                    .Join(_context.User_Accounts,
+                        combined => combined.res.UserId,
+                        user => user.Id,
+                        (combined, user) => new { combined.res, combined.fac, user })
+                    .Where(x =>
+                        x.res.Status == status &&
+                        x.res.SchedDate >= startDateOnly &&
+                        x.res.SchedDate <= endDateOnly)
+                    .Select(x => new
+                    {
+                        x.res.ReservationId,
+                        FacilityName = x.fac.FacilityName,
+                        DateReserved = x.res.SchedDate.ToString("MM/dd/yyyy"),
+                        x.res.StartTime,
+                        x.res.EndTime,
+                        x.res.Status,
+                        ReservedBy = char.ToUpper(x.user.Firstname[0]) + x.user.Firstname.Substring(1).ToLower() + " " +
+                                     char.ToUpper(x.user.Lastname[0]) + x.user.Lastname.Substring(1).ToLower()
+                    }).ToList<object>();
+
+                result = reservations;
                 break;
 
-            case "PAYMENT":
-                var pay = _context.Payment.ToList();
-                sheet.Cells[1, 1].Value = "Payment ID";
-                sheet.Cells[1, 2].Value = "Amount Paid";
-                sheet.Cells[1, 3].Value = "Date Paid";
-                for (int i = 0; i < pay.Count; i++)
-                {
-                    sheet.Cells[i + 2, 1].Value = pay[i].PaymentId;
-                    sheet.Cells[i + 2, 2].Value = pay[i].AmountPaid;
-                    sheet.Cells[i + 2, 3].Value = pay[i].DatePaid;
-                }
+
+            case "SERVICE_REQUEST":
+                DateTime.TryParse(startDate, out var startS);
+                DateTime.TryParse(endDate, out var endS);
+                string startDateStr = startS.ToString("yyyy-MM-dd HH:mm:ss");
+                string endDateStr = endS.ToString("yyyy-MM-dd HH:mm:ss");
+
+                var services = _context.Service_Request
+                    .Join(_context.User_Accounts,
+                        request => request.UserId,
+                        user => user.Id,
+                        (request, user) => new { request, user })
+                    .Where(x =>
+                        x.request.Status == status &&
+                        string.Compare(x.request.DateSubmitted, startDateStr) >= 0 &&
+                        string.Compare(x.request.DateSubmitted, endDateStr) <= 0)
+                    .Select(x => new
+                    {
+                        x.request.ServiceRequestId,
+                        x.request.ReqType,
+                        x.request.Description,
+                        x.request.Status,
+                        x.request.DateSubmitted,
+                        RequestedBy =
+                            char.ToUpper(x.user.Firstname[0]) + x.user.Firstname.Substring(1).ToLower() + " " +
+                            char.ToUpper(x.user.Lastname[0]) + x.user.Lastname.Substring(1).ToLower()
+                    }).ToList<object>();
+
+                result = services;
                 break;
 
-                // Add more cases for other report types
+            case "VISITOR_PASSES":
+                DateTime.TryParse(startDate, out var startV);
+                DateTime.TryParse(endDate, out var endV);
+
+                var passes = (from pass in _context.Visitor_Pass
+                              join user in _context.User_Accounts on pass.UserId equals user.Id
+                              where pass.Status == status && pass.DateTime >= startV && pass.DateTime <= endV
+                              select new
+                              {
+                                  pass.VisitorId,
+                                  pass.VisitorName,
+                                  pass.DateTime,
+                                  pass.Status,
+                                  pass.Relationship,
+                                  HomeownerName = Capitalize(user.Firstname) + " " + Capitalize(user.Lastname)
+                              }).ToList<object>();
+
+                result = passes;
+                break;
+
         }
 
-        var stream = new MemoryStream();
-        package.SaveAs(stream);
-        stream.Position = 0;
-        return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "report.xlsx");
+        return Json(result);
     }
+
+    private static string Capitalize(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return input;
+        input = input.ToLower();
+        return char.ToUpper(input[0]) + input.Substring(1);
+    }
+
 
     [Route("profile/settings")]
     public IActionResult Settings()

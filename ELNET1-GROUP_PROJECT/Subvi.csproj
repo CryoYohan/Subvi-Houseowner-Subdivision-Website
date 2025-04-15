@@ -9,7 +9,9 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
     <PackageReference Include="EPPlus" Version="8.0.1" />
+    <PackageReference Include="itext7" Version="9.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
       <PrivateAssets>all</PrivateAssets>
@@ -24,6 +26,7 @@
     </PackageReference>
     <PackageReference Include="Paymongo.Sharp" Version="0.5.1" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
+    <PackageReference Include="Syncfusion.DocIO.Net.Core" Version="27.1.52" />
   </ItemGroup>
 
   <ItemGroup>

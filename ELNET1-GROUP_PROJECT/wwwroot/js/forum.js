@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const mentionList = document.getElementById("searchMentionSuggestions");
 
     searchInput.addEventListener("input", (e) => {
-        const text = searchInput.innerText;  // Use innerText instead of textContent for contenteditable
+        const text = searchInput.innerText; 
         if (text.includes("@") && !selectedSearchMention) {
             showSearchMentionSuggestions();
         }
@@ -257,9 +257,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     searchInput.addEventListener("keydown", (e) => {
-        if (e.key === "Backspace" && selectedSearchMention) {
-            e.preventDefault();
-            clearEachletterAndMention();
+        if (e.key === "Backspace") {
+            const sel = window.getSelection();
+            const range = sel.getRangeAt(0);
+
+            if (range.startContainer === searchInput) {
+                // If caret is directly after a mention badge
+                const nodes = Array.from(searchInput.childNodes);
+                const caretIndex = range.startOffset;
+
+                if (caretIndex > 0 && nodes[caretIndex - 1].classList?.contains("badge")) {
+                    e.preventDefault(); // prevent default backspace
+                    nodes[caretIndex - 1].remove(); // remove badge
+                    selectedSearchMention = null;
+                    updateSearchHiddenInput();
+                    SearchplaceCaretAtEnd(searchInput); // reposition caret
+                }
+            } else if (range.startContainer.nodeType === Node.TEXT_NODE) {
+                const prevSibling = range.startContainer.previousSibling;
+
+                if (prevSibling && prevSibling.classList?.contains("badge") && range.startOffset === 0) {
+                    e.preventDefault(); // prevent default backspace
+                    prevSibling.remove(); // remove badge
+                    selectedSearchMention = null;
+                    updateSearchHiddenInput();
+                    SearchplaceCaretAtEnd(searchInput); // reposition caret
+                }
+            }
         }
     });
 
@@ -433,12 +457,26 @@ function insertSearchMention(title) {
 }
 function clearSearchMention() {
     const searchInput = document.getElementById("searchInput");
-    searchInput.innerText = ''; // Clear the search input
+
+    // Find and remove the mention badge
+    const badge = searchInput.querySelector('.badge');
+    if (badge) {
+        badge.remove();
+    }
+
+    // Also remove the whitespace/text node right after the badge (optional) if want to remove extra space
+    const nextSibling = searchInput.childNodes[0]?.nextSibling;
+    if (nextSibling && nextSibling.nodeType === Node.TEXT_NODE && /^\s*$/.test(nextSibling.nodeValue)) {
+        nextSibling.remove();
+    }
+
+    // Reset selected mention
     selectedSearchMention = null;
     updateSearchHiddenInput();
+
+    // Place caret at the end
     SearchplaceCaretAtEnd(searchInput);
 }
-
 function updateSearchHiddenInput() {
     const searchInput = document.getElementById("searchInput");
 

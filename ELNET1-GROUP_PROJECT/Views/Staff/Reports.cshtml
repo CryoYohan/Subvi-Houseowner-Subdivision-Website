@@ -4,12 +4,19 @@
 }
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- SheetJS (xlsx) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- jsPDF and AutoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<!-- docx library -->
+<script src="https://unpkg.com/docx@7.6.0/build/index.js"></script>
 
 <div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
     <!-- Sidebar -->
     <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
         <!-- Sidebar Header -->
-        <div class="px-6 py-8 border-b border-gray-100">
+        <div class="px-3 py-2 border-b border-gray-100">
             <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
         </div>
 
@@ -134,22 +141,89 @@
                 </div>
 
                 <!-- REPORT GENERATION -->
-                <div class="tab-pane fade" id="generatePanel">
+                <div class="tab-pane fade show active" id="generatePanel">
                     <h4 class="mb-3">Generate Reports</h4>
-                    <form id="reportForm" asp-controller="Staff" asp-action="GenerateReport" method="post">
+
+                    <!-- Report Filter Form -->
+                    <form id="reportForm">
+                        <!-- Report Type -->
                         <div class="mb-3">
                             <label for="reportType" class="form-label">Report Type</label>
-                            <select name="reportType" class="form-select" required>
-                                <option value="RESERVATIONS">Reservations</option>
-                                <option value="PAYMENT">Payments</option>
-                                <option value="FEEDBACK">Feedback</option>
+                            <select name="reportType" id="reportType" class="form-select" required>
+                                <option value="RESERVATIONS" selected>Reservations</option>
                                 <option value="SERVICE_REQUEST">Service Requests</option>
                                 <option value="VEHICLE_REGISTRATION">Vehicle Registration</option>
                                 <option value="VISITOR_PASSES">Visitor Passes</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary">Generate</button>
+
+                        <!-- Status filter tabs -->
+                        <div id="statusTabsContainer" class="mb-3">
+                            <ul class="nav nav-tabs" id="statusTabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-status="Approved" href="#">Approved</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-status="Declined" href="#">Declined</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Date Range Filter -->
+                        <div class="mb-3" id="dateRangeGroup">
+                            <label class="form-label">Date Range</label>
+                            <div class="input-group">
+                                <input type="date" name="startDate" id="startDate" class="form-control">
+                                <span class="input-group-text">to</span>
+                                <input type="date" name="endDate" id="endDate" class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- Vehicle Filters (Only visible when Vehicle Registration is selected) -->
+                        <div id="vehicleFilters" class="mb-3" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="vehicleType" class="form-label">Vehicle Type</label>
+                                    <select id="vehicleType" class="form-select">
+                                        <option value="">All</option>
+                                        <option value="Car">Car</option>
+                                        <option value="Motorcycle">Motorcycle</option>
+                                        <option value="Truck">Truck</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="vehicleColor" class="form-label">Color</label>
+                                    <select id="vehicleColor" class="form-select">
+                                        <option value="">All</option>
+                                        <option value="Red">Red</option>
+                                        <option value="Blue">Blue</option>
+                                        <option value="Black">Black</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Report Format -->
+                        <div class="mb-3">
+                            <label for="reportFormat" class="form-label">Report Format</label>
+                            <select name="format" id="reportFormat" class="form-select">
+                                <option value="XLSX">Excel (XLSX)</option>
+                                <option value="PDF">PDF</option>
+                                <option value="DOCX">Word (DOCX)</option>
+                            </select>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <button type="submit" class="btn btn-primary">Generate Report</button>
                     </form>
+
+                    <!-- Data Display -->
+                    <div id="reportDataContainer" class="mt-4">
+                        <table class="table table-bordered table-striped">
+                            <thead id="reportTableHead"></thead>
+                            <tbody id="reportTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -219,9 +293,8 @@
         });
 
            // Feedback Ratings Chart (Pie chart)
-            var feedbackData = @Html.Raw(Json.Serialize(ViewBag.FeedbackRatings));
-            console.log(feedbackData)
-            var feedbackCtx = document.getElementById('feedbackChart').getContext('2d');
+        var feedbackData = @Html.Raw(Json.Serialize(ViewBag.FeedbackRatings));
+        var feedbackCtx = document.getElementById('feedbackChart').getContext('2d');
             var feedbackChart = new Chart(feedbackCtx, {
                 type: 'pie',
                 data: {
@@ -260,31 +333,268 @@
             });
     };
 
-    //Under Repair -----------------------
-    document.getElementById("reportForm").addEventListener("submit", function (e) {
-        e.preventDefault();
-        const form = e.target;
+    // For Generating Report Part
+    document.addEventListener("DOMContentLoaded", function () {
+        // Initialize UI components
+        document.getElementById("reportType").dispatchEvent(new Event("change"));
 
-        fetch(form.action, {
-            method: "POST",
-            body: new FormData(form)
-        })
-        .then(response => {
-            if (!response.ok) throw new Error("Failed to generate report");
-            return response.blob();
-        })
-        .then(blob => {
-            const url = window.URL.createObjectURL(blob);
+        // Tab switcher with error boundary
+        document.querySelectorAll("#statusTabs a").forEach(tab => {
+            tab.addEventListener("click", function (e) {
+                try {
+                    e.preventDefault();
+                    document.querySelectorAll("#statusTabs a").forEach(t => t.classList.remove("active"));
+                    this.classList.add("active");
+                } catch (error) {
+                    console.error("Tab switch error:", error);
+                    alert("Error switching tabs");
+                }
+            });
+        });
+
+        // Enhanced report type handler
+        document.getElementById("reportType").addEventListener("change", function () {
+            try {
+                const reportType = this.value;
+                const dateRangeGroup = document.getElementById("dateRangeGroup");
+                const vehicleFilters = document.getElementById("vehicleFilters");
+
+                dateRangeGroup.style.display = reportType === "VEHICLE_REGISTRATION" ? "none" : "block";
+                vehicleFilters.style.display = reportType === "VEHICLE_REGISTRATION" ? "block" : "none";
+            } catch (error) {
+                console.error("Report type change error:", error);
+                alert("Error changing report type");
+            }
+        });
+
+        // Robust form submission handler
+        document.getElementById("reportForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const startTime = performance.now();
+
+            try {
+                const reportType = document.getElementById("reportType").value;
+                const format = document.getElementById("reportFormat").value.toUpperCase();
+
+                if (!["XLSX", "PDF", "DOCX"].includes(format)) {
+                    throw new Error("Invalid format selected");
+                }
+
+                await fetchReportData(async (data) => {
+                    switch(format) {
+                        case "XLSX":
+                            await generateExcelReport(data, reportType);
+                            break;
+                        case "PDF":
+                            await generatePdfReport(data, reportType);
+                            break;
+                        case "DOCX":
+                            await generateDocxReport(data, reportType);
+                            break;
+                    }
+                });
+            } catch (error) {
+                console.error("Report generation error:", error);
+                alert(`Report generation failed: ${error.message}`);
+            } finally {
+                console.log(`Report generated in ${performance.now() - startTime}ms`);
+            }
+        });
+    });
+
+    async function fetchReportData(callback) {
+        try {
+            const reportType = document.getElementById("reportType").value;
+            const statusTab = document.querySelector("#statusTabs a.active");
+            const status = statusTab?.getAttribute("data-status") || 'active';
+
+            const formData = new FormData();
+            formData.append("reportType", reportType);
+            formData.append("status", status);
+
+            if (reportType === "VEHICLE_REGISTRATION") {
+                formData.append("vehicleType", document.getElementById("vehicleType").value);
+                formData.append("color", document.getElementById("vehicleColor").value);
+            } else {
+                formData.append("startDate", document.getElementById("startDate").value);
+                formData.append("endDate", document.getElementById("endDate").value);
+            }
+
+            const response = await fetch('/Staff/GetReportData', {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            callback(data);
+        } catch (error) {
+            console.error("Data fetch error:", error);
+            throw error;
+        }
+    }
+
+    async function generateExcelReport(data, reportType) {
+        return new Promise((resolve, reject) => {
+            try {
+                const worksheet = XLSX.utils.json_to_sheet(data);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+                XLSX.writeFile(workbook, `${reportType}_report.xlsx`);
+                resolve();
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    async function generatePdfReport(data, reportType) {
+        return new Promise((resolve, reject) => {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // PDF metadata
+                doc.setProperties({
+                    title: `${reportType} Report`,
+                    subject: 'Generated by Subvi System',
+                    author: 'Subvi Reporting Service'
+                });
+
+                // Header
+                doc.setFontSize(16);
+                doc.setTextColor(40, 53, 147);
+                doc.text(`${reportType} Report`, 14, 20);
+
+                // Content
+                if (data?.length > 0) {
+                    const headers = [Object.keys(data[0])];
+                    const rows = data.map(record => Object.values(record));
+                    doc.autoTable({
+                        head: headers,
+                        body: rows,
+                        startY: 30,
+                        theme: 'grid',
+                        styles: { cellPadding: 2, fontSize: 10 },
+                        headerStyles: { fillColor: [40, 53, 147], textColor: 255 }
+                    });
+                } else {
+                    doc.setTextColor(255, 0, 0);
+                    doc.text("No records found", 14, 40);
+                }
+
+                // Footer
+                const pageCount = doc.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(10);
+                    doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
+                }
+
+                doc.save(`${reportType}_report.pdf`);
+                resolve();
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    async function generateDocxReport(data, reportType) {
+        try {
+            const { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun } = docx;
+
+            const children = [];
+
+            // Header
+            children.push(
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: `${reportType} Report`,
+                            bold: true,
+                            size: 32,
+                            color: "2C3587"
+                        })
+                    ],
+                    spacing: { after: 400 }
+                })
+            );
+
+            // Table or no data
+            if (data?.length > 0) {
+                const keys = Object.keys(data[0]);
+
+                const table = new Table({
+                    rows: [
+                        // Table headers
+                        new TableRow({
+                            children: keys.map(key =>
+                                new TableCell({
+                                    children: [new Paragraph({
+                                        children: [new TextRun({ text: key, bold: true })]
+                                    })]
+                                })
+                            )
+                        }),
+                        // Table rows
+                        ...data.map(record =>
+                            new TableRow({
+                                children: keys.map(key =>
+                                    new TableCell({
+                                        children: [new Paragraph(record[key]?.toString() || "-")]
+                                    })
+                                )
+                            })
+                        )
+                    ],
+                    width: { size: 100, type: "pct" },
+                    borders: {
+                        top: { style: "single", size: 8, color: "2C3587" },
+                        bottom: { style: "single", size: 8, color: "2C3587" }
+                    }
+                });
+
+                children.push(table);
+            } else {
+                children.push(
+                    new Paragraph({
+                        text: "No records found",
+                        color: "FF0000",
+                        italics: true
+                    })
+                );
+            }
+
+            const doc = new Document({
+                creator: "Subvi Reporting Service",
+                title: `${reportType} Report`,
+                description: "Generated by Subvi System",
+                sections: [
+                    {
+                        children
+                    }
+                ]
+            });
+
+            // Generate and download
+            const blob = await Packer.toBlob(doc);
+            const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "report.xlsx";
+            a.download = `${reportType}_report.docx`;
             document.body.appendChild(a);
             a.click();
-            a.remove();
 
-            const toast = new bootstrap.Toast(document.getElementById("reportToast"));
-            toast.show();
-        })
-        .catch(err => alert("Something went wrong: " + err));
-    });
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        } catch (error) {
+            console.error("DOCX Generation Error:", error);
+            throw error;
+        }
+    }
 </script>

@@ -146,17 +146,26 @@
 
         <!-- Search and Add Discussion Button -->
         <div class="d-flex justify-content-between mb-4">
-            <div class="d-flex flex-column position-relative w-75 " placeholder="Enter Search.." id="search-wrapper">
-                <div class="form-control d-flex flex-wrap align-items-center shadow-sm" id="searchInput" contenteditable="true" style="min-height: 40px;"></div>
-                <ul id="searchMentionSuggestions" class="list-group position-absolute top-100 start-0 z-3 w-100 d-none" style="max-height: 200px; overflow-y: auto;"></ul>
+            <div class="d-flex flex-column position-relative w-75" id="search-wrapper">
+                <div class="form-control shadow-sm"
+                     id="searchInput"
+                     contenteditable="true"
+                     style="min-height: 40px; cursor: text; overflow-wrap: break-word;">
+                </div>
+
+                <ul id="searchMentionSuggestions"
+                    class="list-group position-absolute top-100 start-0 z-3 w-100 d-none"
+                    style="max-height: 200px; overflow-y: auto;">
+                </ul>
             </div>
+
             <button id="searchBtn" class="btn btn-primary shadow-sm mt-2">
                 <i class="bi bi-search"></i> Search
             </button>
 
-            <!-- Hidden input for storing the actual query value -->
             <input type="hidden" id="searchHiddenInput" />
             <input type="hidden" id="mentionHiddenInput" />
+
             <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addDiscussionModal">
                 <i class="bi bi-plus-circle"></i> Add Discussion
             </button>

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Mime;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 public class AdminController : Controller
 {
@@ -693,9 +694,204 @@ public class AdminController : Controller
         var role = HttpContext.Request.Cookies["UserRole"];
         if (string.IsNullOrEmpty(role) || role != "Admin")
         {
-            return RedirectToAction("landing", "Home");
+            return RedirectToAction("Landing");
         }
+
+        // Total Counts
+        ViewBag.TotalReservations = _context.Reservations.Count();
+        ViewBag.TotalPayments = _context.Payment.Count();
+        ViewBag.TotalFeedbacks = _context.Feedback.Count();
+        ViewBag.TotalServiceRequests = _context.Service_Request.Count();
+        ViewBag.TotalVehicles = _context.Vehicle_Registration.Count();
+        ViewBag.TotalVisitors = _context.Visitor_Pass.Count();
+
+        // Reservation Trends (Last 4 months)
+        var reservationTrends = _context.Reservations
+            .AsEnumerable() // Forces client-side processing
+            .Select(r => new
+            {
+                // Convert JSType.Date to DateTime and format as YYYY-MM
+                Month = DateTime.Parse(r.SchedDate.ToString()).ToString("yyyy-MM")
+            })
+            .GroupBy(r => r.Month)
+            .OrderBy(g => g.Key)
+            .TakeLast(4)
+            .Select(g => new { Month = g.Key, Count = g.Count() })
+            .ToList();
+
+        ViewBag.ReservationMonths = reservationTrends.Select(r => r.Month).ToList();
+        ViewBag.ReservationCounts = reservationTrends.Select(r => r.Count).ToList();
+
+        // Payments per Month
+        var paymentTrends = _context.Payment
+            .AsEnumerable() // Forces client-side evaluation
+            .Select(p => new
+            {
+                Month = DateTime.ParseExact(p.DatePaid, "yyyy-MM-dd", CultureInfo.InvariantCulture).ToString("yyyy-MM"),
+                AmountPaid = p.AmountPaid
+            })
+            .GroupBy(p => p.Month)
+            .OrderBy(g => g.Key)
+            .TakeLast(4)
+            .Select(g => new { Month = g.Key, Total = g.Sum(p => p.AmountPaid) })
+            .ToList();
+
+        ViewBag.PaymentMonths = paymentTrends.Select(p => p.Month).ToList();
+        ViewBag.PaymentTotals = paymentTrends.Select(p => p.Total).ToList();
+
+        // Feedback Ratings Breakdown
+        var feedbackRatings = _context.Feedback
+            .Where(f => f.FeedbackType == "Complement") // Filter by Type = 'Complement'
+            .GroupBy(f => f.Rating) // Group by Rating
+            .Select(g => new { Rating = g.Key, Count = g.Count() }) // Select Rating and Count
+            .ToList();
+
+        ViewBag.FeedbackRatings = feedbackRatings;
+
+        // Vehicle Types Breakdown
+        var vehicleTypes = _context.Vehicle_Registration
+            .GroupBy(v => v.Type)
+            .Select(g => new { Type = g.Key, Count = g.Count() })
+            .ToList();
+
+        ViewBag.VehicleTypes = vehicleTypes;
+
         return View();
+    }
+
+    [HttpPost]
+    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string color)
+    {
+        var result = new List<object>();
+
+        switch (reportType)
+        {
+            case "VEHICLE_REGISTRATION":
+                var vehicleQuery = _context.Vehicle_Registration
+                    .Join(_context.User_Accounts,
+                        vehicle => vehicle.UserId,
+                        user => user.Id,
+                        (vehicle, user) => new { vehicle, user })
+                    .AsQueryable();
+
+                if (!string.IsNullOrEmpty(vehicleType))
+                {
+                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.Type == vehicleType);
+                }
+
+                if (!string.IsNullOrEmpty(color))
+                {
+                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.Color == color);
+                }
+
+                result = vehicleQuery.Select(v => new
+                {
+                    v.vehicle.VehicleId,
+                    v.vehicle.PlateNumber,
+                    v.vehicle.Type,
+                    v.vehicle.Color,
+                    v.vehicle.Status,
+                    OwnerName = char.ToUpper(v.user.Firstname[0]) + v.user.Firstname.Substring(1).ToLower() + " " +
+                            char.ToUpper(v.user.Lastname[0]) + v.user.Lastname.Substring(1).ToLower()
+                }).ToList<object>();
+                break;
+
+            case "RESERVATIONS":
+                DateTime.TryParse(startDate, out var startR);
+                DateTime.TryParse(endDate, out var endR);
+
+                var startDateOnly = DateOnly.FromDateTime(startR);
+                var endDateOnly = DateOnly.FromDateTime(endR);
+
+                var reservations = _context.Reservations
+                    .Join(_context.Facility,
+                        res => res.FacilityId,
+                        fac => fac.FacilityId,
+                        (res, fac) => new { res, fac })
+                    .Join(_context.User_Accounts,
+                        combined => combined.res.UserId,
+                        user => user.Id,
+                        (combined, user) => new { combined.res, combined.fac, user })
+                    .Where(x =>
+                        x.res.Status == status &&
+                        x.res.SchedDate >= startDateOnly &&
+                        x.res.SchedDate <= endDateOnly)
+                    .Select(x => new
+                    {
+                        x.res.ReservationId,
+                        FacilityName = x.fac.FacilityName,
+                        DateReserved = x.res.SchedDate.ToString("MM/dd/yyyy"),
+                        x.res.StartTime,
+                        x.res.EndTime,
+                        x.res.Status,
+                        ReservedBy = char.ToUpper(x.user.Firstname[0]) + x.user.Firstname.Substring(1).ToLower() + " " +
+                                     char.ToUpper(x.user.Lastname[0]) + x.user.Lastname.Substring(1).ToLower()
+                    }).ToList<object>();
+
+                result = reservations;
+                break;
+
+
+            case "SERVICE_REQUEST":
+                DateTime.TryParse(startDate, out var startS);
+                DateTime.TryParse(endDate, out var endS);
+                string startDateStr = startS.ToString("yyyy-MM-dd HH:mm:ss");
+                string endDateStr = endS.ToString("yyyy-MM-dd HH:mm:ss");
+
+                var services = _context.Service_Request
+                    .Join(_context.User_Accounts,
+                        request => request.UserId,
+                        user => user.Id,
+                        (request, user) => new { request, user })
+                    .Where(x =>
+                        x.request.Status == status &&
+                        string.Compare(x.request.DateSubmitted, startDateStr) >= 0 &&
+                        string.Compare(x.request.DateSubmitted, endDateStr) <= 0)
+                    .Select(x => new
+                    {
+                        x.request.ServiceRequestId,
+                        x.request.ReqType,
+                        x.request.Description,
+                        x.request.Status,
+                        x.request.DateSubmitted,
+                        RequestedBy =
+                            char.ToUpper(x.user.Firstname[0]) + x.user.Firstname.Substring(1).ToLower() + " " +
+                            char.ToUpper(x.user.Lastname[0]) + x.user.Lastname.Substring(1).ToLower()
+                    }).ToList<object>();
+
+                result = services;
+                break;
+
+            case "VISITOR_PASSES":
+                DateTime.TryParse(startDate, out var startV);
+                DateTime.TryParse(endDate, out var endV);
+
+                var passes = (from pass in _context.Visitor_Pass
+                              join user in _context.User_Accounts on pass.UserId equals user.Id
+                              where pass.Status == status && pass.DateTime >= startV && pass.DateTime <= endV
+                              select new
+                              {
+                                  pass.VisitorId,
+                                  pass.VisitorName,
+                                  pass.DateTime,
+                                  pass.Status,
+                                  pass.Relationship,
+                                  HomeownerName = Capitalize(user.Firstname) + " " + Capitalize(user.Lastname)
+                              }).ToList<object>();
+
+                result = passes;
+                break;
+
+        }
+
+        return Json(result);
+    }
+
+    private static string Capitalize(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return input;
+        input = input.ToLower();
+        return char.ToUpper(input[0]) + input.Substring(1);
     }
 
     public IActionResult Settings()
