@@ -5,41 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - Subvi</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
     <link rel="stylesheet" href="~/css/output.css">
     <link rel="stylesheet" href="~/css/staffhome.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.css" rel="stylesheet">
 </head>
-    <body>
-        <div>
-            <!-- Header -->
+<body>
+    <div>
+        <!-- Header -->
         <header class="shadow-sm px-6 py-4 sticky top-0 z-50"style="background-color: white">
-                <nav>
-                    <div class="flex items-center justify-between">
-                        <!-- Logo -->
-                        <h1 class="text-3xl font-bold">
-                            <span class="text-blue-600">Subvi</span>
-                            <span class="text-blue-400">.</span>
-                        </h1>
+            <nav>
+                <div class="flex items-center justify-between">
+                    <!-- Logo -->
+                    <h1 class="text-3xl font-bold">
+                        <span class="text-blue-600">Subvi</span>
+                        <span class="text-blue-400">.</span>
+                    </h1>
 
-                        <!-- Right Section -->
-                        <div class="flex items-center gap-6">
-                            <!-- Notification Dropdown -->
-                            <div class="relative">
-                                <button id="notification-btn" class=" text-blue-900 hover:text-blue-600">
-                                    <i class="fas fa-bell text-xl text-blue-900"></i>
-                                </button>
-                                <div id="notification-dropdown" class="hidden absolute right-0 mt-3 w-64 shadow-xl rounded-lg border" style="background-color: white">
-                                    <div class="p-4 text-sm text-blue-900">
-                                        No notifications available
-                                    </div>
+                    <!-- Right Section -->
+                    <div class="flex items-center gap-6">
+                        <!-- Notification Dropdown -->
+                        @{
+                            var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+                            var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                        }
+
+                        @if (!(currentController == "Staff" && currentAction == "Notifications"))
+                        {
+                            <div class="dropdown">
+                                <div class="position-relative" id="notifBell" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell-fill text-blue-900 fs-5"></i>
+                                    <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                                        0
+                                    </span>
                                 </div>
+
+                                <ul class="dropdown-menu dropdown-menu-end shadow p-2" aria-labelledby="notifBell" id="notifDropdown" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+                                    <!-- Header -->
+                                    <li class="dropdown-header d-flex justify-content-between align-items-center">
+                                        <span class="fw-semibold">Notifications</span>
+                                        <div class="dropdown dropstart">
+                                            <i class="bi bi-three-dots-vertical" role="button" data-bs-toggle="dropdown" aria-expanded="false"></i>
+                                            <ul class="dropdown-menu">
+                                                <li><button id="markAllReadBtn" class="dropdown-item" disabled>Mark all as Read</button></li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <hr class="my-1" />
+
+                                    <!-- Notifications list -->
+                                    <div id="notifListContainer"></div>
+
+                                    <!-- Footer -->
+                                    <div class="text-end pt-2 pe-2">
+                                        <a href="/staff/notifications" class="btn btn-sm btn-light">View All Notifications</a>
+                                    </div>
+                                </ul>
                             </div>
+                        }
 
                             <!-- Profile Dropdown -->
                             <div class="relative">
@@ -63,7 +93,7 @@
                                 <div id="profile-dropdown" class="hidden absolute right-0 mt-3 w-48 shadow-xl rounded-lg border" style="background-color: white">
                                     <ul class="py-2">
                                         <li>
-                                            <a href="/home/settings"
+                                            <a href="/staff/profile/settings"
                                                class="flex items-center px-4 py-2">
                                                 <i class="fas fa-cog mr-3"></i>
                                                 Settings
@@ -130,6 +160,8 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script src="~/lib/jquery/dist/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
         <script src="~/js/loading-animation.js"></script>
         <script src="~/js/theme-toggle.js"></script>

@@ -29,17 +29,44 @@
 
                     <!-- Right Section -->
                     <div class="flex items-center gap-6">
-                        <!-- Notification Dropdown -->
-                        <div class="relative">
-                            <button id="notification-btn" class=" text-blue-900 hover:text-blue-600">
-                                <i class="fas fa-bell text-xl text-blue-900"></i>
-                            </button>
-                            <div id="notification-dropdown" class="hidden absolute right-0 mt-3 w-64 shadow-xl rounded-lg border" style="background-color: white">
-                                <div class="p-4 text-sm text-blue-900">
-                                    No notifications available
+                        @{
+                            var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+                            var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                        }
+
+                        @if (!(currentController == "Home" && currentAction == "Notifications"))
+                        {
+                            <div class="dropdown">
+                                <div class="position-relative" id="notifBell" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell-fill text-blue-900 fs-5"></i>
+                                    <span id="notifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                                        0
+                                    </span>
                                 </div>
+
+                                <ul class="dropdown-menu dropdown-menu-end shadow p-2" aria-labelledby="notifBell" id="notifDropdown" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+                                    <!-- Header -->
+                                    <li class="dropdown-header d-flex justify-content-between align-items-center">
+                                        <span class="fw-semibold">Notifications</span>
+                                        <div class="dropdown dropstart">
+                                            <i class="bi bi-three-dots-vertical" role="button" data-bs-toggle="dropdown" aria-expanded="false"></i>
+                                            <ul class="dropdown-menu">
+                                                <li><button id="markAllReadBtn" class="dropdown-item" disabled>Mark all as Read</button></li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <hr class="my-1" />
+
+                                    <!-- Notifications list -->
+                                    <div id="notifListContainer"></div>
+
+                                    <!-- Footer -->
+                                    <div class="text-end pt-2 pe-2">
+                                        <a asp-controller="Home" asp-action="Notifications" class="btn btn-sm btn-light">View All Notifications</a>
+                                    </div>
+                                </ul>
                             </div>
-                        </div>
+                        }
 
                         <!-- Profile Dropdown -->
                         <div class="relative">
@@ -133,6 +160,8 @@
     <script src="~/js/loading-animation.js"></script>
     <script src="~/js/logout.js"></script>
     <script src="~/js/theme-toggle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

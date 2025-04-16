@@ -324,18 +324,19 @@
     </script>
 
     <script src="~/js/vehicleregister.js" defer></script>
+    <script src="~/js/notification-staff.js"></script>
 }
 
 <div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
     <!-- Sidebar -->
     <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 flex flex-col">
         <!-- Sidebar Header -->
-        <div class="px-6 py-8 border-b border-gray-100">
+        <div class="px-2 py-2 border-b border-gray-100">
             <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
         </div>
 
         <!-- Navigation Links -->
-        <ul class="flex-1 px-4 py-6 space-y-2">
+        <ul class="flex-1 px-2 py-2 space-y-2">
             <li class="nav-item">
                 <a href="/staff/dashboard" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
                     <i class="fas fa-home w-5 h-5 mr-3"></i>
@@ -378,6 +379,18 @@
                 <a href="/staff/poll_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "bg-blue-50 text-blue-600" : "")">
                     <i class="fas fa-poll w-6"></i>
                     <span class="font-medium">Poll Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/event_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Event" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-calendar-check w-6"></i>
+                    <span class="font-medium">Event Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/feedbacks" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Feedback" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-comment-alt w-6"></i>
+                    <span class="font-medium">Feedbacks</span>
                 </a>
             </li>
             <li class="nav-item">

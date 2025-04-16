@@ -1,5 +1,6 @@
 ﻿using ELNET1_GROUP_PROJECT.Data;
 using ELNET1_GROUP_PROJECT.Middleware;
+using ELNET1_GROUP_PROJECT.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using ELNET1_GROUP_PROJECT.Models; // Add this using directive
@@ -31,6 +32,7 @@ builder.Services.AddSingleton<PayMongoServices>(provider =>
         builder.Configuration.GetValue<bool>("PayMongo:UseSandbox")
     )
 );
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -70,6 +72,9 @@ app.UseSession();
 app.UseMiddleware<RoleMiddleware>();
 
 app.UseAuthorization();
+
+app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.UseEndpoints(endpoints =>
 {

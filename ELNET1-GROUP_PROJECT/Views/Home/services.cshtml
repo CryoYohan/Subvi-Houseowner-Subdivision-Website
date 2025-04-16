@@ -40,6 +40,7 @@
 }
 @section Scripts {
     <script src="~/js/services.js"></script>
+    <script src="~/js/notification-home.js"></script>
 }
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0 min-h-screen">
@@ -225,6 +226,9 @@
                         <div class="flex items-center gap-3">
                             <select id="statusFilter" class="border rounded px-2 py-1 text-sm">
                                 <option value="Scheduled" selected>Approved</option>
+                                <option value="Ongoing">Ongoing</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
                                 <option value="Rejected">Rejected</option>
                             </select>
                             <input id="searchInput" type="text" placeholder="Search services..." class="border rounded px-2 py-1 text-sm" />

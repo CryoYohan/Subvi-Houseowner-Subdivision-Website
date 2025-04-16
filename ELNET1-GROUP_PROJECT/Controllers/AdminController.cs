@@ -62,6 +62,18 @@ public class AdminController : Controller
         return RedirectToAction("Dashboard");
     }
 
+    [Route("event_schedules")]
+    public IActionResult Event()
+    {
+        RefreshJwtCookies();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View();
+    }
+
     public IActionResult Dashboard()
     {
         RefreshJwtCookies();
@@ -690,6 +702,16 @@ public class AdminController : Controller
         return Ok(new { choiceId, percentage });
     }
 
+    public IActionResult Feedback()
+    {
+        RefreshJwtCookies();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Admin");
+        }
+        return View();
+    }
     public IActionResult Reports()
     {
         RefreshJwtCookies();
@@ -743,9 +765,9 @@ public class AdminController : Controller
 
         // Feedback Ratings Breakdown
         var feedbackRatings = _context.Feedback
-            .Where(f => f.FeedbackType == "Complement") // Filter by Type = 'Complement'
-            .GroupBy(f => f.Rating) // Group by Rating
-            .Select(g => new { Rating = g.Key, Count = g.Count() }) // Select Rating and Count
+            .Where(f => f.FeedbackType == "Complement") 
+            .GroupBy(f => f.Rating) 
+            .Select(g => new { Rating = g.Key, Count = g.Count() }) 
             .ToList();
 
         ViewBag.FeedbackRatings = feedbackRatings;

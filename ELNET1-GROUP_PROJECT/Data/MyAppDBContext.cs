@@ -60,5 +60,7 @@ namespace ELNET1_GROUP_PROJECT.Data
         public DbSet<ELNET1_GROUP_PROJECT.Models.Poll> Poll { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Poll_Choice> Poll_Choice { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Vote> Vote { get; set; }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.Notification> Notifications { get; set; }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.NotificationReads> Notification_Reads { get; set; }
     }
 }

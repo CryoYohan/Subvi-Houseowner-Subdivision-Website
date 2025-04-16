@@ -3,8 +3,74 @@
     ViewData["Title"] = "Staff | Profile Settings";
 }
 
-<div class="flex flex-col items-center justify-center bg-gray-50 p-4">
+@section Scripts {
+    <script src="~/js/notification-staff.js"></script>
+}
+
+<div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
+    <!-- Sidebar -->
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
+        <!-- Sidebar Header -->
+        <div class="px-3 py-2 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
+        </div>
+
+        <!-- Navigation Links -->
+        <ul class="flex-1 px-4 py-6 space-y-2">
+            <li class="nav-item">
+                <a href="/staff/dashboard" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-home w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/pass/visitors" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VisitorsPass" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tasks w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Visitors Pass</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/vehicle/registration" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VehicleRegistration" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Vehicle Registration</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/reservation" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ReservationRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-bell w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Reservation Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/services" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ServiceRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tools w-6"></i>
+                    <span class="font-medium">Service Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/bills_and_payments" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "BillsAndPayments" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-file-invoice-dollar w-6"></i>
+                    <span class="font-medium">Bills & Payments</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/poll_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-poll w-6"></i>
+                    <span class="font-medium">Poll Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/reports" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5"></i>
+                    <span class="font-medium">Reports</span>
+                </a>
+            </li>
+        </ul>
+    </div>
     <div class="w-full bg-white rounded-2xl shadow-lg p-4 transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-2xl font-bold text-left text-blue-900"><i class="fa fa-cog me-2"></i> Profile Settings</h2>
         <!-- Profile Header Section -->
         <div class="text-center mb-10">
             <div class="relative inline-block group cursor-pointer" onclick="$('#profileModal').modal('show')">

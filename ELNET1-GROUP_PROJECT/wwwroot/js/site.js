@@ -177,7 +177,6 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     setupDropdown('profile-btn', 'profile-dropdown');
-    setupDropdown('notification-btn', 'notification-dropdown');
 });
 
 const currentPath = window.location.pathname;

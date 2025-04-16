@@ -38,6 +38,10 @@
     }
 }
 
+@section Scripts{
+    <script src="~/js/notification-home.js"></script>
+}
+
 <style rel="stylesheet" href="~/css/homeowner-dashboard.css"></style>
 
 @* Sidebar *@
@@ -432,7 +436,6 @@
             try {
                 const response = await fetch('/api/polls');
                 const data = await response.json();
-                console.log(data)
                 allPolls = data;
                 renderPolls(data);
             } catch (error) {

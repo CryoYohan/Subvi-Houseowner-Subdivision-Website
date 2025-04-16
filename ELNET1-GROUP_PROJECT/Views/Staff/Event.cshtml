@@ -1,0 +1,565 @@
+﻿@{
+    Layout = "_StaffLayout";
+    ViewData["Title"] = "Staff | Service Request";
+}
+
+<div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
+    <!-- Sidebar -->
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 flex flex-col">
+        <!-- Sidebar Header -->
+        <div class="px-2 py-2 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
+        </div>
+
+        <!-- Navigation Links -->
+        <ul class="flex-1 px-2 py-2 space-y-1">
+            <li class="nav-item">
+                <a href="/staff/dashboard" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-home w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/pass/visitors" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VisitorsPass" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tasks w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Visitors Pass</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/vehicle/registration" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VehicleRegistration" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Vehicle Registration</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/reservation" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ReservationRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-bell w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Reservation Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/services" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ServiceRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tools w-6"></i>
+                    <span class="font-medium">Service Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/bills_and_payments" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "BillsAndPayments" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-file-invoice-dollar w-6"></i>
+                    <span class="font-medium">Bills & Payments</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/poll_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-poll w-6"></i>
+                    <span class="font-medium">Poll Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/event_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Event" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-calendar-check w-6"></i>
+                    <span class="font-medium">Event Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/feedbacks" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Feedback" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-comment-alt w-6"></i>
+                    <span class="font-medium">Feedbacks</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/reports" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Reports</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 flex-col bg-gray-100 bg-white p-2 space-y-4">
+        <div class="bg-white rounded-2xl shadow-lg p-3 bg-gradient-to-r from-blue-50 to-purple-50 border border-white/20">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-blue-900">
+                        <i class="fas fa-calendar-check w-6"></i>
+                        Event Manager
+                    </h1>
+                    <p class="text-gray-600 mt-2">Organize community events with ease</p>
+                </div>
+                <img src="/images/calendar-illustration.svg" class="h-24" alt="Calendar illustration">
+            </div>
+        </div>
+        <div class="flex space-x-4 bg-white">
+            <!-- Schedule List -->
+            <div class="bg-white shadow-md rounded-lg w-1/4 p-2">
+                <div class="flex justify-between items-center p-1 mb-2">
+                    <h2 class="text-lg font-medium text-blue-900">📅 EVENTS</h2>
+                    <button class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm" onclick="openAddModal()">Add</button>
+                </div>
+                <input id="schedule-search" type="text" class="w-full mb-2 px-3 py-1 border rounded" placeholder="Search...">
+                <ul id="schedule-list" class="space-y-2"><!-- List of Events on Selected date display here --></ul>
+            </div>
+
+            <!-- Add/Edit Modal -->
+            <div class="modal fade" id="addEditModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content rounded-lg">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Event</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body space-y-3">
+                            <input type="hidden" id="editingId" />
+
+                            <div>
+                                <label for="modalSelectedDate">Date:</label>
+                                <input type="date" id="modalSelectedDate" class="form-control" />
+                                <div class="text-danger small" id="errorDate"></div>
+                            </div>
+
+                            <div>
+                                <label for="eventDescription">Description:</label>
+                                <input type="text" id="eventDescription" class="form-control" placeholder="Enter event description..." />
+                                <div class="text-danger small" id="errorDescription"></div>
+                            </div>
+
+                            <div>
+                                <label for="eventTime">Time:</label>
+                                <input type="time" id="eventTime" class="form-control" min="06:00" max="22:00" />
+                                <div class="text-danger small" id="errorTime"></div>
+                            </div>
+                            <div class="text-danger small" id="errorSave"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <div id="saveLoading" class="spinner-border text-primary d-none" role="status"></div>
+                            <button type="button" class="btn btn-primary" onclick="saveEvent()">Save</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirm Save Modal -->
+            <div class="modal fade" id="confirmSaveModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-lg backdrop-blur">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirm Changes</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to save the changes to this event?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-success" onclick="confirmSave()">Yes, Save</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirm Delete Modal -->
+            <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-sm modal-dialog-centered">
+                    <div class="modal-content text-center p-3">
+                        <div class="modal-body">
+                            <p>Are you sure you want to delete this event?</p>
+                            <button class="btn btn-danger me-2" onclick="deleteEvent()">Yes</button>
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="bg-white shadow-md rounded-lg flex-1 p-6">
+                <div class="flex justify-between">
+                    <button id="prev-month" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h1 id="current-month" class="text-xl font-semibold text-blue-800"></h1>
+                    <button id="next-month" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-7 gap-4 bg-white mt-4 text-center">
+                    <div class="font-semibold text-blue-800">Sun</div>
+                    <div class="font-semibold text-blue-800">Mon</div>
+                    <div class="font-semibold text-blue-800">Tue</div>
+                    <div class="font-semibold text-blue-800">Wed</div>
+                    <div class="font-semibold text-blue-800">Thu</div>
+                    <div class="font-semibold text-blue-800">Fri</div>
+                    <div class="font-semibold text-blue-800">Sat</div>
+                </div>
+                <div id="calendar-days" class="mt-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style src="~/css/calendar.css"></style>
+
+@section Scripts {
+    <script src="~/js/notification-staff.js"></script>
+    <script>
+        let currentDate = new Date();
+        let scheduleData = {};
+        let selectedDate;
+        let currentEventIndex = null;
+        let cachedSavePayload = null;
+        const scheduleList = document.getElementById("schedule-list");
+        const calendarDays = document.getElementById("calendar-days");
+        const currentMonthText = document.getElementById("current-month");
+
+        function openAddModal() {
+            resetErrors();
+
+            const today = new Date().toISOString().split("T")[0];
+            const dateInput = document.getElementById("modalSelectedDate");
+            dateInput.setAttribute("min", today); // Disables past dates
+
+            document.getElementById("editingId").value = "";
+            document.getElementById("eventDescription").value = "";
+            document.getElementById("eventTime").value = "06:00";
+            dateInput.value = selectedDate;
+            document.querySelector("#addEditModal .modal-title").textContent = "Add Event";
+
+            new bootstrap.Modal(document.getElementById("addEditModal")).show();
+        }
+
+        function editEvent(index) {
+            resetErrors();
+
+            const event = scheduleData[selectedDate].events[index];
+            const dateInput = document.getElementById("modalSelectedDate");
+            const today = new Date().toISOString().split("T")[0];
+            dateInput.setAttribute("min", today);
+
+            document.getElementById("editingId").value = event.eventId;
+            document.getElementById("eventDescription").value = event.description;
+
+            if (event.dateTime) {
+                document.getElementById("eventTime").value = event.dateTime.slice(11, 16);
+                dateInput.value = event.dateTime.slice(0, 10);
+            } else {
+                document.getElementById("eventTime").value = "";
+                dateInput.value = selectedDate;
+            }
+
+            document.querySelector("#addEditModal .modal-title").textContent = "Edit Event";
+            new bootstrap.Modal(document.getElementById("addEditModal")).show();
+        }
+
+        async function saveEvent() {
+            resetErrors();
+
+            const eventId = document.getElementById("editingId").value;
+            const date = document.getElementById("modalSelectedDate").value;
+            const description = document.getElementById("eventDescription").value.trim();
+            const time = document.getElementById("eventTime").value;
+
+            let hasError = false;
+
+            if (!date) {
+                document.getElementById("errorDate").textContent = "Date is required.";
+                hasError = true;
+            }
+
+            if (!description) {
+                document.getElementById("errorDescription").textContent = "Description is required.";
+                hasError = true;
+            }
+
+            if (!time) {
+                document.getElementById("errorTime").textContent = "Time is required.";
+                hasError = true;
+            } else if (time < "06:00" || time > "22:00") {
+                document.getElementById("errorTime").textContent = "Time must be between 6:00 AM and 10:00 PM.";
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            const dateTime = `${date} ${time}:00`;
+            cachedSavePayload = {
+                method: eventId ? "PUT" : "POST",
+                url: eventId ? `/api/calendar/events/${eventId}` : "/api/calendar/events",
+                body: JSON.stringify({ description, date_Time: dateTime }),
+                isEdit: !!eventId,
+            };
+
+            // If editing, show confirmation first
+            if (cachedSavePayload.isEdit) {
+                new bootstrap.Modal(document.getElementById("confirmSaveModal")).show();
+                document.querySelector('.modal-backdrop')?.classList.add('blur');
+            } else {
+                await submitSave();
+            }
+        }
+
+        async function confirmSave() {
+            document.querySelector('.modal-backdrop')?.classList.remove('blur');
+            bootstrap.Modal.getInstance(document.getElementById("confirmSaveModal")).hide();
+            await submitSave();
+        }
+
+        async function submitSave() {
+            if (!cachedSavePayload) return;
+
+            document.getElementById("saveLoading").classList.remove("d-none");
+
+            try {
+                const res = await fetch(cachedSavePayload.url, {
+                    method: cachedSavePayload.method,
+                    headers: { "Content-Type": "application/json" },
+                    body: cachedSavePayload.body,
+                });
+
+                document.getElementById("saveLoading").classList.add("d-none");
+
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById("addEditModal")).hide();
+                    showToast("Event saved successfully.");
+                    cachedSavePayload = null;
+                    fetchScheduleData();
+                } else {
+                    document.getElementById("errorSave").textContent = "Failed to save event.";
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById("saveLoading").classList.add("d-none");
+                document.getElementById("errorSave").textContent = "Something error occured.";
+                showToast("Failed to save event. Try again later.", "red");
+            }
+        }
+
+        function resetErrors() {
+            document.getElementById("errorDate").textContent = "";
+            document.getElementById("errorDescription").textContent = "";
+            document.getElementById("errorTime").textContent = "";
+            document.getElementById("errorSave").textContent = "";
+        }
+
+        function confirmDelete(index) {
+            currentEventIndex = index;
+            new bootstrap.Modal(document.getElementById("confirmDeleteModal")).show();
+        }
+
+        async function deleteEvent() {
+            const event = scheduleData[selectedDate].events[currentEventIndex];
+
+            if (!event || !event.eventId) {
+                console.error("Invalid event or missing eventId.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/calendar/events/${event.eventId}`, {
+                    method: "DELETE",
+                });
+
+                if (response.ok) {
+                    scheduleData[selectedDate].events.splice(currentEventIndex, 1);
+                    bootstrap.Modal.getInstance(document.getElementById("confirmDeleteModal")).hide();
+                    showToast("Event Deleted Successfully.")
+                    fetchScheduleData();
+                } else {
+                    console.error("Failed to delete event.");
+                }
+            } catch (error) {
+                console.error("Error deleting event:", error);
+                showToast("Failed to delete event. Try again later.")
+            }
+        }
+
+        // Filter events based on search input
+        document.getElementById("schedule-search").addEventListener("input", function () {
+            showSchedule(selectedDate, this.value);
+        });
+
+        async function fetchScheduleData() {
+            try {
+                const response = await fetch("/api/calendar/schedules");
+                const Data = await response.json();
+                scheduleData = Data;
+                renderCalendar();
+                showSchedule(selectedDate);
+            } catch (error) {
+                console.error("Failed to fetch schedule data:", error);
+                showToast("Failed to Fetch Event Data. Something error occured.")
+            }
+        }
+
+        fetchScheduleData();
+
+        function renderCalendar() {
+            calendarDays.innerHTML = "";
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            if (!selectedDate) selectedDate = todayStr;
+
+            currentMonthText.textContent = currentDate.toLocaleString('default', {
+                month: 'long',
+                year: 'numeric'
+            });
+
+            // Create a grid container
+            const gridContainer = document.createElement('div');
+            gridContainer.className = "grid grid-cols-7 grid-rows-6 gap-2";
+
+            // Add empty cells before the first day
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "h-22 min-w-24 p-2 opacity-0";
+                gridContainer.appendChild(emptyCell);
+            }
+
+            // Add days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const schedule = scheduleData[dateStr] || { events: [] };
+                const isToday = dateStr === todayStr;
+                const isSelected = dateStr === selectedDate;
+
+                // Create day cell
+                const dayCell = document.createElement('div');
+                dayCell.className = `h-22 min-w-24 p-2 border rounded-lg relative cursor-pointer transition-colors
+                    ${isSelected ? 'calendar-selected-bg' : 'hover:bg-blue-200'}`;
+                dayCell.onclick = () => showSchedule(dateStr);
+
+                // Date number
+                const dateSpan = document.createElement('span');
+                dateSpan.className = "font-medium relative z-10";
+                dateSpan.innerHTML = isToday
+                    ? `<span class="bg-blue-800 text-white rounded-full w-6 h-6 flex items-center justify-center">${day}</span>`
+                    : day;
+
+                // Event dot indicator it shows if there are events or reservations
+                const eventIndicator = document.createElement('span');
+                eventIndicator.className = "w-2 h-2 bg-blue-400 rounded-full";
+                eventIndicator.style.visibility = (schedule.events.length > 0 || schedule.reservations > 0) ? "visible" : "hidden";
+
+                // Append top section for date & indicator
+                const topSection = document.createElement('div');
+                topSection.className = "flex justify-between items-start";
+                topSection.appendChild(dateSpan);
+                topSection.appendChild(eventIndicator);
+                dayCell.appendChild(topSection);
+
+                        // Display Events
+                        const eventsDiv = document.createElement('div');
+                        eventsDiv.className = "mt-1 text-left text-sm truncate";
+
+                        if (schedule.events.length > 0) {
+                            const visibleEvents = schedule.events.slice(0, 1); // Only show 1
+                            eventsDiv.innerHTML = visibleEvents
+                                .map(event => `<div class="text-blue-900"><strong>• ${event.description}</strong></div>`)
+                                .join('');
+
+                            if (schedule.events.length > 2) {
+                                const extraCount = schedule.events.length - 2;
+                                eventsDiv.innerHTML += `<div class="text-gray-500 italic">+${extraCount} more</div>`;
+                            }
+                        } else {
+                            eventsDiv.innerHTML = "&nbsp;";
+                        }
+
+                        dayCell.appendChild(eventsDiv);
+
+                gridContainer.appendChild(dayCell);
+            }
+
+            // Fill remaining cells
+            const totalCells = firstDay + daysInMonth;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let i = 0; i < remainingCells; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "h-22 min-w-24 p-2 opacity-0";
+                gridContainer.appendChild(emptyCell);
+            }
+
+            // Append the grid container to the calendar
+            calendarDays.appendChild(gridContainer);
+        }
+
+        function showSchedule(date, searchQuery = "") {
+            selectedDate = date;
+            scheduleList.innerHTML = "";
+            const data = scheduleData[date] || { events: [] };
+
+            let content = "";
+
+            const filteredEvents = data.events.filter(e =>
+                !searchQuery || e.description.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+
+            if (data.events.length === 0) {
+                content = `<div class="p-3 text-gray-600 bg-gray-100 rounded-lg text-center">No Event</div>`;
+            } else if (filteredEvents.length === 0) {
+                content = `<div class="p-3 text-gray-600 bg-yellow-100 rounded-lg text-center">No results found for "<strong>${searchQuery}</strong>"</div>`;
+            } else {
+                content = `
+                    <div class="p-1 overflow-y-auto custom-scrollbar calendar-event-list-bg w-full p-2 space-y-2" style="max-height: 400px">
+                        ${filteredEvents
+                            .map((event, index) => `
+                                <div class="bg-white rounded-lg shadow-sm p-2 flex justify-between items-center hover:shadow-md calendar-event-list-bg transition duration-200">
+                                    <span class="calendar-event-text-list-color font-semibold">• ${event.description}</span>
+                                    <span class="space-x-2 text-lg">
+                                        <button class="text-blue-500 hover:text-blue-700" onclick="editEvent(${index})" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="text-red-500 hover:text-red-700" onclick="confirmDelete(${index})" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                            `).join('')}
+                    </div>
+                `;
+            }
+
+            scheduleList.innerHTML = content;
+            renderCalendar();
+        }
+
+        selectedDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+        showSchedule(selectedDate);
+
+        document.getElementById("prev-month").addEventListener("click", () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById("next-month").addEventListener("click", () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        renderCalendar();
+
+        function showToast(message, color = 'green') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transform translate-y-20 opacity-0 transition-all z-50`;
+            toast.style.backgroundColor = color;
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }, 50);
+        }
+    </script>
+}

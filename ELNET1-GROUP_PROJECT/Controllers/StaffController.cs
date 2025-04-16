@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using ELNET1_GROUP_PROJECT.Controllers;
+using ELNET1_GROUP_PROJECT.SignalR;
 using System.Security.Claims;
 using OfficeOpenXml;
 using iText.Layout;
@@ -21,18 +22,23 @@ using Syncfusion.DocIO;
 using Syncfusion.DocIO.DLS;
 using System.IO;
 using System.Reflection.Metadata;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.SignalR;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 [Route("staff")]
 public class StaffController : Controller
 {
     private readonly MyAppDBContext _context;
     private readonly ILogger<HomeController> _logger;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public StaffController(MyAppDBContext context, ILogger<HomeController> logger)
+    public StaffController(MyAppDBContext context, ILogger<HomeController> logger, IHubContext<NotificationHub> hubContext)
     {
         _context = context;
         _logger = logger;
         ViewData["Layout"] = "_StaffLayout";
+        _hubContext = hubContext;
     }
 
     //Resetting the cookies time
@@ -83,6 +89,7 @@ public class StaffController : Controller
 
         return jwtToken?.Claims.FirstOrDefault(c => c.Type == "Role")?.Value;
     }
+
 
     [Route("")]
     [Route("dashboard")]
@@ -195,7 +202,7 @@ public class StaffController : Controller
     }
 
     [HttpPost("addvisitor")]
-    public IActionResult AddVisitor(int? visitorId, int userId, string visitorName, string relationship)
+    public async Task<IActionResult> AddVisitor(int? visitorId, int userId, string visitorName, string relationship)
     {
         _logger.LogInformation("AddVisitor called with VisitorId: {VisitorId}, UserId: {UserId}, VisitorName: '{VisitorName}', Relationship: '{Relationship}'",
         visitorId, userId, visitorName, relationship);
@@ -227,12 +234,34 @@ public class StaffController : Controller
         _context.Visitor_Pass.Add(newVisitor);
         _context.SaveChanges();
 
+        // Create a new notification
+        var notification = new Notification
+        {
+            UserId = userId,
+            TargetRole = "Homeowner",
+            Type = "Visitor",
+            Title = "Visitor Registered",
+            Message = $"A new visitor named {trimmedVisitorName} has been registered to you as of today {DateTime.Now.ToString("MM/dd/yyyy")}.",
+            IsRead = false,
+            DateCreated = DateTime.Now
+        };
+
+        // Add the notification to the context
+        _context.Notifications.Add(notification);
+
+        // Save changes asynchronously
+        await _context.SaveChangesAsync();
+
+        // Send real-time notification to the user
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
+
         return Json(new { success = true });
     }
 
     [HttpPost("editvisitor")]
-    public IActionResult EditVisitor(int visitorId, int userId, string visitorName, string relationship)
+    public async Task<IActionResult> EditVisitor(int visitorId, int userId, string visitorName, string relationship)
     {
+        // Fetch the existing visitor data
         var visitor = _context.Visitor_Pass.Find(visitorId);
         if (visitor == null)
         {
@@ -254,25 +283,102 @@ public class StaffController : Controller
             return Json(new { success = false, message = "Visitor name already exists!" });
         }
 
+        // Get the current userId of the visitor before updating
+        int originalUserId = visitor.UserId;
+
+        // Update visitor data
         visitor.UserId = userId;
         visitor.VisitorName = trimmedVisitorName;
         visitor.Relationship = relationship;
         _context.SaveChanges();
 
+        // Create a notification for the original user (if userId changed)
+        var originalUserNotification = new Notification
+        {
+            UserId = originalUserId,
+            TargetRole = "Homeowner",
+            Type = "Visitor",
+            Title = $"Visitor Registration Info Updated",
+            Message = $"The visitor registration info that is registered to you has been updated as of today {DateTime.Now:MM/dd/yyyy}.",
+            IsRead = false,
+            DateCreated = DateTime.Now
+        };
+
+        // Create a notification for the new user (if userId changed)
+        Notification newUserNotification = null;
+        if (userId != originalUserId)
+        {
+            newUserNotification = new Notification
+            {
+                UserId = userId,
+                TargetRole = "Homeowner",
+                Type = "Visitor",
+                Title = $"Visitor Registration Info Updated",
+                Message = $"The visitor registration that is now registered to you has been updated as of today {DateTime.Now:MM/dd/yyyy}.",
+                IsRead = false,
+                DateCreated = DateTime.Now
+            };
+        }
+
+        // Add the notifications to the context
+        _context.Notifications.Add(originalUserNotification);
+        if (newUserNotification != null)
+        {
+            _context.Notifications.Add(newUserNotification);
+        }
+
+        // Save changes asynchronously
+        await _context.SaveChangesAsync();
+
+        // Send real-time notifications to both users (if userId changed)
+        await _hubContext.Clients.User(originalUserId.ToString()).SendAsync("ReceiveNotification", originalUserNotification);
+        if (newUserNotification != null)
+        {
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", newUserNotification);
+        }
+
         return Json(new { success = true });
     }
 
     [HttpPost("deletevisitor/{id}")]
-    public IActionResult DeleteVisitor(int id)
+    public async Task<IActionResult> DeleteVisitor(int id)
     {
+        // Fetch the visitor data to get the associated userId
         var visitor = _context.Visitor_Pass.Find(id);
         if (visitor != null)
         {
+            // Get the userId from the visitor data
+            int userId = visitor.UserId;
+
             // Mark visitor as deleted
             visitor.Status = "Deleted";
             _context.SaveChanges();
+
+            // Create a new notification for the user
+            var notification = new Notification
+            {
+                UserId = userId,
+                TargetRole = "Homeowner",
+                Type = "Visitor",
+                Title = "Visitor Registration Deleted",
+                Message = $"The visitor registration that has been registered to you has been deleted as of today {DateTime.Now:MM/dd/yyyy}.",
+                IsRead = false,
+                DateCreated = DateTime.Now
+            };
+
+            // Add the notification to the context
+            _context.Notifications.Add(notification);
+
+            // Save changes asynchronously
+            await _context.SaveChangesAsync();
+
+            // Send real-time notification to the user
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
+
             return Json(new { success = true });
         }
+
+        // If visitor not found, return an error message
         return Json(new { success = false, message = "Visitor not found." });
     }
 
@@ -339,49 +445,184 @@ public class StaffController : Controller
     }
 
     [HttpPost("VehicleRegistration")]
-    public IActionResult AddVehicle([FromBody] VehicleRegistration vehicle)
+    public async Task<IActionResult> AddVehicle([FromBody] VehicleRegistration vehicle)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        // vehicleId will be auto-generated, so no need to pass it in the request body
-        // Add the new vehicle to the database
         _context.Vehicle_Registration.Add(vehicle);
         _context.SaveChanges();
 
-        // Return the added vehicle, including the auto-generated vehicleId
+        // Create a new notification
+        var notification = new Notification
+        {
+            UserId = vehicle.UserId,
+            TargetRole = "Homeowner",
+            Type = "Vehicle",
+            Title = "Vehicle Registered",
+            Message = $"A new vehicle has been registered as of today {DateTime.Now.ToString("MM/dd/yyyy")}.",
+            IsRead = false,
+            DateCreated = DateTime.Now
+        };
+
+        // Add the notification to the context
+        _context.Notifications.Add(notification);
+
+        // Save changes asynchronously
+        await _context.SaveChangesAsync();
+
+        // Send real-time notification to the user
+        await _hubContext.Clients.User(vehicle.UserId.ToString()).SendAsync("ReceiveNotification", notification);
         return Ok(vehicle);
     }
 
-    // PUT: staff/VehicleRegistration/5
     [HttpPut("VehicleRegistration/{id}")]
-    public IActionResult UpdateVehicle(int id, [FromBody] VehicleRegistration updated)
+    public async Task<IActionResult> UpdateVehicle(int id, [FromBody] VehicleRegistration updated)
     {
         if (id != updated.VehicleId) return BadRequest();
 
         var vehicle = _context.Vehicle_Registration.FirstOrDefault(v => v.VehicleId == id);
         if (vehicle == null) return NotFound();
 
+        // Fetch current userId from the existing vehicle record
+        int currentUserId = vehicle.UserId;
+
+        // Update vehicle details
         vehicle.PlateNumber = updated.PlateNumber;
         vehicle.Type = updated.Type;
         vehicle.Status = updated.Status;
         vehicle.Color = updated.Color;
         vehicle.CarBrand = updated.CarBrand;
-        vehicle.UserId = updated.UserId;
+        vehicle.UserId = updated.UserId; // Set new userId
 
         _context.SaveChanges();
+
+        string maskedPlateNumber = MaskPlateNumber(vehicle.PlateNumber);
+
+        // Notification logic
+        if (currentUserId != updated.UserId) // Check if userId has changed
+        {
+            // Notification for the old user (homeowner whose vehicle info has been updated)
+            var oldUserNotification = new Notification
+            {
+                UserId = currentUserId,
+                TargetRole = "Homeowner",
+                Type = "Vehicle",
+                Title = "Vehicle Registration Updated",
+                Message = $"The vehicle registration information for your vehicle {maskedPlateNumber} has been updated.",
+                IsRead = false,
+                DateCreated = DateTime.Now
+            };
+            _context.Notifications.Add(oldUserNotification);
+
+            // Notification for the new user (new homeowner associated with the updated vehicle)
+            var newUserNotification = new Notification
+            {
+                UserId = updated.UserId,
+                TargetRole = "Homeowner",
+                Type = "Vehicle",
+                Title = "Vehicle Registration Updated",
+                Message = $"A vehicle registration information update has been made for the vehicle {maskedPlateNumber}.",
+                IsRead = false,
+                DateCreated = DateTime.Now
+            };
+            _context.Notifications.Add(newUserNotification);
+
+            // Save changes asynchronously
+            await _context.SaveChangesAsync();
+
+            // Send real-time notifications
+            await _hubContext.Clients.User(currentUserId.ToString()).SendAsync("ReceiveNotification", oldUserNotification);
+            await _hubContext.Clients.User(updated.UserId.ToString()).SendAsync("ReceiveNotification", newUserNotification);
+        }
+        else
+        {
+            // If userId has not changed, only send notification to the current user (homeowner)
+            var notification = new Notification
+            {
+                UserId = currentUserId,
+                TargetRole = "Homeowner",
+                Type = "Vehicle",
+                Title = "Vehicle Registration Updated",
+                Message = $"Your vehicle registration information for vehicle {maskedPlateNumber} has been updated.",
+                IsRead = false,
+                DateCreated = DateTime.Now
+            };
+
+            _context.Notifications.Add(notification);
+
+            // Save changes asynchronously
+            await _context.SaveChangesAsync();
+
+            // Send real-time notification to the current user (homeowner)
+            await _hubContext.Clients.User(currentUserId.ToString()).SendAsync("ReceiveNotification", notification);
+        }
+
         return Ok(vehicle);
     }
 
     // DELETE: staff/VehicleRegistration/5
     [HttpDelete("VehicleRegistration/{id}")]
-    public IActionResult DeleteVehicle(int id)
+    public async Task<IActionResult> DeleteVehicle(int id)
     {
+        // Fetch the vehicle first to get the necessary details (e.g., UserId)
         var vehicle = _context.Vehicle_Registration.FirstOrDefault(v => v.VehicleId == id);
-        if (vehicle == null) return NotFound();
+        if (vehicle == null)
+        {
+            return NotFound(new { success = false, message = "Vehicle not found." });
+        }
 
+        // Get the UserId of the owner of the vehicle
+        int userId = vehicle.UserId;
+        string plateNumber = vehicle.PlateNumber;
+
+        // Mask the plate number (show only the last 4 characters)
+        string maskedPlateNumber = MaskPlateNumber(plateNumber);
+
+        // Mark the vehicle as deleted in the database
         _context.Vehicle_Registration.Remove(vehicle);
-        _context.SaveChanges();
-        return Ok();
+        await _context.SaveChangesAsync();
+
+        // Create a notification for the homeowner about the vehicle deletion
+        var notification = new Notification
+        {
+            UserId = userId,  // Send the notification to the vehicle owner
+            TargetRole = "Homeowner",
+            Type = "Vehicle",
+            Title = "Vehicle Registration Deleted",
+            Message = $"Your vehicle (Plate: {maskedPlateNumber}) registration has been deleted as of today {DateTime.Now.ToString("MM/dd/yyyy")}.",
+            IsRead = false,
+            DateCreated = DateTime.Now
+        };
+
+        // Add the notification to the context
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
+        // Send real-time notification to the user
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
+
+        return Ok(new { success = true, message = "Vehicle deleted successfully." });
+    }
+
+    // Helper method to mask plate number
+    private string MaskPlateNumber(string plateNumber)
+    {
+        if (string.IsNullOrEmpty(plateNumber))
+        {
+            return "Unknown Plate";
+        }
+
+        // Mask all characters except the last 4 characters
+        int lengthToShow = 4;
+        if (plateNumber.Length <= lengthToShow)
+        {
+            return plateNumber;  // No need to mask if the plate number is already short
+        }
+
+        string maskedPart = new string('*', plateNumber.Length - lengthToShow);
+        string visiblePart = plateNumber.Substring(plateNumber.Length - lengthToShow);
+
+        return maskedPart + visiblePart;
     }
 
     [Route("requests/reservation")]
@@ -419,10 +660,10 @@ public class StaffController : Controller
         return Json(reservations);
     }
 
-    [HttpPut("reservations/{id}")]
     public async Task<IActionResult> UpdateReservationStatus(int id, [FromBody] ReservationUpdateStatusDTO request)
     {
-        var reservation = await _context.Reservations.FindAsync(id);
+        // Fetch the reservation by ID
+        var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.ReservationId == id);
         if (reservation == null)
         {
             return NotFound(new { message = "Reservation not found" });
@@ -433,10 +674,48 @@ public class StaffController : Controller
             return BadRequest(new { message = "Invalid status" });
         }
 
+        // Fetch facility by FacilityId from the reservation
+        var facility = await _context.Facility.FindAsync(reservation.FacilityId);
+        if (facility == null)
+        {
+            return NotFound(new { message = "Facility not found for this reservation." });
+        }
+
+        // Store the original UserId to send notification
+        var userId = reservation.UserId;
+
+        // Update the reservation status
         reservation.Status = request.Status;
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = $"Reservation {id} has been {request.Status.ToLower()}." });
+        string facilityName = facility.FacilityName;
+        string schedDate = reservation.SchedDate.ToString("MM/dd/yyyy");
+
+        // Set the message based on status
+        string message = request.Status == "Approved"
+            ? $"The Facility Reservation Request for {facilityName} has been approved for {schedDate} from {reservation.StartTime} to {reservation.EndTime}."
+            : $"The Facility Reservation Request for {facilityName} has been declined.";
+
+        // Create the notification
+        var notification = new Notification
+        {
+            UserId = userId,
+            TargetRole = "Homeowner",
+            Type = "Facility Reservation Schedule",
+            Title = $"Facility Reservation {request.Status}",
+            Message = message,
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            Link = "/home/facilities"
+        };
+
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
+        // Real-time notification
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
+
+        return Ok(new { message = $"The Facility Reservation has been {request.Status.ToLower()}." });
     }
 
     [Route("requests/services")]
@@ -504,7 +783,6 @@ public class StaffController : Controller
         }
     }
 
-    // Update request status (Approve or Reject)
     [HttpPost("updaterequeststatus")]
     public async Task<IActionResult> UpdateRequestStatus([FromBody] UpdateRequestStatusDto request)
     {
@@ -525,9 +803,21 @@ public class StaffController : Controller
 
             serviceRequest.Status = request.Status;
 
+            // Get userId to notify
+            var userId = serviceRequest.UserId;
+
+            // Prepare notification message
+            string message = $"The service request has been updated to {request.Status}.";
+            string title = $"Service Request {request.Status}";
+
             if (request.Status == "Rejected" && !string.IsNullOrEmpty(request.RejectedReason))
             {
                 serviceRequest.RejectedReason = request.RejectedReason;
+                message = $"Your {serviceRequest.ReqType} service request has been rejected. Reason: {request.RejectedReason}";
+            }
+            else if (request.Status == "Cancelled")
+            {
+                message = $"Your {serviceRequest.ReqType} service request has been cancelled due to unforeseen circumstance. You can make a request again anytime.";
             }
             else if (request.Status == "Scheduled" && !string.IsNullOrEmpty(request.ScheduleDate))
             {
@@ -536,14 +826,43 @@ public class StaffController : Controller
                     CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
                 {
                     serviceRequest.ScheduleDate = parsedDate;
+                    message = $"Your {serviceRequest.ReqType} service request has been scheduled for {parsedDate:MM/dd/yyyy hh:mm tt}.";
                 }
                 else
                 {
                     return BadRequest(new { message = "Invalid date format. Use 'yyyy-MM-dd HH:mm:ss'." });
                 }
             }
+            else if (request.Status == "Ongoing")
+            {
+                message = $"Your {serviceRequest.ReqType} service request is Ongoing as of {DateTime.Now.ToString("MM/dd/yyyy")}."; 
+            }
+            else if (request.Status == "Completed")
+            {
+                message = $"Your {serviceRequest.ReqType} service request is Completed as of {DateTime.Now.ToString("MM/dd/yyyy")}. " +
+                          "Please check if it is all good now, if there is still problem you can make a request anytime. Have a great day!";
+            }
 
             await _context.SaveChangesAsync();
+
+            // Create notification
+            var notification = new Notification
+            {
+                UserId = userId,
+                TargetRole = "Homeowner",
+                Type = "Service Schedule",
+                Title = title,
+                Message = message,
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                Link = "/home/services"
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
+            // Send real-time notification
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
 
             return Ok(new { message = "Request updated successfully." });
         }
@@ -653,15 +972,6 @@ public class StaffController : Controller
         return Ok(homeowners);
     }
 
-    [HttpPost("bills/add")]
-    public IActionResult AddBill([FromBody] Bill model)
-    {
-        model.Status = GetBillStatus(model.DueDate);
-        _context.Bill.Add(model);
-        _context.SaveChanges();
-        return Ok(new { message = "Bill added successfully!" });
-    }
-
     [HttpGet("bills/getbyid/{id}")]
     public IActionResult GetBillById(int id)
     {
@@ -670,8 +980,45 @@ public class StaffController : Controller
         return Ok(bill);
     }
 
+    // Adding new Bill data
+    [HttpPost("bills/add")]
+    public async Task<IActionResult> AddBill([FromBody] Bill model)
+    {
+        // Get the bill status based on the due date
+        model.Status = GetBillStatus(model.DueDate);
+
+        // Add the bill to the context
+        _context.Bill.Add(model);
+
+        int userId = model.UserId;
+
+        // Create a new notification
+        var notification = new Notification
+        {
+            UserId = userId,
+            TargetRole = "Homeowner",
+            Type = "Bill",
+            Title = "New Bill Posted",
+            Message = $"💰 A new bill '{model.BillName}' due on {model.DueDate} has been added. Please check or you can call us anytime if there is any question or concern.",
+            IsRead = false, 
+            DateCreated = DateTime.Now,
+            Link = $"/home/bill"
+        };
+
+        // Add the notification to the context
+        _context.Notifications.Add(notification);
+
+        // Save changes asynchronously
+        await _context.SaveChangesAsync();
+
+        // Send real-time notification to the user
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
+
+        return Ok(new { message = "Bill added successfully!" });
+    }
+
     [HttpPut("bills/update")]
-    public IActionResult UpdateBill([FromBody] Bill updated)
+    public async Task<IActionResult> UpdateBill([FromBody] Bill updated)
     {
         var bill = _context.Bill.FirstOrDefault(b => b.BillId == updated.BillId);
         if (bill == null) return NotFound();
@@ -681,20 +1028,58 @@ public class StaffController : Controller
         bill.BillAmount = updated.BillAmount;
         bill.Status = GetBillStatus(updated.DueDate);
         bill.UserId = updated.UserId;
-        _context.SaveChanges();
 
-        return Ok(new { message = "Bill updated successfully!" }); 
+        // Create a new notification for the bill update
+        var notification = new Notification
+        {
+            UserId = updated.UserId,
+            TargetRole = "Homeowner",
+            Type = "Bill",
+            Title = "Bill Updated",
+            Message = $"✏️ The bill '{updated.BillName}' has been updated. Due date: {updated.DueDate}. Please check or you can call us anytime if there is any question or concern.",
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            Link = "/home/bill"
+        };
+
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
+        // Send SignalR notification to user
+        await _hubContext.Clients.User(updated.UserId.ToString()).SendAsync("ReceiveNotification", notification);
+
+        return Ok(new { message = "Bill updated successfully!" });
     }
 
+
     [HttpDelete("bills/delete/{id}")]
-    public IActionResult DeleteBill(int id)
+    public async Task<IActionResult> DeleteBill(int id)
     {
         var bill = _context.Bill.FirstOrDefault(b => b.BillId == id);
         if (bill == null) return NotFound();
 
         bill.Status = "Deleted";
-        _context.SaveChanges();
-        return Ok();
+
+        // Create a new notification for the deletion
+        var notification = new Notification
+        {
+            UserId = bill.UserId,
+            TargetRole = "Homeowner",
+            Type = "Bill",
+            Title = "Bill Deleted",
+            Message = $"🗑️ The bill '{bill.BillName}' scheduled for {bill.DueDate} has been deleted. Please call us if you are already paid.",
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            Link = "/home/bill"
+        };
+
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
+        // Send real-time notification to user
+        await _hubContext.Clients.User(bill.UserId.ToString()).SendAsync("ReceiveNotification", notification);
+
+        return Ok(new { message = "Bill deleted successfully!" });
     }
 
     // Helper
@@ -820,7 +1205,6 @@ public class StaffController : Controller
         var normalizedDescription = request.Description.Trim().ToLower();
         var newChoices = request.Choices.Select(c => c.Trim().ToLower()).OrderBy(c => c).ToList();
 
-        // Get polls with same title + description
         var similarPolls = await _context.Poll
             .Where(p => p.Title.ToLower() == normalizedTitle && p.Description.ToLower() == normalizedDescription)
             .Select(p => new
@@ -866,6 +1250,26 @@ public class StaffController : Controller
         }
 
         await _context.SaveChangesAsync();
+
+        // Create a notification for the homeowner
+        var notification = new Notification
+        {
+            UserId = userId,  // Send the notification to the vehicle owner
+            TargetRole = "Homeowner",
+            Type = "Poll",
+            Title = "New Poll Created",
+            Message = $"The Poll Name {request.Title} you can now vote to choose your desired choice.",
+            IsRead = false,
+            DateCreated = DateTime.Now
+        };
+
+        // Add the notification to the context
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
+        // Send real-time notification to the user
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
+
         return Ok(new { message = "Poll created successfully." });
     }
 
@@ -1036,6 +1440,30 @@ public class StaffController : Controller
 
         double percentage = totalVotes == 0 ? 0.0 : (double)choiceVotes / totalVotes * 100;
         return Ok(new { choiceId, percentage });
+    }
+
+    [Route("event_management")]
+    public IActionResult Event()
+    {
+        RefreshJwtCookies();
+        var role = GetUserRoleFromToken();
+        if (string.IsNullOrEmpty(role) || role != "Staff")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View();
+    }
+
+    [Route("feedbacks")]
+    public IActionResult Feedback()
+    {
+        RefreshJwtCookies();
+        var role = GetUserRoleFromToken();
+        if (string.IsNullOrEmpty(role) || role != "Staff")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View();
     }
 
     [Route("reports")]
@@ -1371,6 +1799,18 @@ public class StaffController : Controller
         await _context.SaveChangesAsync();
 
         return Ok(new { message = "Password changed successfully" });
+    }
+
+    [Route("notifications")]
+    public IActionResult Notifications()
+    {
+        RefreshJwtCookies();
+        var role = GetUserRoleFromToken();
+        if (string.IsNullOrEmpty(role) || role != "Staff")
+        {
+            return RedirectToAction("Landing");
+        }
+        return View();
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

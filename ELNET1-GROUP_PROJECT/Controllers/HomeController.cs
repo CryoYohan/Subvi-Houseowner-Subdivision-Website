@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
@@ -10,6 +10,8 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Net.Http;
+using Microsoft.AspNetCore.SignalR;
+using ELNET1_GROUP_PROJECT.SignalR;
 
 namespace ELNET1_GROUP_PROJECT.Controllers
 {
@@ -21,8 +23,9 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
         private readonly PayMongoServices _payMongoServices;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public HomeController(MyAppDBContext context, ILogger<HomeController> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration, PayMongoServices payMongoServices)
+        public HomeController(MyAppDBContext context, ILogger<HomeController> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration, PayMongoServices payMongoServices, IHubContext<NotificationHub> hubContext)
         {
             _context = context;
             _logger = logger;
@@ -30,6 +33,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             _configuration = configuration;
             ViewData["Layout"] = "_HomeLayout";
             _payMongoServices = payMongoServices;
+            _hubContext = hubContext;
         }
 
         private string GetUserRoleFromToken()
@@ -244,6 +248,15 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             if (!int.TryParse(HttpContext.Request.Cookies["Id"], out int userId))
                 return Json(new { success = false, message = "User not authenticated." });
 
+            // Get the user from the database
+            var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+                return Json(new { success = false, message = "User not found." });
+
+            string Capitalize(string input) =>
+            string.IsNullOrWhiteSpace(input) ? input : char.ToUpper(input[0]) + input.Substring(1).ToLower();
+            string personName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
+
             // Check if facility already exists
             var existingFacility = _context.Facility
                 .FirstOrDefault(f => f.FacilityName == reservation.FacilityName);
@@ -269,7 +282,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             }
 
             // Add reservation
-            _context.Reservations.Add(new Reservation
+            var newReservation = new Reservation
             {
                 SchedDate = DateOnly.FromDateTime(DateTime.Parse(reservation.SelectedDate)),
                 StartTime = reservation.StartTime,
@@ -277,12 +290,38 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 Status = "Pending",
                 UserId = userId,
                 FacilityId = facilityId
-            });
+            };
 
+            _context.Reservations.Add(newReservation);
             _context.SaveChanges();
+
+            // Add notification to staff
+            var notification = new Notification
+            {
+                UserId = null,
+                TargetRole = "Staff",
+                Title = $"New {reservation.FacilityName} Facility Reservation Request",
+                Message = $"There is a new facility reservation request by {personName}. Please review it.",
+                DateCreated = DateTime.UtcNow,
+                IsRead = false,
+                Type = "Facility Reservation Request",
+                Link = "/staff/requests/reservation"
+            };
+
+            _context.Notifications.Add(notification);
+            _context.SaveChanges();
+
+            // Send a SignalR notification to all staff
+            _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", new
+            {
+                Title = "New Facility Request",
+                Message = $"A new facility request for {reservation.FacilityName} has been submitted by {personName}.",
+                DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+            });
 
             return Json(new { success = true, message = "Reservation added successfully." });
         }
+
 
         public IActionResult Bill()
         {
@@ -629,12 +668,23 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Get the UserId from the current session or context
                 var userIdString = HttpContext.Request.Cookies["Id"];
                 if (!int.TryParse(userIdString, out int userId))
                 {
                     return Unauthorized("User not authenticated.");
                 }
+
+                var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
+
+                // Capitalize helper
+                string Capitalize(string input) =>
+                    string.IsNullOrWhiteSpace(input) ? input : char.ToUpper(input[0]) + input.Substring(1).ToLower();
+
+                string personName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
 
                 var newRequest = new Service_Request
                 {
@@ -642,11 +692,32 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     Description = request.Notes,
                     DateSubmitted = DateTime.Now.ToString("yyyy-MM-dd"),
                     Status = "Pending",
-                    UserId = userId  
+                    UserId = userId
                 };
 
                 _context.Service_Request.Add(newRequest);
                 _context.SaveChanges();
+
+                var notification = new Notification
+                {
+                    TargetRole = "Staff",
+                    Title = $"New {request.ServiceName} Request",
+                    Message = $"There is a new service request submission made by {personName}. Please review it.",
+                    DateCreated = DateTime.Now,
+                    IsRead = false,
+                    Type = "Service Request",
+                    Link = "/staff/requests/services"
+                };
+
+                _context.Notifications.Add(notification);
+                _context.SaveChanges();
+
+                _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", new
+                {
+                    Title = "New Service Request",
+                    Message = $"A new service request for {request.ServiceName} has been submitted by {personName}.",
+                    DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                });
 
                 return Ok(new { message = "Request submitted successfully." });
             }
@@ -654,7 +725,6 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return BadRequest("Invalid data.");
         }
 
-        [HttpGet]
         public async Task<IActionResult> Forums()
         {
             RefreshJwtCookies();
@@ -987,6 +1057,48 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             _context.Feedback.Add(feedback);
             _context.SaveChanges();
 
+            // Create dynamic message based on feedback type
+            string notifTitle = $"{request.FeedbackType} Feedback";
+            string notifMessage;
+
+            switch (request.FeedbackType)
+            {
+                case "Compliment":
+                    notifMessage = $"Homeowner gave a {request.Rating}-star rating and shared a compliment. Great job! 🎉";
+                    break;
+                case "Suggestion":
+                    notifMessage = "Homeowner submitted a suggestion. Please take time to review it for improvements.";
+                    break;
+                case "Complaint":
+                    notifMessage = "Homeowner submitted a complaint. Kindly investigate and take appropriate action.";
+                    break;
+                default:
+                    notifMessage = "Homeowner submitted feedback. Please review it.";
+                    break;
+            }
+
+            var notification = new Notification
+            {
+                TargetRole = "Staff",
+                Title = notifTitle,
+                Message = notifMessage,
+                DateCreated = DateTime.UtcNow,
+                IsRead = false,
+                Type = "Feedback Submitted",
+                Link = "/staff/requests/feedback"
+            };
+
+            _context.Notifications.Add(notification);
+            _context.SaveChanges();
+
+            // Send a SignalR notification to all staff (role-based notification)
+            _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", new
+            {
+                Title = notifTitle,
+                Message = notifMessage,
+                DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+            });
+
             return Ok();
         }
 
@@ -1158,6 +1270,17 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Password changed successfully" });
+        }
+
+        public IActionResult Notifications()
+        {
+            RefreshJwtCookies();
+            var role = GetUserRoleFromToken();
+            if (string.IsNullOrEmpty(role) || role != "Homeowner")
+            {
+                return RedirectToAction("Landing");
+            }
+            return View();
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -197,9 +197,9 @@ document.addEventListener("DOMContentLoaded", () => {
         tableHead.innerHTML = ""; // Clear headers
 
         // Set dynamic column based on status
-        let dynamicHeader = status === "Scheduled"
-            ? "Schedule Date"
-            : "Rejected Reason";
+        let dynamicHeader = status === "Rejected"
+            ? "Rejected Reason"
+            : "Schedule Date";
 
         // Create headers
         tableHead.innerHTML = `
@@ -223,9 +223,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Create rows
         services.forEach(s => {
-            let dynamicCell = status === "Scheduled"
-                ? (s.scheduleDate || "N/A")
-                : ((s.rejectedReason?.length > 20 ? s.rejectedReason.slice(0, 20) + "..." : s.rejectedReason) || "N/A");
+            let dynamicCell = status === "Rejected"
+                ? ((s.rejectedReason?.length > 20 ? s.rejectedReason.slice(0, 20) + "..." : s.rejectedReason) || "N/A")
+                : (s.scheduleDate || "N/A");
 
             // Choose badge color based on status
             let statusColor = "";

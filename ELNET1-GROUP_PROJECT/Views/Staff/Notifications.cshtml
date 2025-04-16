@@ -1,0 +1,469 @@
+﻿@{
+    Layout = "_StaffLayout";
+    ViewData["Title"] = "Staff | Service Request";
+}
+
+<div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
+    <!-- Sidebar -->
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
+        <!-- Sidebar Header -->
+        <div class="px-2 py-2  border-b border-gray-100">
+            <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
+        </div>
+
+        <!-- Navigation Links -->
+        <ul class="flex-1 px-2 py-2 space-y-1">
+            <li class="nav-item">
+                <a href="/staff/dashboard" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-home w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/pass/visitors" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VisitorsPass" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tasks w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Visitors Pass</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/vehicle/registration" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VehicleRegistration" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Vehicle Registration</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/reservation" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ReservationRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-bell w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Reservation Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/services" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ServiceRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tools w-6"></i>
+                    <span class="font-medium">Service Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/bills_and_payments" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "BillsAndPayments" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-file-invoice-dollar w-6"></i>
+                    <span class="font-medium">Bills & Payments</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/poll_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-poll w-6"></i>
+                    <span class="font-medium">Poll Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/event_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Event" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-calendar-check w-6"></i>
+                    <span class="font-medium">Event Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/feedbacks" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Feedback" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-comment-alt w-6"></i>
+                    <span class="font-medium">Feedbacks</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/reports" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Reports</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-3 overflow-y-auto w-full fade-in">
+        <div class="flex-1overflow-y-auto">
+            <!-- Header -->
+            <div class="p-6 rounded-2xl shadow-md w-full mx-auto">
+                <!-- Header -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-blue-900 mb-2"><i class="bi bi-bell-fill fs-5"></i> Notifications</h1>
+                    <p class="text-blue-500">View your updates.</p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200">
+                    <button data-type="Visitor"
+                            class="px-4 py-2 rounded-t-lg flex items-center font-medium space-x-2 transition-colors notif-tab active-tab
+                   bg-white border-b-4 border-blue-500 text-blue-600 hover:bg-blue-50">
+                        <i class="fas fa-user-check text-lg"></i>
+                        <span>Visitor</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="visitor-count"></span>
+                    </button>
+                    <button data-type="Vehicle"
+                            class="px-4 py-2 rounded-t-lg flex items-center font-medium space-x-2 transition-colors notif-tab
+                   bg-white border-b-4 border-blue-500 text-blue-600 hover:bg-blue-50">
+                        <i class="fas fa-car-side text-lg"></i>
+                        <span>Vehicle</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="vehicle-count"></span>
+                    </button>
+                    <button data-type="Facility Reservation Schedule"
+                            class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                   hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                        <i class="fas fa-calendar-check text-lg"></i>
+                        <span>Facility Schedule</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="facility-count"></span>
+                    </button>
+                    <button data-type="Service Schedule"
+                            class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                   hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                        <i class="fas fa-cogs text-green-500"></i>
+                        <span>Service Schedule</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="service-count"></span>
+                    </button>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div class="flex-1 relative max-w-md w-full">
+                        <div class="flex items-center relative">
+                            <input type="text"
+                                   id="searchInput"
+                                   placeholder="Search notifications..."
+                                   style="display: none;"
+                                   class="w-full pl-12 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500
+                  focus:ring-2 focus:ring-blue-200 absolute right-0 bg-white z-0" />
+
+                            <button id="toggleSearch"
+                                    class="p-2 text-gray-500 hover:text-blue-600 transition-colors z-10 absolute right-2">
+                                <i id="searchIcon" class="fas fa-search text-lg"></i>
+                                <i id="closeIcon" class="fas fa-times text-lg" style="display: none;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="markAllAsRead"
+                            class="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5
+                   rounded-lg transition-colors shadow-sm hidden">
+                        <i class="fas fa-check-double"></i>
+                        <span>Mark All as Read</span>
+                    </button>
+                </div>
+
+                <!-- Notification List -->
+                <div id="notificationList" class="space-y-2">
+                    <!-- Skeleton Loading -->
+                    <div class="animate-pulse space-y-4" id="loadingSkeleton">
+                        <div class="h-20 bg-gray-100 rounded-lg"></div>
+                        <div class="h-20 bg-gray-100 rounded-lg"></div>
+                        <div class="h-20 bg-gray-100 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden text-center py-12">
+                    <div class="mb-4 text-6xl text-gray-300">
+                        <i class="fas fa-bell-slash"></i>
+                    </div>
+                    <h3 class="text-gray-500 font-medium">No notifications found</h3>
+                    <p class="text-gray-400 text-sm">We'll notify you when something arrives</p>
+                </div>
+            </div>
+
+            <!-- Connection Status Indicator -->
+            <div id="connectionStatus" class="fixed bottom-2 text-right right-0 text-sm flex items-center bg-white px-3 py-1.5 rounded-full shadow">
+                <i class="fas fa-circle text-gray-400 text-xs"></i>
+                <span class="ml-2 text-gray-600">Connecting...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .active-tab {
+        background-color: white;
+        color: #2563eb; /* Tailwind blue-600 */
+        border-bottom: 4px solid #3b82f6; /* Tailwind border-blue-500 */
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    const currentUserId = parseInt(getCookie("Id"));
+    const tabs = document.querySelectorAll(".notif-tab");
+    const list = document.getElementById("notificationList");
+    const markAllBtn = document.getElementById("markAllAsRead");
+    const searchInput = document.getElementById("searchInput");
+    const toggleSearchBtn = document.getElementById("toggleSearch");
+    const searchIcon = document.getElementById("searchIcon");
+    const closeIcon = document.getElementById("closeIcon");
+    let selectedType = "Visitor";
+    let allNotifs = [];
+
+    // Tab Click Handler
+    tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+            tabs.forEach(t => {
+                t.classList.remove("active-tab", "bg-white", "text-blue-600", "border-blue-500");
+                t.classList.add("text-gray-600", "border-transparent");
+            });
+
+            tab.classList.add("active-tab", "bg-white", "text-blue-600", "border-blue-500");
+            tab.classList.remove("text-gray-600", "border-transparent");
+
+            selectedType = tab.dataset.type;
+            renderNotifications();
+        });
+    });
+
+    // Search Toggle
+    toggleSearchBtn.addEventListener("click", () => {
+        const isSearchVisible = searchInput.style.display === "block";
+
+        if (isSearchVisible) {
+            // Hide search input
+            searchInput.style.display = "none";
+            searchIcon.style.display = "inline";
+            closeIcon.style.display = "none";
+
+            // Clear input and refresh
+            searchInput.value = "";
+            renderNotifications();
+        } else {
+            // Show search input
+            searchInput.style.display = "block";
+            searchIcon.style.display = "none";
+            closeIcon.style.display = "inline";
+
+            // Focus the input
+            searchInput.focus();
+        }
+    });
+
+    // Search Input Handler
+    searchInput.addEventListener("input", renderNotifications);
+
+    // Mark All as Read
+    markAllBtn.addEventListener("click", async () => {
+        try {
+            await fetch(`/api/notifications/staff/mark-all-read/${currentUserId}`, { method: "PUT" });
+
+            // Update all local notifications as read
+            allNotifs = allNotifs.map(n => ({
+                ...n,
+                isRead: n.type === selectedType ? true : n.isRead
+            }));
+
+            renderNotifications();
+            updateCountBadges();
+        } catch (error) {
+            console.error("Error marking all as read:", error);
+        }
+    });
+
+    // Render Notifications
+    function renderNotifications() {
+        const filtered = allNotifs.filter(n =>
+            n.type === selectedType &&
+            (!searchInput.value || n.title.toLowerCase().includes(searchInput.value.toLowerCase()))
+        );
+
+        list.innerHTML = "";
+        document.getElementById('emptyState').classList.toggle('hidden', filtered.length > 0);
+
+        filtered.forEach(n => {
+            const card = document.createElement("div");
+            card.className = `group p-3 rounded-lg transition-all cursor-pointer shadow-sm
+                            ${n.isRead ? 'hover:bg-gray-50' : 'bg-blue-50 border-l-4 border-blue-500'}`;
+            card.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-3 mb-1.5">
+                            ${getTypeIcon(n.type)}
+                            <h4 class="font-semibold p-2 text-lg ${n.isRead ? 'text-gray-700' : 'text-gray-900'}">
+                                ${n.title}
+                            </h4>
+                            ${!n.isRead ? '<span class="animate-pulse w-2 h-2 bg-blue-500 rounded-full"></span>' : ''}
+                        </div>
+                        <p class="text-sm text-gray-600 text-base ml-6 p-2">${n.message}</p>
+                        <div class="flex items-center space-x-3 text-xs text-blue-900 mt-2 ml-6">
+                            <span>${new Date(n.dateCreated).toLocaleDateString()}</span>
+                            <span>•</span>
+                            <span>${new Date(n.dateCreated).toLocaleTimeString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            card.onclick = () => handleNotificationClick(n);
+            list.appendChild(card);
+
+            if (!n.isRead){
+                markAllBtn.classList.remove('hidden');
+            } else {
+                markAllBtn.classList.add('hidden');
+            }
+        });
+    }
+
+    // SignalR Connection
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/notificationHub")
+        .configureLogging(signalR.LogLevel.Warning)
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+        .build();
+
+    // SignalR Handlers
+    connection.on("ReceiveNotification", notif => {
+        if (notif.userId === currentUserId) {
+            showNewNotificationToast(notif);
+            allNotifs.unshift({ ...notif, isRead: false });
+            updateCountBadges();
+            renderNotifications();
+        }
+    });
+
+    connection.onclose(() => updateConnectionStatus('disconnected'));
+    connection.onreconnecting(() => updateConnectionStatus('reconnecting'));
+    connection.onreconnected(() => updateConnectionStatus('connected'));
+
+    // Start Connection
+    async function startConnection() {
+        if (connection.state === signalR.HubConnectionState.Connected ||
+            connection.state === signalR.HubConnectionState.Connecting ||
+            connection.state === signalR.HubConnectionState.Reconnecting) {
+            return;
+        }
+
+        try {
+            await connection.start();
+            updateConnectionStatus('connected');
+            await loadNotifications();
+        } catch (err) {
+            console.error("SignalR connection error:", err);
+            setTimeout(startConnection, 5000);
+        }
+    }
+
+    // Notification Click Handler
+    async function handleNotificationClick(notif) {
+        if (!notif.isRead) {
+            try {
+                await fetch(`/api/notifications/staff/mark-read/${currentUserId}/${notif.notificationId}`, { method: "PUT" });
+                notif.isRead = true;
+                renderNotifications();
+                updateCountBadges();
+            } catch (error) {
+                console.error("Error marking as read:", error);
+            }
+        }
+        if (notif.link) window.location.href = notif.link;
+    }
+
+    // Load Notifications
+    async function loadNotifications() {
+        try {
+            document.getElementById('loadingSkeleton').classList.remove('hidden');
+            const res = await fetch(`/api/notifications/staff/${currentUserId}`);
+            allNotifs = await res.json();
+            updateCountBadges();
+            renderNotifications();
+        } catch (error) {
+            console.error("Error loading notifications:", error);
+        } finally {
+            document.getElementById('loadingSkeleton').classList.add('hidden');
+        }
+    }
+
+    // Helper Functions
+    function getTypeIcon(type) {
+        return {
+            'Visitor': '<i class="fas fa-user-check text-yellow-500"></i>',
+            'Vehicle': '<i class="fas fa-car-side text-indigo-500"></i>',   
+            'Facility Reservation Schedule': '<i class="fas fa-calendar-check text-blue-500"></i>', 
+            'Service Schedule': '<i class="fas fa-cogs text-green-500"></i>'
+        }[type] || '<i class="fas fa-bell text-gray-400"></i>'; 
+    }
+
+    async function updateCountBadges() {
+        try {
+            const res = await fetch(`/api/notifications/staff/type/unread-count/${currentUserId}`);
+            const counts = await res.json();
+
+            const countMap = {
+                'Visitor': 0,
+                'Vehicle': 0,
+                'Facility Reservation Schedule': 0,
+                'Service Schedule': 0
+            };
+
+            counts.forEach(c => {
+                countMap[c.type] = c.count;
+            });
+
+            // Update UI
+            const badgeMap = {
+                'Visitor': document.getElementById('visitor-count'),
+                'Vehicle': document.getElementById('vehicle-count'),
+                'Facility Reservation Schedule': document.getElementById('facility-count'),
+                'Service Schedule': document.getElementById('service-count')
+            };
+
+            Object.keys(badgeMap).forEach(type => {
+                const badge = badgeMap[type];
+                const count = countMap[type];
+
+                if (!count || count === 0) {
+                    badge.style.display = 'none';
+                } else {
+                    badge.textContent = count;
+                    badge.style.display = 'inline-block';
+                }
+            });
+        } catch (error) {
+            console.error("Error fetching unread count by type:", error);
+        }
+    }
+
+    function updateConnectionStatus(status) {
+        const statusElem = document.getElementById('connectionStatus');
+        statusElem.innerHTML = `
+            <i class="fas fa-circle
+                ${status === 'connected' ? 'text-green-500' :
+                  status === 'reconnecting' ? 'text-yellow-500' : 'text-red-500'}
+                text-xs"></i>
+            <span class="ml-2 text-gray-600">
+                ${status.charAt(0).toUpperCase() + status.slice(1)}
+            </span>
+        `;
+    }
+
+    function showNewNotificationToast(notif) {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg border-l-4 ${
+            notif.type === 'Visitor' ? 'border-blue-500 bg-blue-50' :
+            notif.type === 'Vehicle' ? 'border-blue-500 bg-blue-50' :
+            notif.type === 'Facility Reservation Schedule' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Service Schedule' ? 'border-green-500 bg-green-50' :
+            'border-purple-500 bg-purple-50'
+        } animate-slide-in`;
+
+        toast.innerHTML = `
+            <div class="flex items-center space-x-3">
+                ${getTypeIcon(notif.type)}
+                <div>
+                    <p class="font-medium text-gray-800 p2">${notif.title}</p>
+                    <p class="text-sm text-gray-600 p2">${notif.message}</p>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+    }
+
+    function getCookie(name) {
+        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? match[2] : null;
+    }
+
+    // Initialize
+    startConnection();
+</script>

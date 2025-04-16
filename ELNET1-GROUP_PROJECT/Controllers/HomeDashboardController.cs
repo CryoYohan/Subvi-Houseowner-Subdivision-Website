@@ -8,16 +8,22 @@ using ELNET1_GROUP_PROJECT.Data;
 using System;
 using System.Linq;
 using System.Text.Json;
+using Azure.Core;
+using Microsoft.AspNetCore.SignalR;
+using ELNET1_GROUP_PROJECT.SignalR;
+using System.Globalization;
 
 [Route("api")]
 [ApiController]
 public class HomeDashboardController : ControllerBase
 {
     private readonly MyAppDBContext _context;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public HomeDashboardController(MyAppDBContext context)
+    public HomeDashboardController(MyAppDBContext context, IHubContext<NotificationHub> hubContext)
     {
         _context = context;
+        _hubContext = hubContext;
     }
 
     [HttpGet("announcement")]
@@ -44,9 +50,20 @@ public class HomeDashboardController : ControllerBase
         if (string.IsNullOrEmpty(userIdStr)) return BadRequest(new { message = "User not logged in" });
 
         int userId = int.Parse(userIdStr);
+        var today = DateTime.Today;
 
-        var polls = await _context.Poll
+        // Step 1: Load all active polls from DB (Status = true)
+        var allPolls = await _context.Poll
             .Where(p => p.Status)
+            .OrderByDescending(p => p.PollId)
+            .ToListAsync();
+
+        // Step 2: Filter by valid date range in memory
+        var polls = allPolls
+            .Where(p =>
+                DateTime.TryParseExact(p.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var startDate) &&
+                DateTime.TryParseExact(p.EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var endDate) &&
+                today >= startDate && today <= endDate)
             .Select(p => new
             {
                 p.PollId,
@@ -63,7 +80,7 @@ public class HomeDashboardController : ControllerBase
                         (vote, choice) => choice.Choice)
                     .FirstOrDefault()
             })
-            .ToListAsync();
+            .ToList();
 
         return Ok(polls);
     }
@@ -101,19 +118,28 @@ public class HomeDashboardController : ControllerBase
     public async Task<IActionResult> CastVote([FromBody] VoteRequest voteRequest)
     {
         var userIdStr = Request.Cookies["Id"];
-        if (string.IsNullOrEmpty(userIdStr)) return BadRequest(new { message = "User not logged in" });
+        if (string.IsNullOrEmpty(userIdStr))
+            return BadRequest(new { message = "User not logged in" });
 
         int userId = int.Parse(userIdStr);
 
+        // Check if the user has already voted
         var existingVote = await _context.Vote
-            .Where(v => v.PollId == voteRequest.PollId && v.UserId == userId)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(v => v.PollId == voteRequest.PollId && v.UserId == userId);
 
         if (existingVote != null)
         {
-            return BadRequest("You have already voted for this poll.");
+            return BadRequest(new { message = "You have already voted for this poll." });
         }
 
+        // Fetch poll info (to get the title)
+        var poll = await _context.Poll.FirstOrDefaultAsync(p => p.PollId == voteRequest.PollId);
+        if (poll == null)
+        {
+            return NotFound(new { message = "Poll not found." });
+        }
+
+        // Create the vote
         var vote = new Vote
         {
             PollId = voteRequest.PollId,
@@ -125,7 +151,26 @@ public class HomeDashboardController : ControllerBase
         _context.Vote.Add(vote);
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = "Vote casted successfully" });
+        // Create a notification for all homeowners
+        var notification = new Notification
+        {
+            UserId = null, // null means broadcast to all homeowners
+            TargetRole = "Homeowner",
+            Type = "Poll",
+            Title = $"{poll.Title} Poll Voted",
+            Message = $"You voted to the {poll.Title} Poll.",
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            Link = "/home/dashboard"
+        };
+
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
+        // Real-time notification to all homeowners (you may need to adjust targeting logic)
+        await _hubContext.Clients.Group("Homeowner").SendAsync("ReceiveNotification", notification);
+
+        return Ok(new { message = "Vote casted successfully." });
     }
 
     // PUT: api/polls/vote
@@ -133,27 +178,52 @@ public class HomeDashboardController : ControllerBase
     public async Task<IActionResult> ChangeVote([FromBody] VoteRequest voteRequest)
     {
         var userIdStr = Request.Cookies["Id"];
-        if (string.IsNullOrEmpty(userIdStr)) return BadRequest(new { message = "User not logged in" });
+        if (string.IsNullOrEmpty(userIdStr))
+            return BadRequest(new { message = "User not logged in" });
 
         int userId = int.Parse(userIdStr);
 
         var existingVote = await _context.Vote
-            .Where(v => v.PollId == voteRequest.PollId && v.UserId == userId)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(v => v.PollId == voteRequest.PollId && v.UserId == userId);
 
         if (existingVote == null)
         {
-            return BadRequest("You haven't voted yet.");
+            return BadRequest(new { message = "You haven't voted yet." });
         }
 
-        // Update the existing vote with the new choice and the updated VoteDate
+        // Fetch poll info to include the title in the notification
+        var poll = await _context.Poll.FirstOrDefaultAsync(p => p.PollId == voteRequest.PollId);
+        if (poll == null)
+        {
+            return NotFound(new { message = "Poll not found." });
+        }
+
+        // Update the existing vote
         existingVote.ChoiceId = voteRequest.ChoiceId;
-        existingVote.VoteDate = DateTime.Now; 
+        existingVote.VoteDate = DateTime.Now;
 
         _context.Vote.Update(existingVote);
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = "Vote updated successfully" });
+        // Create a notification for all homeowners
+        var notification = new Notification
+        {
+            UserId = null,
+            TargetRole = "Homeowner",
+            Type = "Poll",
+            Title = "Poll Vote Changed",
+            Message = $"Your vote for the poll {poll.Title} has been updated.",
+            IsRead = false,
+            DateCreated = DateTime.Now
+        };
+
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
+        // Send real-time notification to homeowners (adjust group logic as needed)
+        await _hubContext.Clients.Group("Homeowner").SendAsync("ReceiveNotification", notification);
+
+        return Ok(new { message = "Vote updated successfully." });
     }
 
     [HttpGet("polls/vote-status/{pollId}")]

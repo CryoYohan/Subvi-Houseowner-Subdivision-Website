@@ -3,159 +3,213 @@
     ViewData["Title"] = "Staff | Profile Settings";
 }
 
-<div class="flex flex-col items-center justify-center bg-gray-50 p-4">
-    <div class="w-full bg-white rounded-2xl shadow-lg p-4 transition-all duration-300 hover:shadow-xl">
-        <!-- Profile Header Section -->
-        <div class="text-center mb-10">
-            <div class="relative inline-block group cursor-pointer" onclick="$('#profileModal').modal('show')">
-                <div class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center overflow-hidden border-4 border-white shadow-xl transition-transform duration-300 hover:scale-105">
-                    <img id="profilePreview" src="" class="w-full h-full object-cover" alt="Profile" style="display: none;">
-                    <i class="fas fa-user-circle text-7xl text-gray-300" id="defaultIcon"></i>
+<div class="flex overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-72 p-4 py-6">
+        <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
+        <nav class="flex-1 space-y-3">
+            <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-home w-6"></i>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-calendar-check w-6"></i>
+                <span class="ml-3">Reservations</span>
+            </a>
+            <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-users w-6"></i>
+                <span class="ml-3">Homeowners & Staff Accounts</span>
+            </a>
+            <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-history w-6"></i>
+                <span class="ml-3">Bill Payment History</span>
+            </a>
+            <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-tools w-6"></i>
+                <span class="ml-3">Services</span>
+            </a>
+            <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-bullhorn w-6"></i>
+                <span class="ml-3">Announcements</span>
+            </a>
+            <a asp-controller="admin" asp-action="poll" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-poll w-6"></i>
+                <span class="ml-3">Poll</span>
+            </a>
+            <a asp-controller="admin" asp-action="feedback" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Feedback" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-comment-alt w-6"></i>
+                <span class="ml-3">Feedback</span>
+            </a>
+            <a asp-controller="admin" asp-action="reports" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-chart-line w-6"></i>
+                <span class="ml-3">Reports</span>
+            </a>
+        </nav>
+    </aside>
+    <div class="flex flex-col w-full bg-gray-50"> 
+        <div class="w-full bg-white rounded-2xl shadow-lg p-4 transition-all duration-300 hover:shadow-xl">
+            <h2 class="text-2xl font-bold text-left text-blue-900"><i class="fa fa-cog me-2"></i> Profile Settings</h2>
+            <!-- Profile Header Section -->
+            <div class="text-center mb-10">
+                <div class="relative inline-block group cursor-pointer" onclick="$('#profileModal').modal('show')">
+                    <div class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center overflow-hidden border-4 border-white shadow-xl transition-transform duration-300 hover:scale-105">
+                        <img id="profilePreview" src="" class="w-full h-full object-cover" alt="Profile" style="display: none;">
+                        <i class="fas fa-user-circle text-7xl text-gray-300" id="defaultIcon"></i>
+                    </div>
+                    <div class="absolute inset-0 bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <i class="fas fa-camera text-2xl text-white"></i>
+                    </div>
                 </div>
-                <div class="absolute inset-0 bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <i class="fas fa-camera text-2xl text-white"></i>
-                </div>
-            </div>
-            <div id="profileNameWrapper" class="mt-3">
-                <h2 class="text-3xl font-bold text-gray-800 mt-4" id="profileName">Loading...</h2>
-            </div>
-        </div>
-
-        <!-- Profile Form -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <!-- Left Column - Personal Info -->
-            <div class="space-y-6">
-                <div class="border-b border-gray-200 pb-4">
-                    <h2 class="text-xl font-semibold text-gray-800">
-                        <i class="fas fa-user-circle text-blue-500 mr-2"></i>
-                        Personal Information
-                    </h2>
-                </div>
-
-                <div id="profileSection" class="space-y-2">
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-gray-700">First Name</label>
-                        <input id="firstname" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" disabled />
-                        <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-gray-700">Last Name</label>
-                        <input id="lastname" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" disabled />
-                        <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-gray-700">Email Address</label>
-                        <input id="email" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="email" disabled />
-                        <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-gray-700">Contact Number</label>
-                        <input id="contact" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="tel" disabled />
-                        <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-gray-700">Address</label>
-                        <input id="address" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" disabled />
-                        <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex gap-4 pt-4">
-                    <button id="editBtn" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-secondary px-6 py-2.5" onclick="toggleEditMode()">
-                        <i class="fas fa-edit mr-2"></i>Edit Profile
-                    </button>
-                    <button id="cancelBtn" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-outline-gray px-6 py-2.5" style="display: none" onclick="toggleEditMode()">
-                        Cancel Changes
-                    </button>
-                    <button id="updateinfo" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-primary px-6 py-2.5" style="display: none" onclick="submitProfile()">
-                        <span class="btn-text">Save Changes</span>
-                        <i class="fas fa-spinner fa-spin loading-icon ml-2" style="display: none"></i>
-                    </button>
+                <div id="profileNameWrapper" class="mt-3">
+                    <h2 class="text-3xl font-bold text-gray-800 mt-4" id="profileName">Loading...</h2>
                 </div>
             </div>
 
-            <!-- Right Column - Password Section -->
-            <div class="space-y-6">
-                <div class="border-b border-gray-200 pb-4">
-                    <h2 class="text-xl font-semibold text-gray-800">
-                        <i class="fas fa-lock text-blue-500 mr-2"></i>
-                        Password Management
-                    </h2>
-                </div>
+            <!-- Profile Form -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <!-- Left Column - Personal Info -->
+                <div class="space-y-6">
+                    <div class="border-b border-gray-200 pb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">
+                            <i class="fas fa-user-circle text-blue-500 mr-2"></i>
+                            Personal Information
+                        </h2>
+                    </div>
 
-                <div id="passwordSection" class="space-y-6">
-                    <div id="passwordFields" class="hidden space-y-6">
+                    <div id="profileSection" class="space-y-2">
                         <div class="space-y-1">
-                            <label class="text-sm font-medium text-gray-700">New Password</label>
-                            <input id="newPassword" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="password" />
-                            <div class="password-strength transition-all duration-300 mt-3">
-                                <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                                    <div class="strength-bar shadow-sm h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            <label class="text-sm font-medium text-gray-700">First Name</label>
+                            <input id="firstname" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" disabled />
+                            <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-gray-700">Last Name</label>
+                            <input id="lastname" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" disabled />
+                            <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-gray-700">Email Address</label>
+                            <input id="email" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="email" disabled />
+                            <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-gray-700">Contact Number</label>
+                            <input id="contact" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="tel" disabled />
+                            <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-gray-700">Address</label>
+                            <input id="address" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" disabled />
+                            <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4"></div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-4 pt-4">
+                        <button id="editBtn" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-secondary px-6 py-2.5" onclick="toggleEditMode()">
+                            <i class="fas fa-edit mr-2"></i>Edit Profile
+                        </button>
+                        <button id="cancelBtn" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-outline-gray px-6 py-2.5" style="display: none" onclick="toggleEditMode()">
+                            Cancel Changes
+                        </button>
+                        <button id="updateinfo" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-primary px-6 py-2.5" style="display: none" onclick="submitProfile()">
+                            <span class="btn-text">Save Changes</span>
+                            <i class="fas fa-spinner fa-spin loading-icon ml-2" style="display: none"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column - Password Section -->
+                <div class="space-y-6">
+                    <div class="border-b border-gray-200 pb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">
+                            <i class="fas fa-lock text-blue-500 mr-2"></i>
+                            Password Management
+                        </h2>
+                    </div>
+
+                    <div id="passwordSection" class="space-y-6">
+                        <div id="passwordFields" class="hidden space-y-6">
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium text-gray-700">New Password</label>
+                                <input id="newPassword" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="password" />
+                                <div class="password-strength transition-all duration-300 mt-3">
+                                    <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="strength-bar shadow-sm h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                    </div>
+                                    <div class="strength-text text-xs font-medium mt-2 text-gray-600"></div>
                                 </div>
-                                <div class="strength-text text-xs font-medium mt-2 text-gray-600"></div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium text-gray-700">Confirm Password</label>
+                                <input id="confirmPassword" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="password" />
+                                <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4 mt-1"></div>
+                            </div>
+
+                            <div class="flex gap-4 pt-2">
+                                <button class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-primary px-6 py-2.5" onclick="submitNewPassword()">
+                                    Update Password
+                                </button>
+                                <button class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-outline-gray px-6 py-2.5" onclick="togglePasswordEdit(false)">
+                                    Cancel
+                                </button>
                             </div>
                         </div>
 
-                        <div class="space-y-1">
-                            <label class="text-sm font-medium text-gray-700">Confirm Password</label>
-                            <input id="confirmPassword" class="form-input w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 px-4 py-3" type="password" />
-                            <div class="validation-message transition-opacity duration-200 text-xs text-red-500 h-4 mt-1"></div>
-                        </div>
-
-                        <div class="flex gap-4 pt-2">
-                            <button class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-primary px-6 py-2.5" onclick="submitNewPassword()">
-                                Update Password
-                            </button>
-                            <button class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-outline-gray px-6 py-2.5" onclick="togglePasswordEdit(false)">
-                                Cancel
-                            </button>
-                        </div>
+                        <button id="changePasswordBtn" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-outline-primary w-full py-2.5" onclick="togglePasswordEdit(true)">
+                            <i class="fas fa-key mr-2"></i>Change Password
+                        </button>
                     </div>
-
-                    <button id="changePasswordBtn" class="btn inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 btn-outline-primary w-full py-2.5" onclick="togglePasswordEdit(true)">
-                        <i class="fas fa-key mr-2"></i>Change Password
-                    </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Enhanced Profile Image Modal -->
-    <div class="modal fade" id="profileModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content rounded-2xl overflow-hidden">
-                <div class="border-b-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6">
-                    <h5 class="modal-title text-xl font-bold">Update Profile Picture</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-6">
-                    <div class="text-center space-y-6">
-                        <!-- Profile Image Section -->
-                        <div id="profileImageContainer" class="border-4 border-dashed border-gray-200 transition-all duration-300 hover:border-blue-400 bg-gray-100 rounded-lg overflow-hidden" style="min-height: 400px;">
-                            <img id="preview" class="w-full h-full object-contain" style="display: none;">
-                            <div id="uploadPrompt" class="upload-prompt text-center py-20">
-                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
-                                <p class="text-gray-500">Drag and drop or click to upload</p>
+        <!-- Enhanced Profile Image Modal -->
+        <div class="modal fade" id="profileModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content rounded-2xl overflow-hidden">
+                    <div class="border-b-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6">
+                        <h5 class="modal-title text-xl font-bold">Update Profile Picture</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-6">
+                        <div class="text-center space-y-6">
+                            <!-- Profile Image Section -->
+                            <div id="profileImageContainer" class="border-4 border-dashed border-gray-200 transition-all duration-300 hover:border-blue-400 bg-gray-100 rounded-lg overflow-hidden" style="min-height: 400px;">
+                                <img id="preview" class="w-full h-full object-contain" style="display: none;">
+                                <div id="uploadPrompt" class="upload-prompt text-center py-20">
+                                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                    <p class="text-gray-500">Drag and drop or click to upload</p>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Buttons -->
-                        <div class="flex justify-center gap-4 mt-4">
-                            <input type="file" id="fileInput" class="hidden" accept="image/*">
-                            <button id="uploadBtn" class="btn-secondary">
-                                <i class="fas fa-upload mr-2"></i>Choose Image
-                            </button>
-                            <button id="confirmCrop" class="btn-success hidden" onclick="saveProfileImage()">
-                                <i class="fas fa-check mr-2"></i>Ok
-                            </button>
-                            <button id="cancelCrop" class="btn-secondary hidden" onclick="cancelCrop()">
-                                <i class="fas fa-times mr-2"></i>Cancel
-                            </button>
+                            <!-- Buttons -->
+                            <div class="flex justify-center gap-4 mt-4">
+                                <input type="file" id="fileInput" class="hidden" accept="image/*">
+                                <button id="uploadBtn" class="btn-secondary">
+                                    <i class="fas fa-upload mr-2"></i>Choose Image
+                                </button>
+                                <button id="confirmCrop" class="btn-success hidden" onclick="saveProfileImage()">
+                                    <i class="fas fa-check mr-2"></i>Ok
+                                </button>
+                                <button id="cancelCrop" class="btn-secondary hidden" onclick="cancelCrop()">
+                                    <i class="fas fa-times mr-2"></i>Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

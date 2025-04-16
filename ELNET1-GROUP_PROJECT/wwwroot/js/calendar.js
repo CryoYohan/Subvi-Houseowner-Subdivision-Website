@@ -10,17 +10,8 @@ async function fetchScheduleData() {
     try {
         const response = await fetch("/api/calendar/schedules");
         const Data = await response.json();
-
-        if (Data) {
-            scheduleData = Data;
-        } else {
-            scheduleData = {
-                "2025-03-02": ["Meeting with Admin", "Project Discussion"],
-                "2025-03-10": ["Meeting with Admin", "Project Discussion"],
-                "2025-03-15": ["Staff Training", "System Maintenance"],
-                "2025-03-20": ["Budget Review"]
-            };
-        }
+        scheduleData = Data;
+        showSchedule(selectedDate)
         renderCalendar();
     } catch (error) {
         console.error("Failed to fetch schedule data:", error);
@@ -90,12 +81,22 @@ function renderCalendar() {
 
         // Display Events 
         const eventsDiv = document.createElement('div');
-        eventsDiv.className = "mt-1 text-left text-sm truncate"; 
+        eventsDiv.className = "mt-1 text-left text-sm truncate";
+
         if (schedule.events.length > 0) {
-            eventsDiv.innerHTML = schedule.events.map(event => `<div class="text-blue-900"><strong>• ${event}</strong></div>`).join('');
+            const visibleEvents = schedule.events.slice(0, 1); 
+            eventsDiv.innerHTML = visibleEvents
+                .map(event => `<div class="text-blue-900"><strong>• ${event.description}</strong></div>`)
+                .join('');
+
+            if (schedule.events.length > 2) {
+                const extraCount = schedule.events.length - 2;
+                eventsDiv.innerHTML += `<div class="text-gray-500 italic">+${extraCount} more</div>`;
+            }
         } else {
-            eventsDiv.innerHTML = "&nbsp;"; 
+            eventsDiv.innerHTML = "&nbsp;";
         }
+
         dayCell.appendChild(eventsDiv);
 
         // Display Reservations
@@ -146,7 +147,7 @@ function showSchedule(date) {
                         <ul class="p-2 space-y-1 ">
                             ${data.events.map(event => `
                                 <li class="flex calendar-event-text-list-color items-center font-semibold">
-                                    • ${event}
+                                    • ${event.description}
                                 </li>
                             `).join('')}
                         </ul>
