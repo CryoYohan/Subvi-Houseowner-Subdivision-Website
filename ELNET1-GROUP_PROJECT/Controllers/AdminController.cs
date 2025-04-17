@@ -1238,6 +1238,76 @@ public class AdminController : Controller
         }
         return View();
     }
+
+    public IActionResult GetFeedbackList(string type)
+    {
+        var list = _context.Feedback
+            .Where(f => f.FeedbackType == type && (type != "Complaint" || f.ComplaintStatus != "Resolved"))
+            .Join(_context.User_Accounts,
+                  f => f.UserId,
+                  u => u.Id,
+                  (f, u) => new
+                  {
+                      f.FeedbackId,
+                      f.FeedbackType,
+                      f.Description,
+                      f.ComplaintStatus,
+                      f.DateSubmitted,
+                      FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
+                                 (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower()
+                  })
+            .OrderByDescending(f => f.DateSubmitted)
+            .ToList();
+
+        return Json(list);
+    }
+
+    public IActionResult GetResolvedFeedback()
+    {
+        var feedbacks = (from f in _context.Feedback
+                         join u in _context.User_Accounts on f.UserId equals u.Id
+                         where f.FeedbackType == "Complaint" && f.ComplaintStatus == "Resolved"
+                         orderby f.DateSubmitted descending
+                         select new
+                         {
+                             f.FeedbackId,
+                             f.FeedbackType,
+                             f.Description,
+                             f.ComplaintStatus,
+                             f.DateSubmitted,
+                             FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
+                                        (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower()
+                         }).ToList();
+
+        return Ok(feedbacks);
+    }
+
+    public IActionResult GetFeedbackDetails(int feedbackId)
+    {
+        var feedback = (from f in _context.Feedback
+                        join u in _context.User_Accounts on f.UserId equals u.Id
+                        where f.FeedbackId == feedbackId
+                        select new
+                        {
+                            f.FeedbackId,
+                            f.FeedbackType,
+                            f.Description,
+                            f.DateSubmitted,
+                            f.ComplaintStatus,
+                            Rating = f.Rating,
+                            FullName =
+                                (char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1).ToLower()) + " " +
+                                (char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1).ToLower())
+                        }).FirstOrDefault();
+
+        if (feedback == null)
+        {
+            return NotFound(new { message = "Feedback not found" });
+        }
+
+        return Ok(feedback);
+    }
+
     public IActionResult Reports()
     {
         RefreshJwtCookies();

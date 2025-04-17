@@ -120,11 +120,20 @@
         </ul>
     </div>
 
-        <div class="container mx-auto mt-4 p-2 bg-white rounded-xl shadow-md">
-            <div class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
-                <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-bullhorn text-xl"></i> Feedbacks</h1>
+    <div class="container mx-auto mt-4 p-2 bg-white rounded-xl shadow-md">
+        <!-- Tabs -->
+        <div class="flex justify-between items-center mb-4 bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md">
+            <h1 class="text-2xl font-bold text-blue-900">
+                <i class="fas fa-bullhorn text-xl"></i> Feedbacks
+            </h1>
+            <div class="flex space-x-2">
+                <button id="tabFeedback" class="tab-btn px-4 py-2 rounded-md bg-blue-600 text-white">Feedback</button>
+                <button id="tabComplaint" class="tab-btn px-4 py-2 rounded-md bg-gray-200 text-gray-700">Complaint Feedback</button>
             </div>
-        
+        </div>
+
+        <!-- Feedback Panel-->
+        <div id="panelFeedback">
             <div class="mb-2 flex items-center space-x-2">
                 <select id="filterType" class="border border-gray-300 rounded-md px-2 py-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">All</option>
@@ -135,13 +144,81 @@
                 <button onclick="loadFeedbacks()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">Filter</button>
                 <button onclick="openFeedbackModal()" class="ml-auto bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition">Add Feedback</button>
             </div>
-
-            <div id="feedbackList" class="overflow-y-auto space-y-2" style="max-height: 500px"></div>
+            <div id="feedbackCreationList" class="overflow-y-auto space-y-2" style="max-height: 500px"></div>
         </div>
 
-        <div id="feedbackModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center">
-            <div class="p-6 rounded-xl shadow-lg w-96" style="background-color: white">
-                <h2 class="text-xl font-bold mb-4 text-blue-600">Add Feedback</h2>
+        <!-- Complaint Feedback Panel-->
+        <div id="panelComplaint" class="hidden">
+            <!-- Hidden user ID -->
+            <input type="hidden" id="currentUserId" value="@Context.Request.Cookies["Id"]" />
+
+            <div class="container-fluid">
+                <div class="row" style="height: 85vh;">
+                    <!-- Tabs and Feedback List -->
+                    <div class="col-md-4 border-end p-0 d-flex flex-column">
+                        <!-- Tabs -->
+                        <div class="bg-light p-2 d-flex justify-content-around border-bottom">
+                            <button class="btn btn-sm tab-btn active" data-type="Complaint">Complaint</button>
+                            <button class="btn btn-sm tab-btn" data-type="Resolved">Resolved</button>
+                            <button class="btn btn-sm tab-btn" data-type="Suggestion">Suggestion</button>
+                            <button class="btn btn-sm tab-btn" data-type="Compliment">Compliment</button>
+                        </div>
+
+                        <!-- Search Toggle Icon -->
+                        <div class="px-2 py-1 text-end border-bottom bg-light">
+                            <i id="searchToggle" class="fas fa-search text-primary" style="cursor: pointer;"></i>
+                        </div>
+
+                        <!-- Search Input -->
+                        <div id="searchInputContainer" class="p-2 align-items-center justify-content-between border-bottom bg-white hidden">
+                            <input type="text" id="searchInput" class="form-control form-control-sm me-2" placeholder="Search feedback..." />
+                        </div>
+
+                        <!-- Feedback List -->
+                        <div id="feedbackConvList" class="overflow-auto flex-grow-1">
+                            <!-- Items will be loaded here dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Conversation or Details -->
+                    <div class="col-md-8 d-flex flex-column">
+                        <!-- Top Controls -->
+                        <div class="d-flex justify-content-between align-items-center p-2 border-bottom bg-light">
+                            <div id="feedbackTypeLabel" class="fw-bold">Feedback</div>
+                            <div>
+                                <!-- View Details Button -->
+                                <button id="viewDetailsBtn" class="btn btn-outline-primary btn-sm d-none" data-bs-toggle="modal" data-bs-target="#detailsModal">View</button>
+                            </div>
+                        </div>
+
+                        <div id="feedbackMessage" class="font-medium text-lg text-center p-4">Select a Feedback</div>
+
+                        <!-- Complaint Messages Section -->
+                        <div id="conversationSection" class="flex-grow-1 overflow-auto p-3" style="background: #f9f9f9; display: none;">
+                            <!-- Messages loaded via JS -->
+                        </div>
+
+                        <!-- Suggestion/Compliment Info Section -->
+                        <div id="infoContainer" class="flex-grow-1 overflow-auto p-3" style="display: none;">
+                            <!-- Loaded via JS -->
+                        </div>
+
+                        <!-- Message Input (Complaint only) -->
+                        <div id="messageInputSection" class="p-2 border-top d-none">
+                            <div class="input-group">
+                                <input type="text" id="messageInput" class="form-control" placeholder="Type a message..." />
+                                <button class="btn btn-primary" id="sendMessage">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="feedbackModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center">
+         <div class="p-6 rounded-xl shadow-lg w-96" style="background-color: white">
+              <h2 class="text-xl font-bold mb-4 text-blue-600">Add Feedback</h2>
                 <label for="feedbackType" class="block mb-2 font-medium">Type</label>
                 <select id="feedbackType" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-4" onchange="toggleRating()">
                     <option value="Compliment">Compliment</option>
@@ -175,118 +252,26 @@
                     <button onclick="closeFeedbackModal()" class="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500 transition">Cancel</button>
                     <button onclick="submitFeedback()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">Submit</button>
                 </div>
+         </div>
+    </div>
+
+    <!-- For Complaint Feedback Panel -->
+    <!-- Modal for View Feedback Details -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsModalLabel">Feedback Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        let currentRating = 0;
-        let currentfilterstatus = '';
-
-        function loadFeedbacks() {
-            const feedbackType = document.getElementById("filterType").value;
-            currentfilterstatus = feedbackType;
-            fetch(`/Home/GetFeedbacks?feedbackType=${feedbackType}`)
-                .then(res => res.json())
-                .then(data => {
-                    const list = document.getElementById("feedbackList");
-                    list.innerHTML = "";
-                    if (data.length === 0) {
-                        list.innerHTML = '<p class="text-gray-500 font-semibold text-base text-center">No ${currentfilterstatus} feedback yet.</p>';
-                        return;
-                    }
-
-                    data.forEach(feedback => {
-                        list.innerHTML += `
-                            <div class="p-4 border rounded-lg shadow-sm hover:shadow-md transition hover:blue-600" style="background-color:white">
-                                <div class="flex justify-between items-center">
-                                    <h3 class="text-lg font-semibold">${feedback.feedbackType}</h3>
-                                    ${feedback.feedbackType == 'Complaint' ? `
-                                          <p class="text-sm px-3 py-1 rounded-md ${
-                                            feedback.complaintStatus === 'RESOLVED'
-                                              ? 'bg-green-600 text-white'
-                                              : feedback.complaintStatus === 'PENDING'
-                                              ? 'bg-red-600 text-white'
-                                              : feedback.complaintStatus === 'ONGOING'
-                                              ? 'bg-gray-500 text-white'
-                                              : 'hidden'
-                                          }">
-                                            ${feedback.complaintStatus}
-                                          </p>
-                                        ` : ''}
-                                </div>
-                                <p class="text-gray-700 mt-2">${feedback.description}</p>
-                                <p class="text-sm text-gray-500 mt-1">${new Date(feedback.dateSubmitted).toLocaleString()}</p>
-                            </div>
-                        `;
-                    });
-                })
-                .catch(error => console.error(error));
-        }
-
-        function openFeedbackModal() {
-            document.getElementById("feedbackModal").classList.remove("hidden");
-            toggleRating();  // Ensures rating visibility is correct when opening
-        }
-
-        function closeFeedbackModal() {
-            document.getElementById("feedbackModal").classList.add("hidden");
-            document.getElementById("feedbackType").value = "Compliment";
-            document.getElementById("feedbackDescription").value = "";
-            document.getElementById("charCount").textContent = "0 / 255";
-            document.getElementById("charError").classList.add("hidden");
-            currentRating = 0;
-            toggleRating();
-        }
-
-        function toggleRating() {
-            const type = document.getElementById("feedbackType").value;
-            document.getElementById("ratingSection").classList.toggle("hidden", type !== "Compliment");
-        }
-
-        function setRating(rating) {
-            currentRating = rating;
-            const stars = document.querySelectorAll("#ratingSection span");
-            stars.forEach((star, index) => {
-                star.classList.toggle("text-yellow-400", index < rating);
-            });
-        }
-
-        function updateCharCount() {
-            const textarea = document.getElementById("feedbackDescription");
-            const charCount = document.getElementById("charCount");
-            const charError = document.getElementById("charError");
-            const length = textarea.value.length;
-
-            charCount.textContent = `${length} / 255`;
-
-            if (length >= 255) {
-                charError.classList.remove("hidden");
-            } else {
-                charError.classList.add("hidden");
-            }
-        }
-
-        function submitFeedback() {
-            const feedbackType = document.getElementById("feedbackType").value;
-            const description = document.getElementById("feedbackDescription").value;
-            if (!description.trim()) {
-                alert("Please enter a description.");
-                return;
-            }
-
-            fetch('/Home/AddFeedback', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ feedbackType, description, rating: currentRating })
-            })
-            .then(() => {
-                closeFeedbackModal();
-                loadFeedbacks();
-            })
-            .catch(error => console.error(error));
-        }
-
-        document.addEventListener('DOMContentLoaded', loadFeedbacks);
-    </script>
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="~/js/homeowner-feedback-create.js"></script>
+<script src="~/js/homeowner-feedback-complaint.js"></script>

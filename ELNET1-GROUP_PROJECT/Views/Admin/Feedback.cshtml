@@ -5,7 +5,266 @@
 
 @section Scripts {
     <script src="~/js/notification-admin.js"></script>
+    <script>
+        let currentTab = 'Complaint';
+        let currentFeedbackId = null;
+        let isSearchMode = false;
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+            };
+            return date.toLocaleString('en-US', options);
+        }
+
+        // Toggle Search UI
+        $('.tab-btn').click(function () {
+            $('.tab-btn').removeClass('active');
+            $(this).addClass('active');
+            currentTab = $(this).data('type');
+
+            $('#feedbackList').html('');
+            $('#conversationSection').html('');
+            $('#infoContainer').html('');
+            $('#viewDetailsBtn').addClass('d-none');
+            $('#messageInputSection').addClass('d-none');
+            $('.dropdown-toggle').addClass('d-none');
+
+            // Reset search mode when switching tabs
+            isSearchMode = false;
+            $('#searchInputContainer').hide();
+            $('#searchInput').val('');
+            $('#searchToggle').removeClass('fa-times').addClass('fa-search');
+
+            // Hide/show input based on tab
+            if (currentTab === 'Complaint') {
+                $('#messageInputSection').show();
+            } else {
+                $('#messageInputSection').hide();
+            }
+
+            // Feedback header label
+            if (!currentFeedbackId) {
+                $('#feedbackTypeLabel').text(currentTab);
+                $('#feedbackMessage').removeClass('d-none');
+            } else {
+                $('#feedbackTypeLabel').text(`${currentTab} - ${currentFeedbackFullName}`);
+                $('#feedbackMessage').addClass('d-none');
+            }
+
+            // Determine API endpoint
+            let apiUrl = `/admin/getfeedbacklist?type=${currentTab}`;
+            if (currentTab === 'Resolved') {
+                apiUrl = `/admin/getresolvedfeedback`;
+            }
+
+            // Fetch feedback
+            $.get(apiUrl, function (data) {
+                $('#feedbackList').append(`<h5 class="font-semibold text-center p-2 border-bottom">${currentTab}</h5>`);
+
+                data.forEach(item => {
+                    let statusBadge = '';
+
+                    if (currentTab === 'Complaint' || currentTab === 'Resolved') {
+                        if (item.complaintStatus === 'Resolved') {
+                            statusBadge = '<span class="badge bg-success">Resolved</span>';
+                        } else if (item.complaintStatus === 'Ongoing') {
+                            statusBadge = '<span class="badge bg-yellow-500 p-2 text-1xl">Ongoing</span>';
+                        } else if (item.complaintStatus === 'Pending') {
+                            statusBadge = '<span class="badge bg-secondary">Pending</span>';
+                        }
+                    }
+
+                    if (currentTab === 'Resolved' && item.complaintStatus === 'Resolved') {
+                        statusBadge = '<span class="badge bg-success">Resolved</span>';
+                    }
+
+                    $('#feedbackList').append(`
+                        <div class="p-2 border-bottom feedback-item bg-white hover-bg pointer" style="cursor: pointer;" data-id="${item.feedbackId}" data-type="${currentTab}" data-fullname="${item.fullName}" data-status="${item.complaintStatus}">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">${item.fullName}</small>
+                                <small class="text-muted">${formatDate(item.dateSubmitted)}</small>
+                            </div>
+                            <div class="feedback-description">${item.description.length > 55 ? item.description.substring(0, 55) + '...' : item.description}</div>
+                            <div class="text-right">${statusBadge}</div>
+                        </div>
+                    `);
+                });
+            });
+        });
+
+        // Search toggle logic
+        $('#searchToggle').click(function () {
+            isSearchMode = !isSearchMode;
+
+            if (isSearchMode) {
+                $('#searchInputContainer').show();
+                $(this).removeClass('fa-search').addClass('fa-times');
+                $('#searchInput').focus();
+            } else {
+                $('#searchInputContainer').hide();
+                $(this).removeClass('fa-times').addClass('fa-search');
+                $('#searchInput').val('');
+                $('.tab-btn.active').click();
+            }
+        });
+
+        // Live filtering
+        $('#searchInput').on('input', function () {
+            const keyword = $(this).val().toLowerCase();
+
+            $('#feedbackList .feedback-item').each(function () {
+                const text = $(this).find('.feedback-description').text().toLowerCase();
+                $(this).toggle(text.includes(keyword));
+            });
+        });
+
+        $(document).on('click', '.feedback-item', function () {
+            $('.feedback-item').removeClass('bg-lightblue');
+            $(this).addClass('bg-lightblue'); // Apply background highlight
+
+            currentFeedbackId = $(this).data('id');
+            const type = $(this).data('type');
+            const status = $(this).data('status');
+            const currentUserId = $('#currentUserId').val();
+            currentFeedbackId = $(this).data('id');
+            currentFeedbackFullName = $(this).data('fullname');
+
+            $('#feedbackTypeLabel').text(`${currentTab} - ${currentFeedbackFullName}`);
+            $('#messageInputSection').removeClass('d-none');
+
+            $('#conversationSection').hide().html('');
+            $('#infoContainer').hide().html('');
+
+            if (currentFeedbackId){
+                $('#feedbackMessage').addClass('d-none');
+            } else {
+                $('#feedbackMessage').removeClass('d-none');
+            }
+
+            // Show search if clicking a complaint or resolved item
+            if ((type === 'Complaint' || type === 'Resolved') && currentFeedbackId) {
+                $('#messageInputSection').removeClass('d-none');
+            } else {
+                $('#messageInputSection').addClass('d-none');
+            }
+                $('#infoContainer').show();
+
+                $.get(`/admin/getfeedbackdetails?feedbackId=${currentFeedbackId}`, function (details) {
+                    let extraContent = "";
+
+                    if (type === 'Compliment') {
+                        let stars = "";
+                        for (let i = 1; i <= 5; i++) {
+                            stars += `<i class="bi ${i <= details.rating ? 'bi-star-fill text-warning' : 'bi-star text-secondary'} me-1"></i>`;
+                        }
+
+                        extraContent = `<p><strong>Rating:</strong> ${stars}</p>`;
+                    }
+
+                    $('#infoContainer').html(`
+                        <div class="p-3 animate__animated animate__fadeIn">
+                            <h5 class="text-secondary">${type} Details</h5>
+                            <p><strong>Submitted on:</strong> ${formatDate(details.dateSubmitted)}</p>
+                            <p><strong>By</strong> ${details.fullName}</p>
+                            ${extraContent}
+                            <div class="border p-3 bg-light rounded">${details.description}</div>
+                        </div>
+                    `);
+                });
+
+                $('#messageInputSection').hide();
+                $('#viewDetailsBtn').addClass('d-none');
+                $('.dropdown-toggle').addClass('d-none');
+
+        });
+
+        if (currentFeedbackId) {
+            $('#viewDetailsBtn').removeClass('d-none');  // Show the button
+        } else {
+            $('#viewDetailsBtn').addClass('d-none');  // Hide the button
+        }
+
+        // Handle the 'View' button click
+        $('#viewDetailsBtn').click(function () {
+            $.get(`/admin/getfeedbackdetails?feedbackId=${currentFeedbackId}`, function (data) {
+                // Create a sleek and styled modal content
+                const statusBadge = getStatusBadge(data.complaintStatus); // Function to generate badge based on status
+
+                $('#modalBody').html(`
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title text-center mb-3">Feedback Details</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div><strong>Feedback ID:</strong> ${data.feedbackId}</div>
+                                <div><strong>Date Submitted:</strong> ${formatDate(data.dateSubmitted)}</div>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Full Name:</strong> <span class="text-base font-semibold">${data.fullName}</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Type:</strong> <span class="badge bg-primary">${data.feedbackType}</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Description:</strong>
+                                <p class="text-base font-semibold">${data.description}</p>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Status:</strong> ${statusBadge}
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+        });
+
+        // Function to generate a styled badge based on the complaint status
+        function getStatusBadge(status) {
+            let baseClass = 'badge text-base px-3 py-2';
+            switch (status) {
+                case 'Resolved':
+                    return `<span class="${baseClass} bg-success">Resolved</span>`;
+                case 'Ongoing':
+                    return `<span class="${baseClass} bg-warning text-dark">Ongoing</span>`;
+                case 'Pending':
+                    return `<span class="${baseClass} bg-secondary">Pending</span>`;
+                default:
+                    return `<span class="${baseClass} bg-info">Unknown</span>`;
+            }
+        }
+
+        // Auto-load Complaint tab on start
+        $(document).ready(() => {
+            $('.tab-btn[data-type="Complaint"]').click();
+        });
+    </script>
 }
+
+<style>
+    .bg-lightblue {
+        background-color: #e6f0ff !important;
+    }
+
+    #searchInputContainer {
+        transition: all 0.3s ease;
+    }
+
+    .feedback-item {
+        cursor: pointer;
+        background-color: white;
+        transition: background-color 0.2s ease;
+    }
+
+        .feedback-item:hover {
+            background-color: #bfdbfe;
+        }
+</style>
 
 <div class="flex overflow-hidden">
     <!-- Sidebar -->
@@ -60,14 +319,81 @@
         </nav>
     </aside>
     <div class="flex-1 p-3">
-        <div class="bg-white p-3 dark:bg-gray-900 rounded-lg shadow-md">
-            <div class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
-                <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-comment-alt w-6"></i> Feedback</h1>
+        <div class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <div class="bg-white p-3 dark:bg-gray-900 rounded-lg shadow-md">
+                <div class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+                    <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-comment-alt w-6"></i> Feedback</h1>
+                </div>
+            </div>
+
+            <!-- Hidden user ID -->
+            <input type="hidden" id="currentUserId" value="@Context.Request.Cookies["Id"]" />
+
+            <div class="container-fluid">
+                <div class="row" style="height: 85vh;">
+                    <!-- Tabs and Feedback List -->
+                    <div class="col-md-4 border-end p-0 d-flex flex-column">
+                        <!-- Tabs -->
+                        <div class="bg-light p-2 d-flex justify-content-around border-bottom">
+                            <button class="btn btn-sm tab-btn active" data-type="Complaint">Complaint</button>
+                            <button class="btn btn-sm tab-btn" data-type="Resolved">Resolved</button>
+                            <button class="btn btn-sm tab-btn" data-type="Suggestion">Suggestion</button>
+                            <button class="btn btn-sm tab-btn" data-type="Compliment">Compliment</button>
+                        </div>
+
+                        <!-- Search Toggle Icon -->
+                        <div class="px-2 py-1 text-end border-bottom bg-light">
+                            <i id="searchToggle" class="fas fa-search text-primary" style="cursor: pointer;"></i>
+                        </div>
+
+                        <!-- Search Input -->
+                        <div id="searchInputContainer" class="p-2 align-items-center justify-content-between border-bottom bg-white hidden">
+                            <input type="text" id="searchInput" class="form-control form-control-sm me-2" placeholder="Search feedback..." />
+                        </div>
+
+                        <!-- Feedback List -->
+                        <div id="feedbackList" class="overflow-auto flex-grow-1">
+                            <!-- Items will be loaded here dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Conversation or Details -->
+                    <div class="col-md-8 d-flex flex-column">
+                        <!-- Top Controls -->
+                        <div class="d-flex justify-content-between align-items-center p-2 border-bottom bg-light">
+                            <div id="feedbackTypeLabel" class="fw-bold">Feedback</div>
+                            <div>
+                                <!-- View Details Button -->
+                                <button id="viewDetailsBtn" class="btn btn-outline-primary btn-sm d-none" data-bs-toggle="modal" data-bs-target="#detailsModal">View</button>
+                            </div>
+                        </div>
+
+                        <div id="feedbackMessage" class="font-medium text-lg text-center p-4">Select a Feedback</div>
+
+                        <!-- Info Section -->
+                        <div id="infoContainer" class="flex-grow-1 overflow-auto p-3" style="display: none;">
+                            <!-- Loaded via JS -->
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for View Feedback Details -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsModalLabel">Feedback Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    
-</script>

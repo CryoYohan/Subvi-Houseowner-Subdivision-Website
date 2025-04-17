@@ -1155,7 +1155,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 FeedbackType = request.FeedbackType,
                 Description = request.Description,
                 Rating = request.FeedbackType == "Compliment" ? request.Rating : null,
-                ComplaintStatus = request.FeedbackType == "Complaint" ? "PENDING" : null,
+                ComplaintStatus = request.FeedbackType == "Complaint" ? "Pending" : null,
                 DateSubmitted = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                 UserId = userId
             };
@@ -1206,6 +1206,137 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             });
 
             return Ok();
+        }
+
+        //For Complaint Feedback Panel
+        public IActionResult GetFeedbackList(string type)
+        {
+            var Iduser = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(Iduser, out int userId))
+            {
+                return RedirectToAction("landing");
+            }
+
+            var list = _context.Feedback
+                .Where(f => f.UserId == userId &&
+                            f.FeedbackType == type &&
+                            (type != "Complaint" || f.ComplaintStatus != "Resolved"))
+                .Join(_context.User_Accounts,
+                      f => f.UserId,
+                      u => u.Id,
+                      (f, u) => new
+                      {
+                          f.FeedbackId,
+                          f.FeedbackType,
+                          f.Description,
+                          f.ComplaintStatus,
+                          f.DateSubmitted
+                      })
+                .OrderByDescending(f => f.DateSubmitted)
+                .ToList();
+
+            return Json(list);
+        }
+
+        public IActionResult GetResolvedFeedback()
+        {
+            var Iduser = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(Iduser, out int userId))
+            {
+                return RedirectToAction("landing");
+            }
+
+            var feedbacks = (from f in _context.Feedback
+                             join u in _context.User_Accounts on f.UserId equals u.Id
+                             where f.UserId == userId &&
+                                   f.FeedbackType == "Complaint" &&
+                                   f.ComplaintStatus == "Resolved"
+                             orderby f.DateSubmitted descending
+                             select new
+                             {
+                                 f.FeedbackId,
+                                 f.FeedbackType,
+                                 f.Description,
+                                 f.ComplaintStatus,
+                                 f.DateSubmitted,
+                                 FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
+                                            (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower()
+                             }).ToList();
+
+            return Ok(feedbacks);
+        }
+
+        public IActionResult GetFeedbackDetails(int feedbackId)
+        {
+            var feedback = (from f in _context.Feedback
+                            where f.FeedbackId == feedbackId
+                            select new
+                            {
+                                f.FeedbackId,
+                                f.FeedbackType,
+                                f.Description,
+                                f.DateSubmitted,
+                                f.ComplaintStatus,
+                                Rating = f.Rating
+                            }).FirstOrDefault();
+
+            if (feedback == null)
+            {
+                return NotFound(new { message = "Feedback not found" });
+            }
+
+            return Ok(feedback);
+        }
+
+        public IActionResult GetConversation(int feedbackId)
+        {
+            var convo = _context.FeedbackConversation
+                .Where(c => c.FeedbackId == feedbackId)
+                .Join(_context.User_Accounts,
+                      c => c.UserId,
+                      u => u.Id,
+                      (c, u) => new
+                      {
+                          c.ConvoId,
+                          c.FeedbackId,
+                          c.SenderRole,
+                          c.Message,
+                          c.DateSent,
+                          c.UserId,
+                          FullName = u.Firstname + " " + u.Lastname,
+                          ProfileImage = string.IsNullOrEmpty(u.Profile) ? null : u.Profile
+                      })
+                .OrderBy(c => c.DateSent)
+                .ToList();
+
+            return Json(convo);
+        }
+
+        public IActionResult SendMessage([FromBody] SendMessageDTO dto)
+        {
+            var Iduser = HttpContext.Request.Cookies["Id"];
+            if (!int.TryParse(Iduser, out int userId))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+
+            var convo = new Feedback_Conversation
+            {
+                FeedbackId = dto.FeedbackId,
+                SenderRole = "Homeowner",
+                Message = dto.Message,
+                DateSent = DateTime.Now,
+                UserId = userId 
+            };
+            _context.FeedbackConversation.Add(convo);
+            _context.SaveChanges();
+            return Ok();
+        }
+
+        public class SendMessageDTO
+        {
+            public int FeedbackId { get; set; }
+            public string Message { get; set; }
         }
 
         public IActionResult Resources()

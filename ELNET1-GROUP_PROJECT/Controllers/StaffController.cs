@@ -1471,17 +1471,71 @@ public class StaffController : Controller
     {
         var list = _context.Feedback
             .Where(f => f.FeedbackType == type && (type != "Complaint" || f.ComplaintStatus != "Resolved"))
+            .Join(_context.User_Accounts,
+                  f => f.UserId,
+                  u => u.Id,
+                  (f, u) => new
+                  {
+                      f.FeedbackId,
+                      f.FeedbackType,
+                      f.Description,
+                      f.ComplaintStatus,
+                      f.DateSubmitted,
+                      FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
+                                 (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower()
+                  })
             .OrderByDescending(f => f.DateSubmitted)
-            .Select(f => new
-            {
-                f.FeedbackId,
-                f.Description,
-                f.ComplaintStatus,
-                f.DateSubmitted
-            })
             .ToList();
 
         return Json(list);
+    }
+
+    [HttpGet("getresolvedfeedback")]
+    public IActionResult GetResolvedFeedback()
+    {
+        var feedbacks = (from f in _context.Feedback
+                         join u in _context.User_Accounts on f.UserId equals u.Id
+                         where f.FeedbackType == "Complaint" && f.ComplaintStatus == "Resolved"
+                         orderby f.DateSubmitted descending
+                         select new
+                         {
+                             f.FeedbackId,
+                             f.FeedbackType,
+                             f.Description,
+                             f.ComplaintStatus,
+                             f.DateSubmitted,
+                             FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
+                                        (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower()
+                         }).ToList();
+
+        return Ok(feedbacks);
+    }
+
+    [HttpGet("getfeedbackdetails")]
+    public IActionResult GetFeedbackDetails(int feedbackId)
+    {
+        var feedback = (from f in _context.Feedback
+                        join u in _context.User_Accounts on f.UserId equals u.Id
+                        where f.FeedbackId == feedbackId 
+                        select new
+                        {
+                            f.FeedbackId,
+                            f.FeedbackType,
+                            f.Description,
+                            f.DateSubmitted,
+                            f.ComplaintStatus,
+                            Rating = f.Rating,
+                            FullName =
+                                (char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1).ToLower()) + " " +
+                                (char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1).ToLower())
+                        }).FirstOrDefault();
+
+        if (feedback == null)
+        {
+            return NotFound(new { message = "Feedback not found" });
+        }
+
+        return Ok(feedback);
     }
 
     [HttpGet("getconversation")]
@@ -1524,19 +1578,26 @@ public class StaffController : Controller
             SenderRole = "Staff",
             Message = dto.Message,
             DateSent = DateTime.Now,
-            UserId = userId // set the user ID here
+            UserId = userId 
         };
         _context.FeedbackConversation.Add(convo);
-
-        // Update complaint status if applicable
-        var feedback = _context.Feedback.FirstOrDefault(f => f.FeedbackId == dto.FeedbackId);
-        if (feedback != null && feedback.FeedbackType == "Complaint" && feedback.ComplaintStatus != "Ongoing")
-        {
-            feedback.ComplaintStatus = "Ongoing";
-        }
-
         _context.SaveChanges();
         return Ok();
+    }
+
+    [HttpPost("markongoing")]
+    public IActionResult MarkOngoing(int feedbackId)
+    {
+        var feedback = _context.Feedback.FirstOrDefault(f => f.FeedbackId == feedbackId && f.ComplaintStatus == "Pending");
+
+        if (feedback != null)
+        {
+            feedback.ComplaintStatus = "Ongoing";
+            _context.SaveChanges();
+            return Ok(new { success = true });
+        }
+
+        return BadRequest(new { error = "Invalid feedback or already updated." });
     }
 
     [HttpPost("markresolved/{id}")]
@@ -1556,9 +1617,6 @@ public class StaffController : Controller
         public int FeedbackId { get; set; }
         public string Message { get; set; }
     }
-
-    
-
 
     [Route("reports")]
     public IActionResult Reports()

@@ -5,6 +5,378 @@
 
 @section Scripts {
     <script src="~/js/notification-staff.js"></script>
+    <script>
+        let currentTab = 'Complaint';
+        let currentFeedbackId = null;
+        let isSearchMode = false;
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+            };
+            return date.toLocaleString('en-US', options);
+        }
+
+        // Toggle Search UI
+        $('.tab-btn').click(function () {
+            $('.tab-btn').removeClass('active');
+            $(this).addClass('active');
+            currentTab = $(this).data('type');
+
+            $('#feedbackList').html('');
+            $('#conversationSection').html('');
+            $('#infoContainer').html('');
+            $('#viewDetailsBtn').addClass('d-none');
+            $('#messageInputSection').addClass('d-none');
+            $('.dropdown-toggle').addClass('d-none');
+
+            // Reset search mode when switching tabs
+            isSearchMode = false;
+            $('#searchInputContainer').hide();
+            $('#searchInput').val('');
+            $('#searchToggle').removeClass('fa-times').addClass('fa-search');
+
+            // Hide/show input based on tab
+            if (currentTab === 'Complaint') {
+                $('#messageInputSection').show();
+            } else {
+                $('#messageInputSection').hide();
+            }
+
+            // Feedback header label
+            if (!currentFeedbackId) {
+                $('#feedbackTypeLabel').text(currentTab);
+                $('#feedbackMessage').removeClass('d-none');
+            } else {
+                $('#feedbackTypeLabel').text(`${currentTab} - ${currentFeedbackFullName}`);
+                $('#feedbackMessage').addClass('d-none');
+            }
+
+            // Determine API endpoint
+            let apiUrl = `/staff/getfeedbacklist?type=${currentTab}`;
+            if (currentTab === 'Resolved') {
+                apiUrl = `/staff/getresolvedfeedback`;
+            }
+
+            // Fetch feedback
+            $.get(apiUrl, function (data) {
+                $('#feedbackList').append(`<h5 class="font-semibold text-center p-2 border-bottom">${currentTab}</h5>`);
+
+                data.forEach(item => {
+                    let statusBadge = '';
+
+                    if (currentTab === 'Complaint' || currentTab === 'Resolved') {
+                        if (item.complaintStatus === 'Resolved') {
+                            statusBadge = '<span class="badge bg-success">Resolved</span>';
+                        } else if (item.complaintStatus === 'Ongoing') {
+                            statusBadge = '<span class="badge bg-yellow-500 p-2 text-1xl">Ongoing</span>';
+                        } else if (item.complaintStatus === 'Pending') {
+                            statusBadge = '<span class="badge bg-secondary">Pending</span>';
+                        }
+                    }
+
+                    if (currentTab === 'Resolved' && item.complaintStatus === 'Resolved') {
+                        statusBadge = '<span class="badge bg-success">Resolved</span>';
+                    }
+
+                    $('#feedbackList').append(`
+                        <div class="p-2 border-bottom feedback-item bg-white hover-bg cursor-pointer" style="cursor: pointer;" data-id="${item.feedbackId}" data-type="${currentTab}" data-fullname="${item.fullName}" data-status="${item.complaintStatus}">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">${item.fullName}</small>
+                                <small class="text-muted">${formatDate(item.dateSubmitted)}</small>
+                            </div>
+                            <div class="feedback-description">${item.description.length > 55 ? item.description.substring(0, 55) + '...' : item.description}</div>
+                            <div class="text-right">${statusBadge}</div>
+                        </div>
+                    `);
+                });
+            });
+        });
+
+        // Search toggle logic
+        $('#searchToggle').click(function () {
+            isSearchMode = !isSearchMode;
+
+            if (isSearchMode) {
+                $('#searchInputContainer').show();
+                $(this).removeClass('fa-search').addClass('fa-times');
+                $('#searchInput').focus();
+            } else {
+                $('#searchInputContainer').hide();
+                $(this).removeClass('fa-times').addClass('fa-search');
+                $('#searchInput').val('');
+                $('.tab-btn.active').click();
+            }
+        });
+
+        // Live filtering
+        $('#searchInput').on('input', function () {
+            const keyword = $(this).val().toLowerCase();
+
+            $('#feedbackList .feedback-item').each(function () {
+                const text = $(this).find('.feedback-description').text().toLowerCase();
+                $(this).toggle(text.includes(keyword));
+            });
+        });
+
+        $(document).on('click', '.feedback-item', function () {
+            $('.feedback-item').removeClass('bg-lightblue');
+            $(this).addClass('bg-lightblue'); // Apply background highlight
+
+            currentFeedbackId = $(this).data('id');
+            const type = $(this).data('type');
+            const status = $(this).data('status');
+            const currentUserId = $('#currentUserId').val();
+            currentFeedbackId = $(this).data('id');
+            currentFeedbackFullName = $(this).data('fullname');
+
+            $('#feedbackTypeLabel').text(`${currentTab} - ${currentFeedbackFullName}`);
+            $('#messageInputSection').removeClass('d-none');
+
+            $('#conversationSection').hide().html('');
+            $('#infoContainer').hide().html('');
+
+            if (currentFeedbackId){
+                $('#feedbackMessage').addClass('d-none');
+            } else {
+                $('#feedbackMessage').removeClass('d-none');
+            }
+
+            // Show search if clicking a complaint or resolved item
+            if ((type === 'Complaint' || type === 'Resolved') && currentFeedbackId) {
+                $('#messageInputSection').removeClass('d-none');
+            } else {
+                $('#messageInputSection').addClass('d-none');
+            }
+
+            // Auto-update to Ongoing if it's still Pending
+            if (type === 'Complaint' && status === 'Pending') {
+                $.post(`/staff/markongoing`, { feedbackId: currentFeedbackId }, function () {
+                    // Update badge visually
+                    const badge = $(this).find('.badge');
+                    if (badge.length) {
+                        badge.replaceWith('<span class="badge bg-warning">Ongoing</span>');
+                    }
+                }.bind(this));
+            }
+
+            if (type === 'Complaint' || type === 'Resolved') {
+                $('#conversationSection').show();
+
+                $.get(`/staff/getconversation?feedbackId=${currentFeedbackId}`, function (messages) {
+                    $('#viewDetailsBtn').removeClass('d-none');
+                    $('#conversationSection').html(''); // Clear old messages
+
+                    for (let i = 0; i < messages.length; i++) {
+                        const msg = messages[i];
+                        const isOwn = msg.userId == currentUserId;
+                        const nextMsg = messages[i + 1];
+                        const isLastFromSender = !nextMsg || nextMsg.userId !== msg.userId;
+
+                        let msgHtml = '';
+
+                        if (isOwn) {
+                            msgHtml = `
+                                <div class="d-flex justify-content-end animate__animated animate__fadeInUp">
+                                    <div class="bg-primary text-white p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
+                                </div>
+                            `;
+                        } else {
+                            if (isLastFromSender) {
+                                msgHtml = `
+                                    <div class="d-flex align-items-start animate__animated animate__fadeInUp">
+                                        <img src="${msg.profileImage || '/images/default-user.png'}" class="rounded-circle me-2" width="40" height="40" />
+                                        <div>
+                                            <div class="fw-bold">${msg.fullName}</div>
+                                            <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                msgHtml = `
+                                    <div class="d-flex align-items-start animate__animated animate__fadeInUp" style="margin-left: 48px;">
+                                        <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
+                                    </div>
+                                `;
+                            }
+                        }
+
+                        $('#conversationSection').append(msgHtml);
+                    }
+
+                    if (type === 'Resolved') {
+                        $('#conversationSection').append(`
+                            <div class="text-center text-success mt-3 fw-bold">The Complaint is Resolved</div>
+                        `);
+                        $('#messageInputSection').hide();
+                        $('.dropdown-toggle').addClass('d-none');
+                    } else {
+                        $('#messageInputSection').show();
+                        $('.dropdown-toggle').removeClass('d-none');
+                    }
+
+                    // Ensure scroll is at the bottom after rendering
+                    setTimeout(() => {
+                        const container = $('#conversationSection');
+                        container.scrollTop(container[0].scrollHeight);
+                    }, 100);
+                });
+            } else {
+                $('#infoContainer').show();
+
+                $.get(`/staff/getfeedbackdetails?feedbackId=${currentFeedbackId}`, function (details) {
+                    let extraContent = "";
+
+                    if (type === 'Compliment') {
+                        let stars = "";
+                        for (let i = 1; i <= 5; i++) {
+                            stars += `<i class="bi ${i <= details.rating ? 'bi-star-fill text-warning' : 'bi-star text-secondary'} me-1"></i>`;
+                        }
+
+                        extraContent = `<p><strong>Rating:</strong> ${stars}</p>`;
+                    }
+
+                    $('#infoContainer').html(`
+                        <div class="p-3 animate__animated animate__fadeIn">
+                            <h5 class="text-secondary">${type} Details</h5>
+                            <p><strong>Submitted on:</strong> ${formatDate(details.dateSubmitted)}</p>
+                            <p><strong>By</strong> ${details.fullName}</p>
+                            ${extraContent}
+                            <div class="border p-3 bg-light rounded">${details.description}</div>
+                        </div>
+                    `);
+                });
+
+                $('#messageInputSection').hide();
+                $('#viewDetailsBtn').addClass('d-none');
+                $('.dropdown-toggle').addClass('d-none');
+            }
+        });
+
+        // Send message
+        function sendMessage() {
+            const message = $('#messageInput').val();
+            if (!message.trim()) return;
+
+            $.ajax({
+                url: '/staff/sendmessage',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ feedbackId: currentFeedbackId, message }),
+                success: function () {
+                    $('#messageInput').val('');
+                    // Re-fetch messages
+                    $('.feedback-item[data-id="' + currentFeedbackId + '"]').click();
+                }
+            });
+        }
+
+        $('#sendMessage').click(() => sendMessage());
+
+        $('#messageInput').keydown(function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        if (currentFeedbackId) {
+            $('#viewDetailsBtn').removeClass('d-none');  // Show the button
+        } else {
+            $('#viewDetailsBtn').addClass('d-none');  // Hide the button
+        }
+
+        // Handle the 'View' button click
+        $('#viewDetailsBtn').click(function () {
+            $.get(`/staff/getfeedbackdetails?feedbackId=${currentFeedbackId}`, function (data) {
+                // Create a sleek and styled modal content
+                const statusBadge = getStatusBadge(data.complaintStatus); // Function to generate badge based on status
+
+                $('#modalBody').html(`
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title text-center mb-3">Feedback Details</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div><strong>Feedback ID:</strong> ${data.feedbackId}</div>
+                                <div><strong>Date Submitted:</strong> ${formatDate(data.dateSubmitted)}</div>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Full Name:</strong> <span class="text-base font-semibold">${data.fullName}</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Type:</strong> <span class="badge bg-primary">${data.feedbackType}</span>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Description:</strong>
+                                <p class="text-base font-semibold">${data.description}</p>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Status:</strong> ${statusBadge}
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+        });
+
+        // Function to generate a styled badge based on the complaint status
+        function getStatusBadge(status) {
+            let baseClass = 'badge text-base px-3 py-2';
+            switch (status) {
+                case 'Resolved':
+                    return `<span class="${baseClass} bg-success">Resolved</span>`;
+                case 'Ongoing':
+                    return `<span class="${baseClass} bg-warning text-dark">Ongoing</span>`;
+                case 'Pending':
+                    return `<span class="${baseClass} bg-secondary">Pending</span>`;
+                default:
+                    return `<span class="${baseClass} bg-info">Unknown</span>`;
+            }
+        }
+
+        // Resolve complaint
+        let resolveModal = new bootstrap.Modal(document.getElementById('confirmResolveModal'));
+
+        $('#resolveComplaint').click(function () {
+            resolveModal.show(); // Show confirmation modal
+        });
+
+        $('#confirmResolveBtn').click(function () {
+            $.post(`/staff/markresolved/${currentFeedbackId}`, function () {
+                $('.tab-btn.active').click(); // reload the list
+                $('#conversationSection').html('<div class="text-center p-3">This complaint has been resolved.</div>');
+                resolveModal.hide(); // Hide the modal after action
+                showToast("Successfully resolved the complaint.")
+            });
+        });
+
+        function showToast(message, color = 'green') {
+                const toast = document.createElement('div');
+                toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transform translate-y-20 opacity-0 transition-all z-50`;
+                toast.style.backgroundColor = color;
+                toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.remove('translate-y-20', 'opacity-0');
+                    setTimeout(() => {
+                        toast.classList.add('translate-y-20', 'opacity-0');
+                        setTimeout(() => toast.remove(), 500);
+                    }, 4000);
+                }, 50);
+            }
+
+        // Auto-load Complaint tab on start
+        $(document).ready(() => {
+            $('.tab-btn[data-type="Complaint"]').click();
+        });
+    </script>
 }
 
 <div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
@@ -84,36 +456,53 @@
 
     <!-- Main Content -->
     <div class="flex-1 p-3 overflow-y-auto w-full fade-in">
-        <div class="flex-1overflow-y-auto">
+        <div class="flex-1 overflow-y-auto">
             <!-- Header -->
-            <div class="mx-autospace-x-1 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md">
+            <div class="mx-auto space-x-1 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md">
                 <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-comment-alt w-6"></i> Feedbacks</h1>
-             </div>
-             <!-- For fetching id in cookies -->
+            </div>
+
+            <!-- Hidden user ID -->
             <input type="hidden" id="currentUserId" value="@Context.Request.Cookies["Id"]" />
 
             <div class="container-fluid">
                 <div class="row" style="height: 85vh;">
-                    <!-- Tabs -->
+                    <!-- Tabs and Feedback List -->
                     <div class="col-md-4 border-end p-0 d-flex flex-column">
+                        <!-- Tabs -->
                         <div class="bg-light p-2 d-flex justify-content-around border-bottom">
                             <button class="btn btn-sm tab-btn active" data-type="Complaint">Complaint</button>
+                            <button class="btn btn-sm tab-btn" data-type="Resolved">Resolved</button>
                             <button class="btn btn-sm tab-btn" data-type="Suggestion">Suggestion</button>
                             <button class="btn btn-sm tab-btn" data-type="Compliment">Compliment</button>
                         </div>
 
+                        <!-- Search Toggle Icon -->
+                        <div class="px-2 py-1 text-end border-bottom bg-light">
+                            <i id="searchToggle" class="fas fa-search text-primary" style="cursor: pointer;"></i>
+                        </div>
+
+                        <!-- Search Input -->
+                        <div id="searchInputContainer" class="p-2 align-items-center justify-content-between border-bottom bg-white hidden">
+                            <input type="text" id="searchInput" class="form-control form-control-sm me-2" placeholder="Search feedback..." />
+                        </div>
+
                         <!-- Feedback List -->
                         <div id="feedbackList" class="overflow-auto flex-grow-1">
-                            <!-- Feedback items loaded here -->
+                            <!-- Items will be loaded here dynamically -->
                         </div>
                     </div>
 
-                    <!-- Conversation or Detail View -->
+                    <!-- Right Panel: Conversation or Details -->
                     <div class="col-md-8 d-flex flex-column">
+                        <!-- Top Controls -->
                         <div class="d-flex justify-content-between align-items-center p-2 border-bottom bg-light">
-                            <span id="feedbackTypeLabel" class="fw-bold">Select a Feedback</span>
+                            <div id="feedbackTypeLabel" class="fw-bold">Feedback</div>
                             <div>
+                                <!-- View Details Button -->
                                 <button id="viewDetailsBtn" class="btn btn-outline-primary btn-sm d-none" data-bs-toggle="modal" data-bs-target="#detailsModal">View</button>
+
+                                <!-- Dropdown -->
                                 <div class="dropdown d-inline">
                                     <button class="btn btn-outline-secondary btn-sm dropdown-toggle d-none" type="button" data-bs-toggle="dropdown">⋮</button>
                                     <ul class="dropdown-menu">
@@ -123,13 +512,20 @@
                             </div>
                         </div>
 
-                        <!-- Messages -->
-                        <div id="conversationSection" class="flex-grow-1 overflow-auto p-3" style="background: #f9f9f9;">
-                            <!-- Messages loaded here -->
+                        <div id="feedbackMessage" class="font-medium text-lg text-center p-4">Select a Feedback</div>
+
+                        <!-- Complaint Messages Section -->
+                        <div id="conversationSection" class="flex-grow-1 overflow-auto p-3" style="background: #f9f9f9; display: none;">
+                            <!-- Messages loaded via JS -->
                         </div>
 
-                        <!-- Input -->
-                        <div class="p-2 border-top">
+                        <!-- Suggestion/Compliment Info Section -->
+                        <div id="infoContainer" class="flex-grow-1 overflow-auto p-3" style="display: none;">
+                            <!-- Loaded via JS -->
+                        </div>
+
+                        <!-- Message Input (Complaint only) -->
+                        <div id="messageInputSection" class="p-2 border-top d-none">
                             <div class="input-group">
                                 <input type="text" id="messageInput" class="form-control" placeholder="Type a message..." />
                                 <button class="btn btn-primary" id="sendMessage">Send</button>
@@ -140,101 +536,38 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal for View Feedback Details -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsModalLabel">Feedback Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmResolveModal" tabindex="-1" aria-labelledby="confirmResolveLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmResolveLabel">Confirm Resolution</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to make this complaint feedback as resolved?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="confirmResolveBtn">Yes, Mark as Resolved</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
-<script>
-    let currentFeedbackId = null;
-
-    $('.tab-btn').click(function () {
-        $('.tab-btn').removeClass('active');
-        $(this).addClass('active');
-        const type = $(this).data('type');
-
-        $('#feedbackTypeLabel').text(type);
-        $('#viewDetailsBtn').addClass('d-none');
-        $('.dropdown-toggle').addClass('d-none');
-        $('#conversationSection').html('');
-
-        $.get(`/staff/getfeedbacklist?type=${type}`, function (data) {
-            $('#feedbackList').html('');
-            data.forEach(item => {
-                $('#feedbackList').append(`<div class="p-2 border-bottom feedback-item" data-id="${item.feedbackId}">
-                    <small class="text-muted">${item.dateSubmitted}</small>
-                    <div>${item.description}</div>
-                </div>`);
-            });
-        });
-    });
-
-    $(document).on('click', '.feedback-item', function () {
-        currentFeedbackId = $(this).data('id');
-        $('#viewDetailsBtn, .dropdown-toggle').removeClass('d-none');
-
-        const currentUserId = $('#currentUserId').val();
-
-        $.get(`/staff/getconversation?feedbackId=${currentFeedbackId}`, function (messages) {
-            $('#conversationSection').html('');
-
-            messages.forEach(msg => {
-                const isOwnMessage = msg.userId == currentUserId;
-                const messageHtml = isOwnMessage
-                    ? `<div class="d-flex justify-content-end animate__animated animate__fadeInUp">
-                            <div class="bg-primary text-white p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
-                       </div>`
-                    : `<div class="d-flex align-items-start animate__animated animate__fadeInUp">
-                            <img src="${msg.profileImage || '/images/default-user.png'}" class="rounded-circle me-2" width="40" height="40" />
-                            <div>
-                                <div class="fw-bold">${msg.fullName}</div>
-                                <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
-                            </div>
-                       </div>`;
-
-                $('#conversationSection').append(messageHtml);
-            });
-
-            // Optional: Scroll to bottom
-            $('#conversationSection').scrollTop($('#conversationSection')[0].scrollHeight);
-        });
-    });
-
-    function sendMessage() {
-        const message = $('#messageInput').val();
-        if (!message.trim()) return;
-
-        $.ajax({
-            url: '/staff/sendmessage',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ feedbackId: currentFeedbackId, message }),
-            success: function () {
-                $('#messageInput').val('');
-                $('.feedback-item[data-id="' + currentFeedbackId + '"]').click(); 
-            }
-        });
-    }
-
-    $('#sendMessage').click(function () {
-        sendMessage();
-    });
-
-    // Handle Enter key
-    $('#messageInput').keydown(function (e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-
-    $('#resolveComplaint').click(function () {
-        if (!confirm('Are you sure you want to mark this complaint as resolved?')) return;
-
-        $.post(`/staff/markresolved/${currentFeedbackId}`, function () {
-            $('.tab-btn.active').click(); // reload list
-            $('#conversationSection').html('<div class="text-center p-3">This complaint has been resolved.</div>');
-        });
-    });
-
-    $(document).ready(function () {
-        $('.tab-btn[data-type="Complaint"]').click(); // Automatically click the Complaint tab on load
-    });
-</script>
