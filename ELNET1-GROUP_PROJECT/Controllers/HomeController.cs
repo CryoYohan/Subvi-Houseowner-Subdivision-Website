@@ -680,6 +680,42 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     return NotFound("User not found.");
                 }
 
+                // Check for existing non-completed/rejected request
+                var existingRequest = _context.Service_Request.FirstOrDefault(r =>
+                    r.ReqType.ToLower().Trim() == request.ServiceName.ToLower().Trim() &&
+                    r.UserId == userId &&
+                    r.Status != "Completed" && r.Status != "Rejected");
+
+                if (existingRequest != null)
+                {
+                    var status = existingRequest.Status;
+                    var reqType = existingRequest.ReqType;
+
+                    if (status == "Scheduled" && existingRequest.ScheduleDate != null)
+                    {
+                        var formattedDate = existingRequest.ScheduleDate?.ToString("MM/dd/yyyy 'at' hh:mm tt");
+
+                        return Conflict(new
+                        {
+                            message = $"You have already scheduled date for {reqType} service request which is scheduled for {formattedDate}."
+                        });
+                    }
+                    else if (status == "Ongoing")
+                    {
+                        return Conflict(new
+                        {
+                            message = $"You already have submitted for {reqType} Service Request and is currently ongoing."
+                        });
+                    }
+                    else if (status == "Pending")
+                    {
+                        return Conflict(new
+                        {
+                            message = $"You already submitted for {reqType} service request. Please wait for approval."
+                        });
+                    }
+                }
+
                 // Capitalize helper
                 string Capitalize(string input) =>
                     string.IsNullOrWhiteSpace(input) ? input : char.ToUpper(input[0]) + input.Substring(1).ToLower();

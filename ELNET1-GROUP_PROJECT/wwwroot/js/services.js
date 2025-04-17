@@ -72,6 +72,18 @@ function confirmRequest(serviceName) {
                     })
                 });
 
+                const result = await response.json();
+
+                if (response.status === 409) {
+                    Swal.fire({
+                        title: 'Duplicate Request',
+                        text: result.message,
+                        icon: 'warning',
+                        confirmButtonColor: '#F59E0B'
+                    });
+                    return;
+                }
+
                 if (!response.ok) {
                     throw new Error("Request failed");
                 }
@@ -80,11 +92,11 @@ function confirmRequest(serviceName) {
                 Swal.fire({
                     title: 'Request Submitted!',
                     html: `
-                        <div class="text-left">
-                            <p>Your <b>${serviceName}</b> request has been received.</p>
-                            ${notes ? `<p class="mt-2">Description: ${notes}</p>` : ''}
-                        </div>
-                    `,
+            <div class="text-left">
+                <p>Your <b>${serviceName}</b> request has been received.</p>
+                ${notes ? `<p class="mt-2">Description: ${notes}</p>` : ''}
+            </div>
+        `,
                     icon: 'success',
                     confirmButtonColor: '#60A5FA'
                 });

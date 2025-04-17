@@ -158,6 +158,13 @@
                 <span>Service Schedule</span>
                 <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="service-count"></span>
             </button>
+            <button data-type="Bill"
+                    class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                   hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                <i class="fas fa-file-invoice-dollar text-green-500 text-lg"></i>
+                <span>Billing</span>
+                <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="bill-count"></span>
+            </button>
             <button data-type="Account"
                     class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                    hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
@@ -424,6 +431,7 @@
             'Feedback Reply': '<i class="fas fas fa-bullhorn text-blue-200"></i>',
             'Facility Reservation Schedule': '<i class="fas fa-calendar-check text-blue-500"></i>',
             'Service Schedule': '<i class="fas fa-cogs text-green-500"></i>',
+            'Bill': '<i class="fas fa-file-invoice-dollar text-green-500"></i>',
             'Account': '<i class="fas fa-user text-green-500"></i>'
         }[type] || '<i class="fas fa-bell text-gray-400"></i>';
     }
@@ -439,6 +447,7 @@
                 'Feedback Reply': 0,
                 'Facility Reservation Schedule': 0,
                 'Service Schedule': 0,
+                'Bill': 0,
                 'Account': 0
             };
 
@@ -453,6 +462,7 @@
                 'Feedback Reply': document.getElementById('feedback-count'),
                 'Facility Reservation Schedule': document.getElementById('facility-count'),
                 'Service Schedule': document.getElementById('service-count'),
+                'Bill': document.getElementById('bill-count'),
                 'Account': document.getElementById('account-count')
             };
 
@@ -493,6 +503,7 @@
             notif.type === 'Feedback Reply' ? 'border-green-500 bg-green-50' :
             notif.type === 'Facility Reservation Schedule' ? 'border-green-500 bg-green-50' :
             notif.type === 'Service Schedule' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Bill' ? 'border-green-500 bg-green-50' :
             notif.type === 'Account' ? 'border-green-500 bg-green-50' :
             'border-purple-500 bg-purple-50'
         } animate-slide-in`;

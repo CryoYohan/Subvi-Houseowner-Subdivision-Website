@@ -71,6 +71,7 @@
                             <li class="dropdown-header d-flex justify-content-between align-items-center">
                                 <span class="fw-semibold">Notifications</span>
                                 <div class="dropdown dropstart">
+                                    <a asp-controller="admin" asp-action="notifications" class="btn btn-sm btn-light">View All Notifications</a>
                                     <i class="bi bi-three-dots-vertical" role="button" data-bs-toggle="dropdown" aria-expanded="false"></i>
                                     <ul class="dropdown-menu">
                                         <li><button id="markAllReadBtn" class="dropdown-item" disabled>Mark all as Read</button></li>
@@ -81,11 +82,6 @@
 
                             <!-- Notifications list -->
                             <div id="notifListContainer"></div>
-
-                            <!-- Footer -->
-                            <div class="text-end pt-2 pe-2">
-                                <a asp-controller="admin" asp-action="notifications" class="btn btn-sm btn-light">View All Notifications</a>
-                            </div>
                         </ul>
                     </li>
                     <li class="nav-item">

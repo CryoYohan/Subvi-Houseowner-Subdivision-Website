@@ -47,7 +47,7 @@ async function loadNotifications() {
                     <div><small>${n.message}</small></div>
                     <div class="d-flex justify-content-between align-items-center mt-1">
                         <small class="text-muted">${new Date(n.dateCreated).toLocaleString()}</small>
-                        <span class="text-primary small">${hasLink ? 'View Notification' : 'No Link'}</span>
+                        <span class="text-primary small">${hasLink ? 'View' : 'No Link'}</span>
                     </div>
                 </div>
             `;

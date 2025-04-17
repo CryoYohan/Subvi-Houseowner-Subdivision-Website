@@ -54,6 +54,7 @@ namespace ELNET1_GROUP_PROJECT.Data
         public DbSet<ELNET1_GROUP_PROJECT.Models.Like> Like { get; set; }
 
         public DbSet<ELNET1_GROUP_PROJECT.Models.Feedback> Feedback { get; set; }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.Feedback_Conversation> FeedbackConversation { get; set; }
         
         public DbSet<ELNET1_GROUP_PROJECT.Models.Visitor_Pass> Visitor_Pass { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.VehicleRegistration> Vehicle_Registration { get; set; }

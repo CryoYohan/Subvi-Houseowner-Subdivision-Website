@@ -1466,6 +1466,100 @@ public class StaffController : Controller
         return View();
     }
 
+    [HttpGet("getfeedbacklist")]
+    public IActionResult GetFeedbackList(string type)
+    {
+        var list = _context.Feedback
+            .Where(f => f.FeedbackType == type && (type != "Complaint" || f.ComplaintStatus != "Resolved"))
+            .OrderByDescending(f => f.DateSubmitted)
+            .Select(f => new
+            {
+                f.FeedbackId,
+                f.Description,
+                f.ComplaintStatus,
+                f.DateSubmitted
+            })
+            .ToList();
+
+        return Json(list);
+    }
+
+    [HttpGet("getconversation")]
+    public IActionResult GetConversation(int feedbackId)
+    {
+        var convo = _context.FeedbackConversation
+            .Where(c => c.FeedbackId == feedbackId)
+            .Join(_context.User_Accounts,
+                  c => c.UserId,
+                  u => u.Id,
+                  (c, u) => new
+                  {
+                      c.ConvoId,
+                      c.FeedbackId,
+                      c.SenderRole,
+                      c.Message,
+                      c.DateSent,
+                      c.UserId,
+                      FullName = u.Firstname + " " + u.Lastname,
+                      ProfileImage = string.IsNullOrEmpty(u.Profile) ? null : u.Profile
+                  })
+            .OrderBy(c => c.DateSent)
+            .ToList();
+
+        return Json(convo);
+    }
+
+    [HttpPost("sendmessage")]
+    public IActionResult SendMessage([FromBody] SendMessageDTO dto)
+    {
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return Unauthorized("User not authenticated.");
+        }
+
+        var convo = new Feedback_Conversation
+        {
+            FeedbackId = dto.FeedbackId,
+            SenderRole = "Staff",
+            Message = dto.Message,
+            DateSent = DateTime.Now,
+            UserId = userId // set the user ID here
+        };
+        _context.FeedbackConversation.Add(convo);
+
+        // Update complaint status if applicable
+        var feedback = _context.Feedback.FirstOrDefault(f => f.FeedbackId == dto.FeedbackId);
+        if (feedback != null && feedback.FeedbackType == "Complaint" && feedback.ComplaintStatus != "Ongoing")
+        {
+            feedback.ComplaintStatus = "Ongoing";
+        }
+
+        _context.SaveChanges();
+        return Ok();
+    }
+
+    [HttpPost("markresolved/{id}")]
+    public IActionResult MarkResolved(int id)
+    {
+        var feedback = _context.Feedback.FirstOrDefault(f => f.FeedbackId == id);
+        if (feedback != null)
+        {
+            feedback.ComplaintStatus = "Resolved";
+            _context.SaveChanges();
+        }
+        return Ok();
+    }
+
+    public class SendMessageDTO
+    {
+        public int FeedbackId { get; set; }
+        public string Message { get; set; }
+    }
+
+    
+
+
     [Route("reports")]
     public IActionResult Reports()
     {

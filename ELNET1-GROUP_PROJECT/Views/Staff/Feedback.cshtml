@@ -89,7 +89,151 @@
             <div class="mx-autospace-x-1 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md">
                 <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-comment-alt w-6"></i> Feedbacks</h1>
              </div>
+            <input type="hidden" id="currentUserId" value="@Context.Request.Cookies["Id"]" />
 
+            <div class="container-fluid">
+                <div class="row" style="height: 85vh;">
+                    <!-- Tabs -->
+                    <div class="col-md-4 border-end p-0 d-flex flex-column">
+                        <div class="bg-light p-2 d-flex justify-content-around border-bottom">
+                            <button class="btn btn-sm tab-btn active" data-type="Complaint">Complaint</button>
+                            <button class="btn btn-sm tab-btn" data-type="Suggestion">Suggestion</button>
+                            <button class="btn btn-sm tab-btn" data-type="Compliment">Compliment</button>
+                        </div>
+
+                        <!-- Feedback List -->
+                        <div id="feedbackList" class="overflow-auto flex-grow-1">
+                            <!-- Feedback items loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Conversation or Detail View -->
+                    <div class="col-md-8 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center p-2 border-bottom bg-light">
+                            <span id="feedbackTypeLabel" class="fw-bold">Select a Feedback</span>
+                            <div>
+                                <button id="viewDetailsBtn" class="btn btn-outline-primary btn-sm d-none" data-bs-toggle="modal" data-bs-target="#detailsModal">View</button>
+                                <div class="dropdown d-inline">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle d-none" type="button" data-bs-toggle="dropdown">⋮</button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item text-success" href="#" id="resolveComplaint">Mark as Resolved</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Messages -->
+                        <div id="conversationSection" class="flex-grow-1 overflow-auto p-3" style="background: #f9f9f9;">
+                            <!-- Messages loaded here -->
+                        </div>
+
+                        <!-- Input -->
+                        <div class="p-2 border-top">
+                            <div class="input-group">
+                                <input type="text" id="messageInput" class="form-control" placeholder="Type a message..." />
+                                <button class="btn btn-primary" id="sendMessage">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    let currentFeedbackId = null;
+
+    $('.tab-btn').click(function () {
+        $('.tab-btn').removeClass('active');
+        $(this).addClass('active');
+        const type = $(this).data('type');
+
+        $('#feedbackTypeLabel').text(type);
+        $('#viewDetailsBtn').addClass('d-none');
+        $('.dropdown-toggle').addClass('d-none');
+        $('#conversationSection').html('');
+
+        $.get(`/staff/getfeedbacklist?type=${type}`, function (data) {
+            $('#feedbackList').html('');
+            data.forEach(item => {
+                $('#feedbackList').append(`<div class="p-2 border-bottom feedback-item" data-id="${item.feedbackId}">
+                    <small class="text-muted">${item.dateSubmitted}</small>
+                    <div>${item.description}</div>
+                </div>`);
+            });
+        });
+    });
+
+    $(document).on('click', '.feedback-item', function () {
+        currentFeedbackId = $(this).data('id');
+        $('#viewDetailsBtn, .dropdown-toggle').removeClass('d-none');
+
+        const currentUserId = $('#currentUserId').val();
+
+        $.get(`/staff/getconversation?feedbackId=${currentFeedbackId}`, function (messages) {
+            $('#conversationSection').html('');
+
+            messages.forEach(msg => {
+                const isOwnMessage = msg.userId == currentUserId;
+                const messageHtml = isOwnMessage
+                    ? `<div class="d-flex justify-content-end animate__animated animate__fadeInUp">
+                            <div class="bg-primary text-white p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
+                       </div>`
+                    : `<div class="d-flex align-items-start animate__animated animate__fadeInUp">
+                            <img src="${msg.profileImage || '/images/default-user.png'}" class="rounded-circle me-2" width="40" height="40" />
+                            <div>
+                                <div class="fw-bold">${msg.fullName}</div>
+                                <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
+                            </div>
+                       </div>`;
+
+                $('#conversationSection').append(messageHtml);
+            });
+
+            // Optional: Scroll to bottom
+            $('#conversationSection').scrollTop($('#conversationSection')[0].scrollHeight);
+        });
+    });
+
+    function sendMessage() {
+        const message = $('#messageInput').val();
+        if (!message.trim()) return;
+
+        $.ajax({
+            url: '/staff/sendmessage',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ feedbackId: currentFeedbackId, message }),
+            success: function () {
+                $('#messageInput').val('');
+                $('.feedback-item[data-id="' + currentFeedbackId + '"]').click(); 
+            }
+        });
+    }
+
+    $('#sendMessage').click(function () {
+        sendMessage();
+    });
+
+    // Handle Enter key
+    $('#messageInput').keydown(function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    $('#resolveComplaint').click(function () {
+        if (!confirm('Are you sure you want to mark this complaint as resolved?')) return;
+
+        $.post(`/staff/markresolved/${currentFeedbackId}`, function () {
+            $('.tab-btn.active').click(); // reload list
+            $('#conversationSection').html('<div class="text-center p-3">This complaint has been resolved.</div>');
+        });
+    });
+
+    $(document).ready(function () {
+        $('.tab-btn[data-type="Complaint"]').click(); // Automatically click the Complaint tab on load
+    });
+</script>

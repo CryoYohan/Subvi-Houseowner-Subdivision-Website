@@ -292,34 +292,51 @@ document.addEventListener('DOMContentLoaded', function () {
         const startTime = document.getElementById('startTimeSlot').value;
         const endTime = document.getElementById('endTimeSlot').value;
 
+        const startTimeError = document.getElementById('startTimeError');
+        const endTimeError = document.getElementById('endTimeError');
+
+        // Clear previous errors
+        startTimeError.textContent = "";
+        endTimeError.textContent = "";
+        startTimeError.classList.add("hidden");
+        endTimeError.classList.add("hidden");
+
         if (!selectedDateEl || !startTime || !endTime) {
-            alert('Please select a date and both start and end time!');
+            if (!startTime) {
+                startTimeError.textContent = "Start time is required.";
+                startTimeError.classList.remove("hidden");
+            }
+            if (!endTime) {
+                endTimeError.textContent = "End time is required.";
+                endTimeError.classList.remove("hidden");
+            }
+            return;
+        }
+
+        const start = new Date(`1970-01-01T${startTime}`);
+        const end = new Date(`1970-01-01T${endTime}`);
+
+        if (start >= end) {
+            startTimeError.textContent = "Start time must be before end time.";
+            endTimeError.textContent = "End time must be after start time.";
+            startTimeError.classList.remove("hidden");
+            endTimeError.classList.remove("hidden");
             return;
         }
 
         const selectedDay = selectedDateEl.textContent;
         const selectedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
-
-        // Validate time logic
-        const start = new Date(`1970-01-01T${startTime}`);
-        const end = new Date(`1970-01-01T${endTime}`);
-        if (start >= end) {
-            alert("Start time must be before end time.");
-            return;
-        }
-
         const facilityName = document.getElementById('reservationTitle').textContent;
 
-        // Check if there's an existing reservation
         const checkResponse = await fetch(`/Home/CheckReservationConflict?facilityName=${facilityName}&selectedDate=${selectedDate}&startTime=${startTime}&endTime=${endTime}`);
         const checkResult = await checkResponse.json();
 
         if (!checkResult.success) {
-            alert(checkResult.message);
+            endTimeError.textContent = checkResult.message;
+            endTimeError.classList.remove("hidden");
             return;
         }
 
-        // Proceed to insert reservation
         const res = await fetch(`/Home/AddReservation`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -328,12 +345,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const result = await res.json();
         if (result.success) {
-            alert("Reservation successfully added!");
+            showToast("Reservation successfully added!");
             fetchPendingFacilities();
             facilityBootstrapModal.hide();
             reservationModal.hide();
         } else {
-            alert("Failed to add reservation.");
+            endTimeError.textContent = "Failed to add reservation.";
+            endTimeError.classList.remove("hidden");
+            showToast("Something went wrong. Please try again later.", "red");
         }
     });
 });
+
+function showToast(message, color = 'green') {
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transform translate-y-20 opacity-0 transition-all z-50`;
+    toast.style.backgroundColor = color;
+    toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        setTimeout(() => {
+            toast.classList.add('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
+    }, 50);
+}
