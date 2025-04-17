@@ -206,5 +206,125 @@ namespace YourNamespace.Controllers
 
             return Ok();
         }
+
+        // Get all admin notifications
+        [HttpGet("admin/{userId}")]
+        public IActionResult GetAllAdminNotifications(int userId)
+        {
+            var allNotifs = _context.Notifications
+                .Where(n => n.TargetRole == "Admin")
+                .OrderByDescending(n => n.DateCreated)
+                .ToList();
+
+            var readNotifIds = _context.Notification_Reads
+                .Where(r => r.UserId == userId)
+                .Select(r => r.NotificationId)
+                .ToList();
+
+            var results = allNotifs.Select(n => new
+            {
+                n.NotificationId,
+                n.Title,
+                n.Type,
+                n.Message,
+                n.DateCreated,
+                n.Link,
+                IsRead = readNotifIds.Contains(n.NotificationId)
+            });
+
+            return Ok(results);
+        }
+
+        // Count unread notifications
+        [HttpGet("admin/unread-count/{userId}")]
+        public IActionResult GetAdminUnreadCount(int userId)
+        {
+            var totalNotifIds = _context.Notifications
+                .Where(n => n.TargetRole == "Admin")
+                .Select(n => n.NotificationId)
+                .ToList();
+
+            var readNotifIds = _context.Notification_Reads
+                .Where(r => r.UserId == userId)
+                .Select(r => r.NotificationId)
+                .ToList();
+
+            var unreadCount = totalNotifIds.Except(readNotifIds).Count();
+
+            return Ok(new { count = unreadCount });
+        }
+
+        //Get unread notifications every notification type in admin
+        [HttpGet("admin/type/unread-count/{adminUserId}")]
+        public IActionResult GetAdminUnreadTypeCount(int adminUserId)
+        {
+            var counts = _context.Notifications
+                .Where(n => n.TargetRole == "Admin" &&
+                            !_context.Notification_Reads
+                                .Any(r => r.NotificationId == n.NotificationId && r.UserId == adminUserId))
+                .GroupBy(n => n.Type)
+                .Select(g => new { Type = g.Key, Count = g.Count() })
+                .ToList();
+
+            return Ok(counts);
+        }
+
+        // Mark specific notification as read
+        [HttpPut("admin/mark-read/{userId}/{notificationId}")]
+        public async Task<IActionResult> AdminMarkAsRead(int userId, int notificationId)
+        {
+            var exists = await _context.Notifications
+                .AnyAsync(n => n.NotificationId == notificationId && n.TargetRole == "Admin");
+
+            if (!exists) return NotFound();
+
+            var alreadyRead = await _context.Notification_Reads
+                .AnyAsync(r => r.UserId == userId && r.NotificationId == notificationId);
+
+            if (!alreadyRead)
+            {
+                _context.Notification_Reads.Add(new NotificationReads
+                {
+                    UserId = userId,
+                    NotificationId = notificationId,
+                    DateRead = DateTime.UtcNow
+                });
+
+                await _context.SaveChangesAsync();
+            }
+
+            return NoContent();
+        }
+
+        // Mark all as read
+        [HttpPut("admin/mark-all-read/{userId}")]
+        public async Task<IActionResult> AdminMarkAllAsRead(int userId)
+        {
+            var allNotifIds = await _context.Notifications
+                .Where(n => n.TargetRole == "Admin")
+                .Select(n => n.NotificationId)
+                .ToListAsync();
+
+            var alreadyRead = await _context.Notification_Reads
+                .Where(r => r.UserId == userId)
+                .Select(r => r.NotificationId)
+                .ToListAsync();
+
+            var unreadNotifIds = allNotifIds.Except(alreadyRead).ToList();
+
+            foreach (var notifId in unreadNotifIds)
+            {
+                _context.Notification_Reads.Add(new NotificationReads
+                {
+                    UserId = userId,
+                    NotificationId = notifId,
+                    DateRead = DateTime.UtcNow
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
     }
 }

@@ -9,15 +9,20 @@ using System.Net.Mime;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using ELNET1_GROUP_PROJECT.SignalR;
+using Microsoft.AspNetCore.SignalR;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 public class AdminController : Controller
 {
     private readonly MyAppDBContext _context;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public AdminController(MyAppDBContext context)
+    public AdminController(MyAppDBContext context, IHubContext<NotificationHub> hubContext)
     {
         _context = context;
-        ViewData["Layout"] = "_AdminLayout"; 
+        ViewData["Layout"] = "_AdminLayout";
+        _hubContext = hubContext;
     }
 
     //Resetting the cookies time
@@ -60,6 +65,282 @@ public class AdminController : Controller
     public IActionResult RedirectToDashboard()
     {
         return RedirectToAction("Dashboard");
+    }
+
+    [Route("admin/communityforum")]
+    public async Task<IActionResult> CommunityForum()
+    {
+        RefreshJwtCookies();
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return RedirectToAction("landing");
+        }
+
+        var rawPosts = await _context.Forum
+            .Join(_context.User_Accounts,
+                f => f.UserId,
+                u => u.Id,
+                (f, u) => new
+                {
+                    f.PostId,
+                    f.Title,
+                    f.Hashtag,
+                    f.Content,
+                    f.DatePosted,
+                    f.UserId,
+                    u.Profile,
+                    u.Firstname,
+                    u.Lastname
+                })
+            .OrderByDescending(f => f.DatePosted)
+            .ToListAsync();
+
+        var posts = rawPosts
+            .Select(f => new ForumPost
+            {
+                PostId = f.PostId,
+                Title = char.ToUpper(f.Title[0]) + f.Title.Substring(1),
+                Hashtag = f.Hashtag ?? null,
+                Content = f.Content,
+                DatePosted = f.DatePosted,
+                UserId = f.UserId,
+                Profile = f.Profile,
+                Firstname = char.ToUpper(f.Firstname[0]) + f.Firstname.Substring(1),
+                Lastname = char.ToUpper(f.Lastname[0]) + f.Lastname.Substring(1),
+                FullName = char.ToUpper(f.Firstname[0]) + f.Firstname.Substring(1) + " " + char.ToUpper(f.Lastname[0]) + f.Lastname.Substring(1),
+                Likes = _context.Like.Count(l => l.PostId == f.PostId),
+                RepliesCount = _context.Replies.Count(r => r.PostId == f.PostId),
+                IsLiked = _context.Like.Any(l => l.PostId == f.PostId && l.UserId == userId)
+            })
+            .OrderByDescending(f => f.DatePosted)
+            .ToList();
+
+        return View(posts);
+    }
+
+    public IActionResult SearchDiscussions(string? query, string? mention)
+    {
+        RefreshJwtCookies();
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return RedirectToAction("landing");
+        }
+
+        var results = _context.Forum
+            .Include(fp => fp.UserAccount) // Include the related UserAccount data
+            .AsQueryable();
+
+        // Handle @mention if present
+        if (!string.IsNullOrWhiteSpace(mention))
+        {
+            string formattedMention = $"[{mention.Trim()}]";
+            results = results.Where(fp => fp.Hashtag.Contains(formattedMention));
+        }
+
+        // Handle free-text query (Title or Content)
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            results = results.Where(fp =>
+                fp.Title.Contains(query) || fp.Content.Contains(query));
+        }
+
+        // Materialize results before calculating Likes/Replies to avoid EF function translation issues
+        var rawResults = results
+            .OrderByDescending(fp => fp.DatePosted)
+            .ToList();
+
+        var data = rawResults
+            .Select(fp => new {
+                fp.PostId,
+                fp.Title,
+                fp.Hashtag,
+                fp.Content,
+                DatePosted = fp.DatePosted.ToString("MMMM dd, yyyy"),
+                fp.Profile,
+                Firstname = char.ToUpper(fp.Firstname[0]) + fp.Firstname.Substring(1),
+                Lastname = char.ToUpper(fp.Lastname[0]) + fp.Lastname.Substring(1),
+                FullName = char.ToUpper(fp.Firstname[0]) + fp.Firstname.Substring(1) + " " + char.ToUpper(fp.Lastname[0]) + fp.Lastname.Substring(1),
+                LikeCount = _context.Like.Count(l => l.PostId == fp.PostId),
+                RepliesDisplay = _context.Replies.Count(r => r.PostId == fp.PostId),
+                IsLiked = _context.Like.Any(l => l.PostId == fp.PostId && l.UserId == userId)
+            }).ToList();
+
+        return Json(data);
+    }
+
+    //Mention Announcement Title
+    [HttpGet]
+    public IActionResult GetAnnouncementTitles()
+    {
+        var titles = _context.Announcement.Select(a => a.Title).ToList();
+        return Json(titles);
+    }
+
+    // Add a new post
+    [HttpPost]
+    public async Task<IActionResult> AddPost(string title, string content, string? hashtag)
+    {
+        RefreshJwtCookies();
+        var Iduser = HttpContext.Request.Cookies["Id"];
+
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(content))
+            return BadRequest("Title and Content cannot be empty.");
+
+        if (!int.TryParse(Iduser, out int userId))
+            return BadRequest("Invalid User ID.");
+
+        try
+        {
+            var newPost = new Forum
+            {
+                Title = char.ToUpper(title[0]) + title.Substring(1),
+                Content = content,
+                DatePosted = DateTime.Now,
+                UserId = userId,
+                Hashtag = hashtag
+            };
+
+            _context.Forum.Add(newPost);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("CommunityForum");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding post: {ex.Message}");
+            return StatusCode(500, "An error occurred while adding the post.");
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ToggleLike(int postId)
+    {
+        RefreshJwtCookies();
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return BadRequest("Invalid User ID.");
+        }
+
+        try
+        {
+            var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return Unauthorized();
+
+            var forumPost = await _context.Forum.FirstOrDefaultAsync(f => f.PostId == postId);
+            if (forumPost == null) return NotFound();
+
+            string Capitalize(string name) => string.IsNullOrEmpty(name) ? "" : char.ToUpper(name[0]) + name.Substring(1).ToLower();
+            var personName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
+            var title = forumPost.Title;
+
+            var existingLike = await _context.Like
+                .FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
+
+            if (existingLike == null)
+            {
+                // Add like
+                _context.Like.Add(new Like { PostId = postId, UserId = userId });
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                // Remove like (unlike)
+                _context.Like.Remove(existingLike);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("CommunityForum");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling like: {ex.Message}");
+            return StatusCode(500, "An error occurred while toggling the like.");
+        }
+    }
+
+    [HttpGet]
+    public IActionResult Comments(int id, string title)
+    {
+        RefreshJwtCookies();
+        // Fetch the post and replies based on the PostId (id)
+        var post = _context.Forum
+            .Where(f => f.PostId == id)
+            .Join(_context.User_Accounts, f => f.UserId, u => u.Id, (f, u) => new
+            {
+                f.PostId,
+                Title = char.ToUpper(f.Title[0]) + f.Title.Substring(1),
+                Hashtag = f.Hashtag ?? null,
+                f.Content,
+                f.DatePosted,
+                f.UserId,
+                Firstname = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
+                Lastname = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
+            })
+            .FirstOrDefault();
+
+        // Fetch replies and join with User_Accounts to get the FullName
+        var replies = _context.Replies
+            .Where(r => r.PostId == id)
+            .Join(_context.User_Accounts, r => r.UserId, u => u.Id, (r, u) => new ReplyViewModel
+            {
+                ReplyId = r.ReplyId,
+                Content = r.Content,
+                Date = r.Date,
+                UserId = r.UserId,
+                FullName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                Firstname = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
+                Lastname = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
+            })
+            .OrderByDescending(r => r.Date)
+            .ToList();
+
+        // Pass the post and replies to the view
+        var viewModel = new CommentsViewModel
+        {
+            Post = post,
+            Replies = replies
+        };
+
+        return View(viewModel);
+    }
+
+    private string GetTruncatedTitle(string title)
+    {
+        var words = title.Split(' ');
+        if (words.Length >= 5)
+        {
+            return string.Join("-", words.Take(5)) + "...";
+        }
+        return string.Join("-", words);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddReply(int postId, string content)
+    {
+        RefreshJwtCookies();
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return RedirectToAction("landing");
+        }
+
+        // Fetch user from USER_ACCOUNT
+        var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+        if (user == null) return Unauthorized();
+
+        // Capitalize first letter of first and last name
+        string Capitalize(string name) => string.IsNullOrEmpty(name) ? "" : char.ToUpper(name[0]) + name.Substring(1).ToLower();
+        var personName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
+
+        // Get post title from FORUM table
+        var forumPost = _context.Forum.FirstOrDefault(f => f.PostId == postId);
+        if (forumPost == null) return NotFound();
+
+        var title = forumPost.Title;
+
+        return RedirectToAction("Comments", new { id = postId, title = GetTruncatedTitle(title) });
     }
 
     [Route("event_schedules")]
@@ -140,9 +421,9 @@ public class AdminController : Controller
         return View(users);
     }
 
-    // POST: /Admin/AddUserAccount
     [HttpPost]
-    public IActionResult AddUserAccount(User_Account model)
+    // POST: /Admin/AddUserAccount
+    public async Task<IActionResult> AddUserAccount(User_Account model)
     {
         if (ModelState.IsValid)
         {
@@ -150,29 +431,44 @@ public class AdminController : Controller
             try
             {
                 // Check if the email already exists
-                var existingUser = _context.User_Accounts
-                    .FirstOrDefault(u => u.Email == model.Email);
-
-                if (existingUser != null)
+                var existingEmail = _context.User_Accounts.FirstOrDefault(u => u.Email == model.Email);
+                if (existingEmail != null)
                 {
                     TempData["ErrorMessage"] = "User already exists with this email.";
                     return RedirectToAction("HomeownerStaffAccounts");
                 }
 
-                // Hash the password before saving it
-                string fullname = model.Firstname + " " + model.Lastname;
-                string username = model.Email;
-                string originalPassword = model.Password;
-                model.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
+                // Check if the contact number already exists
+                var existingContact = _context.User_Accounts.FirstOrDefault(u => u.PhoneNumber == model.PhoneNumber);
+                if (existingContact != null)
+                {
+                    TempData["ErrorMessage"] = "User already exists with this contact number.";
+                    return RedirectToAction("HomeownerStaffAccounts");
+                }
 
-                // Add the new user to the database
+                // Check if first and last name combination already exists
+                var existingName = _context.User_Accounts.FirstOrDefault(u => u.Firstname == model.Firstname && u.Lastname == model.Lastname);
+                if (existingName != null)
+                {
+                    TempData["ErrorMessage"] = "User with the same name already exists.";
+                    return RedirectToAction("HomeownerStaffAccounts");
+                }
+
+                // Save original password and hash it
+                string originalPassword = model.Password;
+                model.Password = BCrypt.Net.BCrypt.HashPassword(originalPassword);
+
+                // Add new user to the database
                 _context.User_Accounts.Add(model);
                 _context.SaveChanges();
 
-                // Send email only if Role is "Homeowner"
+                // Construct full name
+                string fullname = $"{model.Firstname} {model.Lastname}";
+
+                // Send email only if role is Homeowner
                 if (model.Role == "Homeowner")
                 {
-                    var emailSent = SendEmail(model.Email, fullname, username, originalPassword);
+                    var emailSent = SendEmail(model.Email, fullname, model.Email, originalPassword);
                     /*
                     if (!emailSent)
                     {
@@ -180,6 +476,60 @@ public class AdminController : Controller
                         return RedirectToAction("HomeownerStaffAccounts");
                     }
                     */
+                }
+
+                // Role-based link assignment
+                string link = model.Role switch
+                {
+                    "Homeowner" => "/home/settings",
+                    "Admin" => "/admin/settings",
+                    "Staff" => "/staff/profile/settings",
+                    _ => "/"
+                };
+
+                // Create Notification
+                var notification = new Notification
+                {
+                    Title = "Account Created",
+                    Message = $"Your user account was successfully created. Email: {model.Email}, Password: {originalPassword}. Please change your password for security reasons.",
+                    IsRead = false,
+                    Type = "Account",
+                    TargetRole = model.Role,
+                    Link = link,
+                    UserId = model.Role == "Homeowner" ? model.Id : null,
+                    DateCreated = DateTime.Now
+                };
+
+                _context.Notifications.Add(notification);
+                _context.SaveChanges();
+
+                // Send real-time notification via SignalR
+                if (model.Role == "Homeowner")
+                {
+                    await _hubContext.Clients.User(model.Id.ToString()).SendAsync("ReceiveNotification", new
+                    {
+                        Title = notification.Title,
+                        Message = notification.Message,
+                        DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                    });
+                }
+                else if (model.Role == "Staff")
+                {
+                    await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", new
+                    {
+                        Title = notification.Title,
+                        Message = notification.Message,
+                        DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                    });
+                }
+                else if (model.Role == "Admin")
+                {
+                    await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", new
+                    {
+                        Title = notification.Title,
+                        Message = notification.Message,
+                        DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                    });
                 }
 
                 TempData["SuccessMessage"] = "User registered successfully!";
@@ -192,7 +542,6 @@ public class AdminController : Controller
             }
         }
 
-        // If validation fails, redisplay the form with validation errors
         return View(model);
     }
 
@@ -335,17 +684,15 @@ public class AdminController : Controller
     }
     */
 
-    // POST: /Admin/EditUser
     [HttpPost]
-    public IActionResult EditUser(User_Account model)
+    // POST: /Admin/EditUser
+    public async Task<IActionResult> EditUser(User_Account model)
     {
         RefreshJwtCookies();
-        // Remove the Password field from model validation
         ModelState.Remove("Password");
 
         if (!ModelState.IsValid)
         {
-            // Log validation errors
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
             TempData["ErrorMessage"] = "Validation failed: " + string.Join(", ", errors);
             return RedirectToAction("HomeownerStaffAccounts");
@@ -353,7 +700,6 @@ public class AdminController : Controller
 
         try
         {
-            // Find the existing user by ID
             var existingUser = _context.User_Accounts.FirstOrDefault(u => u.Id == model.Id);
             if (existingUser == null)
             {
@@ -361,15 +707,30 @@ public class AdminController : Controller
                 return RedirectToAction("HomeownerStaffAccounts");
             }
 
-            // Check if the email is being updated and if the new email already exists
-            if (existingUser.Email != model.Email && _context.User_Accounts
-                    .Any(u => u.Email == model.Email))
+            // Check for duplicate email (excluding current user)
+            if (existingUser.Email != model.Email &&
+                _context.User_Accounts.Any(u => u.Email == model.Email && u.Id != model.Id))
             {
-                TempData["ErrorMessage"] = "User already exists with this email.";
+                TempData["ErrorMessage"] = "Email is already taken by another user.";
                 return RedirectToAction("HomeownerStaffAccounts");
             }
 
-            // Update the user data
+            // Check for duplicate contact number (excluding current user)
+            if (!string.IsNullOrEmpty(model.PhoneNumber) &&
+                _context.User_Accounts.Any(u => u.PhoneNumber == model.PhoneNumber && u.Id != model.Id))
+            {
+                TempData["ErrorMessage"] = "Contact number is already used by another user.";
+                return RedirectToAction("HomeownerStaffAccounts");
+            }
+
+            // Check for duplicate name (excluding current user)
+            if (_context.User_Accounts.Any(u => u.Firstname == model.Firstname && u.Lastname == model.Lastname && u.Id != model.Id))
+            {
+                TempData["ErrorMessage"] = "A user with the same name already exists.";
+                return RedirectToAction("HomeownerStaffAccounts");
+            }
+
+            // Update user details
             existingUser.Firstname = model.Firstname;
             existingUser.Lastname = model.Lastname;
             existingUser.Email = model.Email;
@@ -377,29 +738,81 @@ public class AdminController : Controller
             existingUser.Address = model.Address;
             existingUser.PhoneNumber = model.PhoneNumber;
 
-            // Conditionally update the password with BCrypt
             if (!string.IsNullOrEmpty(model.Password))
             {
                 existingUser.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
             }
 
-            // Save changes to the database
             _context.SaveChanges();
+
+            // Role-based link assignment
+            string link = model.Role switch
+            {
+                "Homeowner" => "/home/settings",
+                "Admin" => "/admin/settings",
+                "Staff" => "/staff/profile/settings",
+                _ => "/"
+            };
+
+            // Create notification
+            string Capitalize(string input)
+            {
+                if (string.IsNullOrWhiteSpace(input)) return input;
+                return char.ToUpper(input[0]) + input.Substring(1).ToLower();
+            }
+            var fullName = $"{Capitalize(model.Firstname)} {Capitalize(model.Lastname)}";
+
+            var notification = new Notification
+            {
+                Title = "Account Updated",
+                Message = $"Hi {fullName}, your account has been updated by the administrator. Go to your profile settings for the changes. You can contact us anytime if there is something wrong.",
+                IsRead = false,
+                Type = "Account Update",
+                TargetRole = model.Role,
+                UserId = model.Role == "Homeowner" ? model.Id : null,
+                Link = link,
+                DateCreated = DateTime.Now
+            };
+
+            _context.Notifications.Add(notification);
+            _context.SaveChanges();
+
+            // Send SignalR notification
+            var signalPayload = new
+            {
+                Title = notification.Title,
+                Message = notification.Message,
+                DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+            };
+
+            if (model.Role == "Homeowner")
+            {
+                await _hubContext.Clients.User(model.Id.ToString()).SendAsync("ReceiveNotification", signalPayload);
+            }
+            else if (model.Role == "Staff")
+            {
+                await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", signalPayload);
+            }
+            else if (model.Role == "Admin")
+            {
+                await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", signalPayload);
+            }
 
             TempData["SuccessMessage"] = "User updated successfully!";
             return RedirectToAction("HomeownerStaffAccounts");
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = "Failed to update user info. Please try again later. ";
+            TempData["ErrorMessage"] = "Failed to update user info. Please try again later.";
             return RedirectToAction("HomeownerStaffAccounts");
         }
     }
 
-    // Function to delete a specific user by ID
-    public IActionResult DeleteUser(int id)
+    // Function to deactivate a specific user by ID
+    public async Task<IActionResult> DeleteUser(int id)
     {
         RefreshJwtCookies();
+
         try
         {
             // Find the user by ID
@@ -410,16 +823,129 @@ public class AdminController : Controller
                 return RedirectToAction("HomeownerStaffAccounts");
             }
 
-            // Remove the specific user from the database
-            _context.User_Accounts.Remove(user);
+            // Mark the user as INACTIVE instead of deleting
+            user.Status = "INACTIVE";
             _context.SaveChanges();
 
-            TempData["SuccessMessage"] = "User deleted successfully!";
+            string Capitalize(string input)
+            {
+                if (string.IsNullOrWhiteSpace(input)) return input;
+                return char.ToUpper(input[0]) + input.Substring(1).ToLower();
+            }
+
+            var fullName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
+            var notification = new Notification
+            {
+                Title = "Account Deactivated",
+                Message = $"Hi {fullName}, your account has been set to inactive by the administrator. Contact support if this was unexpected.",
+                IsRead = false,
+                Type = "Account Deactivation",
+                TargetRole = user.Role,
+                UserId = user.Role == "Homeowner" ? user.Id : null,
+                DateCreated = DateTime.Now
+            };
+
+            _context.Notifications.Add(notification);
+            _context.SaveChanges();
+
+            // SignalR notification payload
+            var signalPayload = new
+            {
+                Title = notification.Title,
+                Message = notification.Message,
+                DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+            };
+
+            if (user.Role == "Homeowner")
+            {
+                await _hubContext.Clients.User(user.Id.ToString()).SendAsync("ReceiveNotification", signalPayload);
+            }
+            else if (user.Role == "Staff")
+            {
+                await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", signalPayload);
+            }
+            else if (user.Role == "Admin")
+            {
+                await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", signalPayload);
+            }
+
+            TempData["SuccessMessage"] = "User deactivated successfully!";
             return RedirectToAction("HomeownerStaffAccounts");
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = "Failed to delete user. Please try again later. ";
+            TempData["ErrorMessage"] = "Failed to deactivate user. Please try again later.";
+            return RedirectToAction("HomeownerStaffAccounts");
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ActivateUser(int id)
+    {
+        RefreshJwtCookies();
+        try
+        {
+            var user = await _context.User_Accounts.FindAsync(id);
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "User not found.";
+                return RedirectToAction("HomeownerStaffAccounts");
+            }
+
+            user.Status = "ACTIVE";
+            _context.Update(user);
+            await _context.SaveChangesAsync();
+
+            // Capitalize full name
+            string Capitalize(string input)
+            {
+                if (string.IsNullOrWhiteSpace(input)) return input;
+                return char.ToUpper(input[0]) + input.Substring(1).ToLower();
+            }
+            var fullName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
+
+            // Create Notification
+            var notification = new Notification
+            {
+                Title = "Account Activated",
+                Message = $"Hi {fullName}, your account has been reactivated. You can now access the system again.",
+                IsRead = false,
+                Type = "Account Activation",
+                TargetRole = user.Role,
+                UserId = user.Role == "Homeowner" ? user.Id : null,
+                DateCreated = DateTime.Now
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
+            // SignalR payload
+            var signalPayload = new
+            {
+                Title = notification.Title,
+                Message = notification.Message,
+                DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+            };
+
+            if (user.Role == "Homeowner")
+            {
+                await _hubContext.Clients.User(user.Id.ToString()).SendAsync("ReceiveNotification", signalPayload);
+            }
+            else if (user.Role == "Staff")
+            {
+                await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", signalPayload);
+            }
+            else if (user.Role == "Admin")
+            {
+                await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", signalPayload);
+            }
+
+            TempData["SuccessMessage"] = "User activated and notified successfully!";
+            return RedirectToAction("HomeownerStaffAccounts");
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "An error occurred while activating the user.";
             return RedirectToAction("HomeownerStaffAccounts");
         }
     }
@@ -935,8 +1461,7 @@ public class AdminController : Controller
         if (!int.TryParse(Iduser, out int userId))
         {
             return Unauthorized();
-        }
-        ;
+        };
         var user = await _context.User_Accounts
             .Where(u => u.Id == userId)
             .Select(u => new
@@ -1038,5 +1563,16 @@ public class AdminController : Controller
         await _context.SaveChangesAsync();
 
         return Ok(new { message = "Password changed successfully" });
+    }
+
+    public IActionResult Notifications()
+    {
+        RefreshJwtCookies();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("Landing");
+        }
+        return View();
     }
 }

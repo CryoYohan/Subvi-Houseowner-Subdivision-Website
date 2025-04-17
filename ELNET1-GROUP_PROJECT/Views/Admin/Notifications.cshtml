@@ -1,82 +1,60 @@
 ﻿@{
-    Layout = "_StaffLayout";
-    ViewData["Title"] = "Staff | Notification";
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Notifications";
 }
 
-<div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
+<div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     <!-- Sidebar -->
-    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
-        <!-- Sidebar Header -->
-        <div class="px-2 py-2  border-b border-gray-100">
-            <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
-        </div>
-
-        <!-- Navigation Links -->
-        <ul class="flex-1 px-2 py-2 space-y-1">
-            <li class="nav-item">
-                <a href="/staff/dashboard" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
-                    <i class="fas fa-home w-5 h-5 mr-3"></i>
-                    <span class="font-medium">Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/staff/pass/visitors" style="text-decoration: none;"
-                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VisitorsPass" ? "bg-blue-50 text-blue-600" : "")">
-                    <i class="fas fa-tasks w-5 h-5 mr-3"></i>
-                    <span class="font-medium">Visitors Pass</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/staff/vehicle/registration" style="text-decoration: none;"
-                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VehicleRegistration" ? "bg-blue-50 text-blue-600" : "")">
-                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
-                    <span class="font-medium">Vehicle Registration</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/staff/requests/reservation" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ReservationRequests" ? "bg-blue-50 text-blue-600" : "")">
-                    <i class="fas fa-bell w-5 h-5 mr-3"></i>
-                    <span class="font-medium">Reservation Requests</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/staff/requests/services" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ServiceRequests" ? "bg-blue-50 text-blue-600" : "")">
-                    <i class="fas fa-tools w-6"></i>
-                    <span class="font-medium">Service Requests</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/staff/bills_and_payments" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "BillsAndPayments" ? "bg-blue-50 text-blue-600" : "")">
-                    <i class="fas fa-file-invoice-dollar w-6"></i>
-                    <span class="font-medium">Bills & Payments</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/staff/poll_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "bg-blue-50 text-blue-600" : "")">
-                    <i class="fas fa-poll w-6"></i>
-                    <span class="font-medium">Poll Management</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/staff/event_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Event" ? "bg-blue-50 text-blue-600" : "")">
-                    <i class="fas fa-calendar-check w-6"></i>
-                    <span class="font-medium">Event Management</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/staff/feedbacks" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Feedback" ? "bg-blue-50 text-blue-600" : "")">
-                    <i class="fas fa-comment-alt w-6"></i>
-                    <span class="font-medium">Feedbacks</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/staff/reports" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-blue-50 text-blue-600" : "")">
-                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
-                    <span class="font-medium">Reports</span>
-                </a>
-            </li>
-        </ul>
-    </div>
+    <aside class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-72 p-4 py-6">
+        <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
+        <nav class="flex-1 space-y-3">
+            <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-home w-6"></i>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-calendar-check w-6"></i>
+                <span class="ml-3">Reservations</span>
+            </a>
+            <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-users w-6"></i>
+                <span class="ml-3">Homeowners & Staff Accounts</span>
+            </a>
+            <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-history w-6"></i>
+                <span class="ml-3">Bill Payment History</span>
+            </a>
+            <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-tools w-6"></i>
+                <span class="ml-3">Services</span>
+            </a>
+            <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-bullhorn w-6"></i>
+                <span class="ml-3">Announcements</span>
+            </a>
+            <a asp-controller="admin" asp-action="poll" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-poll w-6"></i>
+                <span class="ml-3">Poll</span>
+            </a>
+            <a asp-controller="admin" asp-action="feedback" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Feedback" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-comment-alt w-6"></i>
+                <span class="ml-3">Feedback</span>
+            </a>
+            <a asp-controller="admin" asp-action="reports" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-chart-line w-6"></i>
+                <span class="ml-3">Reports</span>
+            </a>
+        </nav>
+    </aside>
 
     <!-- Main Content -->
     <div class="flex-1 p-3 overflow-y-auto w-full fade-in">
@@ -86,38 +64,24 @@
                 <!-- Header -->
                 <div class="mb-8">
                     <h1 class="text-3xl font-bold text-blue-900 mb-2"><i class="bi bi-bell-fill fs-5"></i> Notifications</h1>
-                    <p class="text-blue-500 font-medium">View the pending request notification, and feedback.</p>
+                    <p class="text-blue-500 font-medium">View Community Forum Updates.</p>
                 </div>
 
                 <!-- Tabs -->
                 <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200">
-                    <button data-type="Facility Reservation Request"
+                    <button data-type="Post Like"
                             class="px-4 py-2 rounded-t-lg flex items-center font-medium space-x-2 transition-colors notif-tab active-tab
                        bg-white border-b-4 border-blue-500 text-blue-600 hover:bg-blue-50">
-                        <i class="fas fa-building text-lg"></i>
-                        <span>Facility</span>
-                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="facility-count"></span>
+                        <i class="fas fa-thumbs-up text-blue-500 text-lg"></i>
+                        <span>Post Likes</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="like-count"></span>
                     </button>
-                    <button data-type="Service Request"
+                    <button data-type="Post Reply"
                             class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                        hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
-                        <i class="fas fa-tools text-lg"></i>
-                        <span>Services</span>
-                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="service-count"></span>
-                    </button>
-                    <button data-type="Feedback Submitted"
-                            class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
-                       hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
-                        <i class="fas fa-comment-dots text-lg"></i>
-                        <span>Feedback</span>
-                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="feedback-count"></span>
-                    </button>
-                    <button data-type="User Account"
-                            class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
-                       hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
-                        <i class="fas fa-comment-dots text-lg"></i>
-                        <span>Account</span>
-                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="account-count"></span>
+                        <i class="fas fa-comment text-green-500 text-lg"></i>
+                        <span>Post Reply</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="reply-count"></span>
                     </button>
                 </div>
 
@@ -194,7 +158,7 @@
     const toggleSearchBtn = document.getElementById("toggleSearch");
     const searchIcon = document.getElementById("searchIcon");
     const closeIcon = document.getElementById("closeIcon");
-    let selectedType = "Facility Reservation Request";
+    let selectedType = "Post Like";
     let allNotifs = [];
 
     // Tab Click Handler
@@ -243,7 +207,7 @@
     // Mark All as Read
     markAllBtn.addEventListener("click", async () => {
         try {
-            await fetch(`/api/notifications/staff/mark-all-read/${currentUserId}`, { method: "PUT" });
+            await fetch(`/api/notifications/admin/mark-all-read/${currentUserId}`, { method: "PUT" });
 
             // Update all local notifications as read
             allNotifs = allNotifs.map(n => ({
@@ -346,7 +310,7 @@
     async function handleNotificationClick(notif) {
         if (!notif.isRead) {
             try {
-                await fetch(`/api/notifications/staff/mark-read/${currentUserId}/${notif.notificationId}`, { method: "PUT" });
+                await fetch(`/api/notifications/admin/mark-read/${currentUserId}/${notif.notificationId}`, { method: "PUT" });
                 notif.isRead = true;
                 renderNotifications();
                 updateCountBadges();
@@ -361,7 +325,7 @@
     async function loadNotifications() {
         try {
             document.getElementById('loadingSkeleton').classList.remove('hidden');
-            const res = await fetch(`/api/notifications/staff/${currentUserId}`);
+            const res = await fetch(`/api/notifications/admin/${currentUserId}`);
             allNotifs = await res.json();
             updateCountBadges();
             renderNotifications();
@@ -375,23 +339,19 @@
     // Helper Functions
     function getTypeIcon(type) {
         return {
-            'Facility Reservation Request': '<i class="fas fa-building text-blue-500"></i>',
-            'Service Request': '<i class="fas fa-tools text-green-500"></i>',
-            'Feedback Submitted': '<i class="fas fa-comment-dots text-purple-500"></i>',
-            'Account': '<i class="fas fa-tools text-green-500"></i>'
+            'Post Like': '<i class="fas fa-thumbs-up text-blue-500"></i>',
+            'Post Reply': '<i class="fas fa-comment text-green-500"></i>'
         }[type] || '<i class="fas fa-bell text-gray-400"></i>'; 
     }
 
     async function updateCountBadges() {
         try {
-            const res = await fetch(`/api/notifications/staff/type/unread-count/${currentUserId}`);
+            const res = await fetch(`/api/notifications/admin/type/unread-count/${currentUserId}`);
             const counts = await res.json();
 
             const countMap = {
-                'Facility Reservation Request': 0,
-                'Service Request': 0,
-                'Feedback Submitted': 0,
-                'Account': 0
+                'Post Like': 0,
+                'Post Reply': 0
             };
 
             counts.forEach(c => {
@@ -400,10 +360,8 @@
 
             // Update UI
             const badgeMap = {
-                'Facility Reservation Request': document.getElementById('facility-count'),
-                'Service Request': document.getElementById('service-count'),
-                'Feedback Submitted': document.getElementById('feedback-count'),
-                'Account': document.getElementById('account-count')
+                'Post Like': document.getElementById('like-count'),
+                'Post Reply': document.getElementById('reply-count')
             };
 
             Object.keys(badgeMap).forEach(type => {
@@ -438,9 +396,8 @@
     function showNewNotificationToast(notif) {
         const toast = document.createElement('div');
         toast.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg border-l-4 ${
-            notif.type === 'Facility Reservation Request' ? 'border-blue-500 bg-blue-50' :
-            notif.type === 'Service Request' ? 'border-green-500 bg-green-50' :
-            notif.type === 'Account' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Post Like' ? 'border-blue-500 bg-blue-50' :
+            notif.type === 'Post Reply' ? 'border-green-500 bg-green-50' :
             'border-purple-500 bg-purple-50'
         } animate-slide-in`;
 

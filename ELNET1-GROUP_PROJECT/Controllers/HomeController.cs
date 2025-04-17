@@ -870,7 +870,6 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             }
         }
 
-        // Handle likes
         [HttpPost]
         public async Task<IActionResult> ToggleLike(int postId)
         {
@@ -883,21 +882,55 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
             try
             {
+                var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user == null) return Unauthorized();
+
+                var forumPost = await _context.Forum.FirstOrDefaultAsync(f => f.PostId == postId);
+                if (forumPost == null) return NotFound();
+
+                string Capitalize(string name) => string.IsNullOrEmpty(name) ? "" : char.ToUpper(name[0]) + name.Substring(1).ToLower();
+                var personName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
+                var title = forumPost.Title;
+
                 var existingLike = await _context.Like
                     .FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
 
                 if (existingLike == null)
                 {
-                    // Add like if it doesn't exist
+                    // Add like
                     _context.Like.Add(new Like { PostId = postId, UserId = userId });
+                    await _context.SaveChangesAsync();
+
+                    // Add notification (ONLY for new likes)
+                    var notification = new Notification
+                    {
+                        TargetRole = "Admin",
+                        Title = "Post Like",
+                        Message = $"{personName} liked the post {title}.",
+                        DateCreated = DateTime.UtcNow,
+                        IsRead = false,
+                        Type = "Post Like",
+                        Link = "/admin/communityforum"
+                    };
+
+                    _context.Notifications.Add(notification);
+                    await _context.SaveChangesAsync();
+
+                    // Notify admin via SignalR
+                    await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", new
+                    {
+                        Title = notification.Title,
+                        Message = notification.Message,
+                        DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                    });
                 }
                 else
                 {
-                    // Remove like if it already exists (unlike)
+                    // Remove like (unlike)
                     _context.Like.Remove(existingLike);
+                    await _context.SaveChangesAsync();
                 }
 
-                await _context.SaveChangesAsync();
                 return RedirectToAction("Forums");
             }
             catch (Exception ex)
@@ -963,7 +996,6 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return string.Join("-", words);
         }
 
-        // Add a reply
         [HttpPost]
         public async Task<IActionResult> AddReply(int postId, string content)
         {
@@ -974,6 +1006,21 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 return RedirectToAction("landing");
             }
 
+            // Fetch user from USER_ACCOUNT
+            var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+            if (user == null) return Unauthorized();
+
+            // Capitalize first letter of first and last name
+            string Capitalize(string name) => string.IsNullOrEmpty(name) ? "" : char.ToUpper(name[0]) + name.Substring(1).ToLower();
+            var personName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
+
+            // Get post title from FORUM table
+            var forumPost = _context.Forum.FirstOrDefault(f => f.PostId == postId);
+            if (forumPost == null) return NotFound();
+
+            var title = forumPost.Title;
+
+            // Save the reply
             var reply = new Replies
             {
                 Content = content,
@@ -985,7 +1032,30 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             _context.Replies.Add(reply);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Comments", new { id = postId, title = GetTruncatedTitle(_context.Forum.First(f => f.PostId == postId).Title) });
+            // Create the notification
+            var notification = new Notification
+            {
+                TargetRole = "Admin",
+                Title = "Post Reply",
+                Message = $"{personName} replied to the post {title}.",
+                DateCreated = DateTime.UtcNow,
+                IsRead = false,
+                Type = "Post Reply",
+                Link = $"/admin/comments/{postId}?title={GetTruncatedTitle(title)}"
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
+            // Send SignalR notification
+            await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", new
+            {
+                Title = notification.Title,
+                Message = notification.Message,
+                DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+            });
+
+            return RedirectToAction("Comments", new { id = postId, title = GetTruncatedTitle(title) });
         }
 
         public IActionResult Feedbacks()
@@ -1091,7 +1161,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             _context.Notifications.Add(notification);
             _context.SaveChanges();
 
-            // Send a SignalR notification to all staff (role-based notification)
+            // Send a SignalR notification to all staff
             _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", new
             {
                 Title = notifTitle,

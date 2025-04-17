@@ -57,6 +57,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
             RefreshJwtCookies();
+
             var existingToken = Request.Cookies["jwt"];
             if (!string.IsNullOrEmpty(existingToken) && ValidateJwtToken(existingToken) != null)
             {
@@ -67,14 +68,16 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 }
             }
 
-            var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Email == loginDTO.Email);
+            var user = await _context.User_Accounts
+                .FirstOrDefaultAsync(u => u.Email == loginDTO.Email && u.Status == "ACTIVE");
+
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDTO.Password, user.Password))
             {
                 return Unauthorized(new { message = "Login Failed. Please check your email or password." });
             }
 
             var token = GenerateJwtToken(user);
-            SetJwtCookie(token, user.Role, user.Id.ToString()); 
+            SetJwtCookie(token, user.Role, user.Id.ToString());
 
             return RedirectToRole(user.Role);
         }

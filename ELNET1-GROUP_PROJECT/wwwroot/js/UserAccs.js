@@ -7,8 +7,11 @@ function filterByRole() {
 
     rows.forEach(row => {
         const role = row.getAttribute("data-role");
+        const status = row.getAttribute("data-status");  // Assuming you store the user status in a "data-status" attribute.
+        console.log(status)
 
-        if (selectedRole === "All" || role === selectedRole) {
+        // Check for "Inactive" status
+        if (selectedRole === "All" || role === selectedRole || (selectedRole === "Inactive" && status === "INACTIVE")) {
             row.style.display = "";
             visibleCount++;
         } else {
@@ -17,8 +20,22 @@ function filterByRole() {
     });
 
     // Update the user count text
-    const userCountText = `${selectedRole}: ${visibleCount} User${visibleCount !== 1 ? "s" : ""}`;
+    const userCountText = `${selectedRole === "Inactive" ? "Inactive" : selectedRole}: ${visibleCount} User${visibleCount !== 1 ? "s" : ""}`;
     document.getElementById("userCount").textContent = userCountText;
+}
+
+function searchUsers() {
+    const input = document.getElementById("searchInput").value.toLowerCase();
+    const rows = document.querySelectorAll("#userTableBody tr");
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(input)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
 }
 
 function openUserInfoBox(user) {
@@ -29,6 +46,18 @@ function openUserInfoBox(user) {
     document.getElementById("userInfoAddress").textContent = `Address: ${user.address}`;
     document.getElementById("userInfoPhone").textContent = `Phone: ${user.phoneNumber}`;
     document.getElementById("userInfoEmail").textContent = `Email: ${user.email}`;
+
+    // Set status badge text and color based on user status
+    const statusBadge = document.getElementById("userStatusBadge");
+    if (user.status === "ACTIVE") {
+        statusBadge.textContent = "Active";
+        statusBadge.classList.remove("bg-red-500");
+        statusBadge.classList.add("bg-green-500");
+    } else if (user.status === "INACTIVE") {
+        statusBadge.textContent = "Inactive";
+        statusBadge.classList.remove("bg-green-500");
+        statusBadge.classList.add("bg-red-500");
+    }
 
     // Show info box and shrink table height
     document.getElementById("userInfoBox").classList.remove("hidden");
@@ -92,12 +121,12 @@ function deleteUser(userId, event) {
 
     Swal.fire({
         title: 'Are you sure you want to Delete with ID No. ' + userId + '?',
-        text: "You won't be able to revert this!",
+        text: "By Removing user you just set it to Inactive!",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
+        confirmButtonText: 'Yes, Remove it!'
     }).then((result) => {
         if (result.isConfirmed) {
             // Send a DELETE request to the server
@@ -111,8 +140,8 @@ function deleteUser(userId, event) {
                     if (response.ok) {
                         closeUserInfoBox();
                         Swal.fire({
-                            title: 'Deleted!',
-                            text: 'The user has been deleted.',
+                            title: 'Remove!',
+                            text: 'The user has been remove.',
                             icon: 'success',
                             timer: 5000, // Close after 5 seconds
                             timerProgressBar: true,
@@ -127,6 +156,50 @@ function deleteUser(userId, event) {
                 })
                 .catch(error => {
                     Swal.fire('Error', 'An error occurred while deleting the user.', 'error');
+                });
+        }
+    });
+}
+
+function activateUser(userId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+
+    Swal.fire({
+        title: 'Activate this user?',
+        text: `User ID ${userId} will be reactivated.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, activate!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/Admin/ActivateUser/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => {
+                    if (response.ok) {
+                        Swal.fire({
+                            title: 'Activated!',
+                            text: 'The user has been reactivated.',
+                            icon: 'success',
+                            timer: 5000,
+                            timerProgressBar: true,
+                            didClose: () => {
+                                window.location.href = '/Admin/HomeownerStaffAccounts';
+                            }
+                        });
+                    } else {
+                        Swal.fire('Error', 'Failed to activate the user.', 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', 'An error occurred while activating the user.', 'error');
                 });
         }
     });

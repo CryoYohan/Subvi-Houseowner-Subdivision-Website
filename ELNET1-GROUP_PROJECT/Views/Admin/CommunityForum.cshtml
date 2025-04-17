@@ -1,0 +1,284 @@
+﻿@model List<ForumPost>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Community Forum";
+}
+
+@functions {
+    public string GetTruncatedTitle(string title)
+    {
+        var words = title.Split(' ');
+        if (words.Length >= 5)
+        {
+            return string.Join("-", words.Take(5)) + "...";
+        }
+        return string.Join("-", words);
+    }
+}
+
+@section Scripts {
+    <script src="~/js/forum-admin.js"></script>
+    <script src="~/js/notification-admin.js"></script>
+}
+
+<div class="flex overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-72 p-4 py-6">
+        <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
+        <nav class="flex-1 space-y-3">
+            <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-home w-6"></i>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-calendar-check w-6"></i>
+                <span class="ml-3">Reservations</span>
+            </a>
+            <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-users w-6"></i>
+                <span class="ml-3">Homeowners & Staff Accounts</span>
+            </a>
+            <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-history w-6"></i>
+                <span class="ml-3">Bill Payment History</span>
+            </a>
+            <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-tools w-6"></i>
+                <span class="ml-3">Services</span>
+            </a>
+            <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-bullhorn w-6"></i>
+                <span class="ml-3">Announcements</span>
+            </a>
+            <a asp-controller="admin" asp-action="poll" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-poll w-6"></i>
+                <span class="ml-3">Poll</span>
+            </a>
+            <a asp-controller="admin" asp-action="feedback" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Feedback" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-comment-alt w-6"></i>
+                <span class="ml-3">Feedback</span>
+            </a>
+            <a asp-controller="admin" asp-action="reports" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-chart-line w-6"></i>
+                <span class="ml-3">Reports</span>
+            </a>
+        </nav>
+    </aside>
+    <div id="forum-container" class="container mt-2">
+        <div id="header" class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+            <i class="bi bi-chat-left-dots"></i>
+            <h1 class="text-2xl font-bold">Community Forum</h1>
+
+            <!-- Tooltip Text (Hidden by default, shown on hover) -->
+            <div class="tooltip-text absolute left-1/2 transform -translate-x-1/2 bottom-0 mb-6 p-2 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Go to Community Forum Home
+            </div>
+
+            <!-- Redirect link on click -->
+            <a href="/admin/communityforum" title="Go to Community Forum Home" class="absolute inset-0"></a>
+        </div>
+
+        <!-- Search and Add Discussion Button -->
+        <div class="d-flex justify-content-between mb-4">
+            <div class="d-flex flex-column position-relative w-75" id="search-wrapper">
+                <div class="form-control shadow-sm"
+                     id="searchInput"
+                     contenteditable="true"
+                     style="min-height: 40px; cursor: text; overflow-wrap: break-word;">
+                </div>
+
+                <ul id="searchMentionSuggestions"
+                    class="list-group position-absolute top-100 start-0 z-3 w-100 d-none"
+                    style="max-height: 200px; overflow-y: auto;">
+                </ul>
+            </div>
+
+            <button id="searchBtn" class="btn btn-primary shadow-sm mt-2">
+                <i class="bi bi-search"></i> Search
+            </button>
+
+            <input type="hidden" id="searchHiddenInput" />
+            <input type="hidden" id="mentionHiddenInput" />
+
+            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addDiscussionModal">
+                <i class="bi bi-plus-circle"></i> Add Discussion
+            </button>
+        </div>
+
+        <!-- Loading Animation -->
+        <div id="loading-placeholder" class="animate-pulse">
+            <div class="card mb-4 shadow-sm rounded-lg border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-light" style="width: 50px; height: 50px;"></div>
+                        <div class="ms-3">
+                            <div class="bg-light mb-1" style="width: 120px; height: 10px;"></div>
+                            <div class="bg-light" style="width: 80px; height: 10px;"></div>
+                        </div>
+                    </div>
+                    <div class="bg-light mb-2" style="width: 100%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 90%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 60%; height: 15px;"></div>
+                </div>
+            </div>
+            <div class="card mb-4 shadow-sm rounded-lg border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-light" style="width: 50px; height: 50px;"></div>
+                        <div class="ms-3">
+                            <div class="bg-light mb-1" style="width: 120px; height: 10px;"></div>
+                            <div class="bg-light" style="width: 80px; height: 10px;"></div>
+                        </div>
+                    </div>
+                    <div class="bg-light mb-2" style="width: 100%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 90%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 60%; height: 15px;"></div>
+                </div>
+            </div>
+            <div class="card mb-4 shadow-sm rounded-lg border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-light" style="width: 50px; height: 50px;"></div>
+                        <div class="ms-3">
+                            <div class="bg-light mb-1" style="width: 120px; height: 10px;"></div>
+                            <div class="bg-light" style="width: 80px; height: 10px;"></div>
+                        </div>
+                    </div>
+                    <div class="bg-light mb-2" style="width: 100%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 90%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 60%; height: 15px;"></div>
+                </div>
+            </div>
+            <div class="card mb-4 shadow-sm rounded-lg border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-light" style="width: 50px; height: 50px;"></div>
+                        <div class="ms-3">
+                            <div class="bg-light mb-1" style="width: 120px; height: 10px;"></div>
+                            <div class="bg-light" style="width: 80px; height: 10px;"></div>
+                        </div>
+                    </div>
+                    <div class="bg-light mb-2" style="width: 100%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 90%; height: 15px;"></div>
+                    <div class="bg-light mb-2" style="width: 60%; height: 15px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forum Posts -->
+        <div id="forum-posts">
+            @foreach (var post in Model)
+            {
+                // Extract unique @mentions from Hashtag field
+                var mentions = post.Hashtag?
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(tag => tag.Trim('[', ']', ' ')) // Remove brackets and trim spaces
+                .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                .Distinct(); // Ensure only unique mentions
+
+                <div class="card mb-3 post-item">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <div class="user-avatar p-4 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold;">
+                                @if (!string.IsNullOrEmpty(post.Profile))
+                                {
+                                    <img src="@post.Profile" alt="@post.FullName's Profile Picture" class="img-fluid rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    @post.Firstname[0]
+
+                                    @post.Lastname[0]
+                                }
+                            </div>
+                            <div class="w-100 ps-3">
+                                <h5 class="card-title font-semibold">@post.Title</h5>
+
+                                @if (mentions != null && mentions.Any())
+                                {
+                                    <div class="mt-2">
+                                        @foreach (var mention in mentions)
+                                        {
+                                            <span class="badge bg-light text-primary border border-primary me-2">@($"@{mention}")</span>
+                                        }
+                                    </div>
+                                }
+
+                                <p class="text-muted">Posted by @post.FullName on @post.DatePosted.ToString("MMMM dd, yyyy")</p>
+                                <p class="card-text">@post.Content</p>
+                                <div class="d-flex justify-content-end gap-3">
+                                    <!-- Like Button -->
+                                    <button onclick="toggleLike(@post.PostId)" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1">
+                                        <i id="like-icon-@post.PostId" class="bi @(post.IsLiked ? "bi-hand-thumbs-up-fill" : "bi-hand-thumbs-up ")"></i>
+                                        <span id="like-count-@post.PostId">@post.LikeDisplay</span>
+                                    </button>
+
+                                    <!-- Comment Button -->
+                                    <a href="@Url.Action("Comments", "Admin", new { id = post.PostId, title = GetTruncatedTitle(post.Title) })" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+                                        <i class="bi bi-chat"></i>
+                                        <span>@post.RepliesDisplay replies</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Add Discussion Modal -->
+        <div class="modal fade" id="addDiscussionModal" tabindex="-1" aria-labelledby="addDiscussionModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title font-semibold text-primary" id="addDiscussionModalLabel">New Discussion</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="post" asp-action="AddPost" asp-controller="Admin">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                            <div class="mb-3 position-relative">
+                                <label for="mentionInput" class="form-label">Mention Announcement (Optional)</label>
+
+                                <div id="mentionInput"
+                                     contenteditable="true"
+                                     class="form-control mention-box"
+                                     oninput="handleTyping(event)"
+                                     onkeydown="handleKeyDown(event); handleBackspace(event)"
+                                     onclick="focusMentionInput()">
+                                </div>
+
+                                <ul id="mentionSuggestions"
+                                    class="list-group position-absolute w-100 mt-1 d-none mention-suggestions">
+                                </ul>
+
+                                <input type="hidden" name="Hashtag" id="hashtagHiddenInput" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="content" class="form-label">Content</label>
+                                <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Post</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

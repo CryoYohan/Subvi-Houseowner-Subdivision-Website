@@ -6,6 +6,10 @@
     ViewData["Title"] = "Homeowner & Staff Accounts";
 }
 
+@section Scripts {
+    <script src="~/js/notification-admin.js"></script>
+}
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
     @if (TempData["SuccessMessage"] != null)
@@ -164,7 +168,10 @@
 
 
                         <!-- User Info Section (Hidden by Default) -->
-                        <div id="userInfoBox" class="hidden bg-blue-50 p-3 rounded-lg shadow-md mb-4 transition-all duration-300">
+                        <div id="userInfoBox" class="hidden bg-blue-50 p-3 rounded-lg shadow-md mb-4 transition-all duration-300 relative">
+                            <!-- Status Badge -->
+                            <span id="userStatusBadge" class="absolute top-2 right-0 px-3 py-1 text-sm font-semibold rounded-full bg-green-500 text-white">Active</span>
+
                             <h3 class="text-xl font-bold text-blue-600 mb-2">User Information</h3>
                             <div class="space-y-2 text-gray-700">
                                 <div><i class="fas fa-id-badge text-blue-500"></i> <span id="userInfoId"></span></div>
@@ -188,13 +195,24 @@
                             </div>
 
                             <div class="flex items-center space-x-2">
-                                <label for="roleFilter" class="text-sm font-medium text-gray-700">Filter:</label>
-                                <select id="roleFilter" onchange="filterByRole()" class="p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="All">All</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="Staff">Staff</option>
-                                    <option value="Homeowner">Homeowner</option>
-                                </select>
+                                <!-- Role Filter -->
+                                <div class="flex items-center space-x-2">
+                                    <label for="roleFilter" class="text-sm font-medium text-gray-700">Filter:</label>
+                                    <select id="roleFilter" onchange="filterByRole()" class="p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="All">All</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Staff">Staff</option>
+                                        <option value="Homeowner">Homeowner</option>
+                                        <option value="Inactive">Inactive</option>
+                                    </select>
+                                </div>
+
+                                <!-- Search Box -->
+                                <div class="relative">
+                                    <input type="text" id="searchInput" oninput="searchUsers()" placeholder="Search users..."
+                                           class="p-1 pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                    <i class="fas fa-search absolute right-1 top-1.5 text-gray-400 text-sm"></i>
+                                </div>
                             </div>
                         </div>
 
@@ -219,17 +237,28 @@
                                 <tbody id="userTableBody" class="divide-y divide-gray-200">
                                     @foreach (var user in Model)
                                     {
-                                        <tr onclick='openUserInfoBox(@Html.Raw(Json.Serialize(user)))' data-role="@user.Role" class="cursor-pointer hover:bg-blue-200 transition">
+                                        <tr onclick='openUserInfoBox(@Html.Raw(Json.Serialize(user)))' data-role="@user.Role" data-status="@user.Status" class="cursor-pointer hover:bg-blue-200 transition">
                                             <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">@user.Id</td>
                                                 <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500 capitalize">
                                                     @user.Firstname @user.Lastname
                                                 </td>
                                             <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">@user.Email</td>
                                             <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">@user.Role</td>
-                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">
-                                                <button onclick='openEditModal(@Html.Raw(Json.Serialize(user)), event)' class="bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600"><i class="far fa-edit"></i></button>
-                                                <button onclick='deleteUser(@user.Id, event)' class="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 ml-2"><i class="far fa-trash-alt"></i></button>
-                                            </td>
+                                                <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">
+                                                    @if (user.Status == "INACTIVE")
+                                                    {
+                                                        <button onclick='openEditModal(@Html.Raw(Json.Serialize(user)), event)' class="bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600"><i class="far fa-edit"></i></button>
+                                                        <button onclick='activateUser(@user.Id, event)' class="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 ml-2" title="Activate User">
+                                                            <i class="fas fa-user-check"></i>
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button onclick='openEditModal(@Html.Raw(Json.Serialize(user)), event)' class="bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600"><i class="far fa-edit"></i></button>
+                                                        <button onclick='deleteUser(@user.Id, event)' class="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 ml-2"><i class="far fa-trash-alt"></i></button>
+                                                    }
+                                                </td>
+
                                         </tr>
                                     }
                                 </tbody>

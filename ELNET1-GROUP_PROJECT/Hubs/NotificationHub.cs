@@ -16,15 +16,20 @@ namespace ELNET1_GROUP_PROJECT.SignalR
                 DateCreated = DateTime.UtcNow
             };
 
-            // Send to the specific user (homeowner)
+            // Send to the homeowner to specific userid
             if (role == "Homeowner")
             {
                 await Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
             }
-            // Send to all users with the "staff" role (Staff only)
+            // Send to all staff users 
             else if (role == "Staff")
             {
                 await Clients.Group("staff").SendAsync("ReceiveNotification", notification);
+            }
+            // Send to all admin
+            else if (role == "Admin")
+            {
+                await Clients.Group("admin").SendAsync("ReceiveNotification", notification);
             }
         }
 
@@ -32,6 +37,11 @@ namespace ELNET1_GROUP_PROJECT.SignalR
         public async Task AddToStaffGroup()
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, "staff");
+        }
+
+        public async Task AddToAdminGroup()
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, "admin");
         }
 
         // Broadcast a notification to all users (not restricted by role)

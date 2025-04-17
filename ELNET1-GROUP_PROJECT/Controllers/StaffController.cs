@@ -9,6 +9,7 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using ELNET1_GROUP_PROJECT.Controllers;
 using ELNET1_GROUP_PROJECT.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using OfficeOpenXml;
 using iText.Layout;
@@ -23,7 +24,6 @@ using Syncfusion.DocIO.DLS;
 using System.IO;
 using System.Reflection.Metadata;
 using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.AspNetCore.SignalR;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 [Route("staff")]

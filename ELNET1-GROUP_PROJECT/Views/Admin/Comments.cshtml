@@ -1,15 +1,18 @@
-ï»¿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.User_Account>
+@model CommentsViewModel
 
 @{
     Layout = "_AdminLayout";
-    ViewData["Title"] = "Reservations";
+    ViewData["Title"] = "Community Forum";
 }
+  
 
 @section Scripts {
     <script src="~/js/notification-admin.js"></script>
 }
 
-<div class="flex overflow-hidden">
+<link rel="stylesheet" href="~/css/comments.css" />
+
+<div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     <!-- Sidebar -->
     <aside class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-72 p-4 py-6">
         <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
@@ -61,106 +64,97 @@
             </a>
         </nav>
     </aside>
-    <div class="container mx-auto p-3">
-        <div class="bg-white shadow-md rounded-xl p-3 mb-3 flex items-center space-x-3">
-            <span><i class="fas fa-calendar-check text-blue-700 text-xl"></i></span>
-            <h1 class="text-blue-700 font-bold text-lg">Reservations</h1>
-        </div>
-        <!-- Filter Section -->
-        <div class="flex justify-start mb-2">
-            <span class="p-2 font-semibold text-blue-900">Filtered: </span>
-            <select id="adminStatusFilter"
-                    style="cursor: pointer; transition: background-color 0.2s, color 0.2s;"
-                    class="p-2 border rounded-md text-gray-800">
-                <option value="Approved">Approved</option>
-                <option value="Declined">Declined</option>
-            </select>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8">
+        <!-- Post Header -->
+        <div class="post-details">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="user-avatar">
+                    @Model.Post.Firstname[0]@Model.Post.Lastname[0]
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-800 mb-2">@Model.Post.Title</h1>
+                    <p class="text-slate-500 text-sm">
+                        Posted by <span class="font-medium">@Model.Post.Firstname @Model.Post.Lastname</span>
+                        · @Model.Post.DatePosted.ToString("MMM dd, yyyy 'at' h:mm tt")
+                    </p>
+                </div>
+            </div>
+            <div class="prose max-w-none text-slate-700">
+                @Model.Post.Content
+            </div>
         </div>
 
-        <!-- Reservations Table -->
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-500">
-                <thead class="text-base text-white uppercase bg-gray-200">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 bg-blue-600 text-center">ID</th>
-                        <th scope="col" class="px-6 py-3 bg-blue-600 text-center">Facility Name</th>
-                        <th scope="col" class="px-6 py-3 bg-blue-600 text-center">Requested By</th>
-                        <th scope="col" class="px-6 py-3 bg-blue-600 text-center">Date</th>
-                        <th scope="col" class="px-6 py-3 bg-blue-600 text-center">Time</th>
-                        <th scope="col" class="px-6 py-3 bg-blue-600 text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody id="adminReservationTable"></tbody>
-            </table>
+        <!-- Replies Section -->
+        <div class="replies-section">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold text-slate-800">
+                    <i class="fas fa-comment-dots mr-2 text-blue-500"></i>
+                    @Model.Replies.Count replies
+                </h3>
+            </div>
+
+            <!-- Replies List -->
+            @if (!Model.Replies.Any())
+            {
+                <div class="text-center py-12">
+                    <i class="fas fa-comment-slash text-4xl text-slate-300 mb-4"></i>
+                    <p class="text-slate-500">No replies yet. Be the first to join the discussion!</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var reply in Model.Replies)
+                {
+                    <div class="reply">
+                        <div class="flex items-start gap-3 mb-3">
+                            <div class="user-avatar text-sm">
+                                @reply.Firstname[0]@reply.Lastname[0]
+                            </div>
+                            <div>
+                                <div class="font-medium text-slate-800">@reply.FullName</div>
+                                <div class="text-sm text-slate-500">
+                                    @reply.Date.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-slate-700 leading-relaxed">@reply.Content</p>
+                    </div>
+                }
+            }
+
+            <!-- Reply Form -->
+            <div class="mt-8 p-6 bg-white rounded-xl shadow-sm">
+                <h4 class="text-lg font-semibold mb-4 text-slate-800">
+                    <i class="fas fa-reply mr-2 text-blue-500"></i>
+                    Post a Reply
+                </h4>
+                <form method="post" class="reply-form" asp-action="AddReply" asp-controller="Admin">
+                    <input type="hidden" name="PostId" value="@Model.Post.PostId" />
+                    <textarea name="Content"
+                              rows="4"
+                              class="w-full mb-4"
+                              placeholder="Share your thoughts..."></textarea>
+                    <button type="submit"
+                            class="bg-blue-600 hover:bg-blue-800 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Post Reply
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-        document.addEventListener("DOMContentLoaded", () => {
-      const adminReservationTable = document.getElementById("adminReservationTable");
-      const adminStatusFilter = document.getElementById("adminStatusFilter");
-
-      function updateFilterColor() {
-        if (adminStatusFilter.value === "Approved") {
-          adminStatusFilter.className = "p-2 border rounded-md text-white bg-green-500 transition-colors duration-200";
-        } else if (adminStatusFilter.value === "Declined") {
-          adminStatusFilter.className = "p-2 border rounded-md text-white bg-red-500 transition-colors duration-200";
-        }
-      }
-
-      async function fetchAdminReservations(status = "Approved") {
-        try {
-          const response = await fetch(`/admin/reservations/schedule?status=${status}`);
-          const data = await response.json();
-          renderAdminReservations(data);
-          updateFilterColor();  // Update color after fetching data
-        } catch (error) {
-          console.error("Error fetching reservations:", error);
-        }
-      }
-
-      function renderAdminReservations(reservations) {
-        adminReservationTable.innerHTML = "";
-
-        if (reservations.length === 0) {
-          adminReservationTable.innerHTML = `
-            <tr>
-              <td colspan="5" class="text-center p-4 text-gray-500">No reservations found</td>
-            </tr>`;
-          return;
-        }
-
-        reservations.forEach((r) => {
-          const row = document.createElement("tr");
-          row.className = "hover:bg-gray-100 transition text-base";
-          row.innerHTML = `
-            <td class="p-3 text-center">${r.id}</td>
-            <td class="p-3 text-center">${r.facilityName}</td>
-            <td class="p-3 text-center">${r.requestedBy}</td>
-            <td class="p-3 text-center">${new Date(r.date).toLocaleString('en-US', {
-              month: '2-digit',
-              day: '2-digit',
-              year: 'numeric'
-            })}</td>
-            <td class="p-3 text-center">${r.startTime} - ${r.endTime}</td>
-            <td class="p-3 text-center">
-              <span class="px-2 py-1 text-xs font-semibold rounded ${
-                r.status === "Approved"
-                  ? "bg-green-500 text-white"
-                  : "bg-red-500 text-white"
-              }">
-                ${r.status.toUpperCase()}
-              </span>
-            </td>
-          `;
-          adminReservationTable.appendChild(row);
+    // Add smooth scroll to reply form
+    document.querySelectorAll('.reply a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelector('#reply-form').scrollIntoView({
+                behavior: 'smooth'
+            });
         });
-      }
-
-      adminStatusFilter.addEventListener("change", () => fetchAdminReservations(adminStatusFilter.value));
-
-      // Initial load
-      fetchAdminReservations();
     });
 </script>
