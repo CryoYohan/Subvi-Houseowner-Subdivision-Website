@@ -681,38 +681,41 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 }
 
                 // Check for existing non-completed/rejected request
-                var existingRequest = _context.Service_Request.FirstOrDefault(r =>
-                    r.ReqType.ToLower().Trim() == request.ServiceName.ToLower().Trim() &&
-                    r.UserId == userId &&
-                    r.Status != "Completed" && r.Status != "Rejected");
+                var duplicateRequest = _context.Service_Request
+                    .Where(r => r.ReqType.ToLower().Trim() == request.ServiceName.ToLower().Trim()
+                             && r.UserId == userId)
+                    .OrderByDescending(r => r.ServiceRequestId) // Get latest
+                    .FirstOrDefault(r => r.Status != "Completed" && r.Status != "Rejected");
 
-                if (existingRequest != null)
+                if (duplicateRequest != null)
                 {
-                    var status = existingRequest.Status;
-                    var reqType = existingRequest.ReqType;
+                    string reqType = duplicateRequest.ReqType;
+                    string status = duplicateRequest.Status;
 
-                    if (status == "Scheduled" && existingRequest.ScheduleDate != null)
+                    switch (status)
                     {
-                        var formattedDate = existingRequest.ScheduleDate?.ToString("MM/dd/yyyy 'at' hh:mm tt");
+                        case "Scheduled":
+                            if (duplicateRequest.ScheduleDate != null)
+                            {
+                                var formattedDate = duplicateRequest.ScheduleDate?.ToString("MM/dd/yyyy 'at' hh:mm tt");
+                                return Conflict(new
+                                {
+                                    message = $"You already have a scheduled {reqType} service request on {formattedDate}."
+                                });
+                            }
+                            break;
 
-                        return Conflict(new
-                        {
-                            message = $"You have already scheduled date for {reqType} service request which is scheduled for {formattedDate}."
-                        });
-                    }
-                    else if (status == "Ongoing")
-                    {
-                        return Conflict(new
-                        {
-                            message = $"You already have submitted for {reqType} Service Request and is currently ongoing."
-                        });
-                    }
-                    else if (status == "Pending")
-                    {
-                        return Conflict(new
-                        {
-                            message = $"You already submitted for {reqType} service request. Please wait for approval."
-                        });
+                        case "Ongoing":
+                            return Conflict(new
+                            {
+                                message = $"Your {reqType} service request is currently ongoing. Please wait until it is completed."
+                            });
+
+                        case "Pending":
+                            return Conflict(new
+                            {
+                                message = $"You already submitted a {reqType} service request. Please wait for it to be approved."
+                            });
                     }
                 }
 
@@ -1191,7 +1194,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 DateCreated = DateTime.UtcNow,
                 IsRead = false,
                 Type = "Feedback Submitted",
-                Link = "/staff/requests/feedback"
+                Link = "/staff/feedbacks"
             };
 
             _context.Notifications.Add(notification);
@@ -1303,7 +1306,8 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                           c.Message,
                           c.DateSent,
                           c.UserId,
-                          FullName = u.Firstname + " " + u.Lastname,
+                          FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
+                                     (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower(),
                           ProfileImage = string.IsNullOrEmpty(u.Profile) ? null : u.Profile
                       })
                 .OrderBy(c => c.DateSent)
@@ -1320,16 +1324,58 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 return Unauthorized("User not authenticated.");
             }
 
+            // Get user info
+            var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Capitalize first letters of first and last name
+            string Capitalize(string input) =>
+                string.IsNullOrWhiteSpace(input)
+                    ? ""
+                    : char.ToUpper(input[0]) + input.Substring(1).ToLower();
+
+            var fullName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
+
             var convo = new Feedback_Conversation
             {
                 FeedbackId = dto.FeedbackId,
                 SenderRole = "Homeowner",
                 Message = dto.Message,
                 DateSent = DateTime.Now,
-                UserId = userId 
+                UserId = userId
             };
             _context.FeedbackConversation.Add(convo);
             _context.SaveChanges();
+
+            // Construct the message using full name
+            var notifMessage = $"Homeowner name {fullName} has sent a new message in Complaint Feedback.";
+
+            var notification = new Notification
+            {
+                UserId = null,
+                TargetRole = "Staff",
+                Title = "New Feedback Message",
+                Message = notifMessage,
+                DateCreated = DateTime.UtcNow,
+                IsRead = false,
+                Type = "Feedback Message",
+                Link = "/staff/feedbacks"
+            };
+
+            _context.Notifications.Add(notification);
+            _context.SaveChanges();
+
+            // Send a SignalR notification to all staff
+            _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", new
+            {
+                Title = "Feedback Message",
+                Message = notifMessage,
+                DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+            });
+
             return Ok();
         }
 

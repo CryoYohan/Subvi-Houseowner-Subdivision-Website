@@ -92,11 +92,11 @@ function confirmRequest(serviceName) {
                 Swal.fire({
                     title: 'Request Submitted!',
                     html: `
-            <div class="text-left">
-                <p>Your <b>${serviceName}</b> request has been received.</p>
-                ${notes ? `<p class="mt-2">Description: ${notes}</p>` : ''}
-            </div>
-        `,
+                        <div class="text-left">
+                            <p>Your <b>${serviceName}</b> request has been received.</p>
+                            ${notes ? `<p class="mt-2">Description: ${notes}</p>` : ''}
+                        </div>
+                    `,
                     icon: 'success',
                     confirmButtonColor: '#60A5FA'
                 });
@@ -140,14 +140,14 @@ async function fetchServiceRequests() {
 
         // Dynamically build table headers for pending status
         tableHead.innerHTML = `
-    <tr class="text-sm text-gray-500 text-center">
-        <th class="py-2">ID</th>
-        <th class="py-2">Req Type</th>
-        <th class="py-2">Description</th>
-        <th class="py-2">Date Submitted</th>
-        <th class="py-2">Status</th>
-    </tr>
-`;
+            <tr class="text-sm text-gray-500 text-center">
+                <th class="py-2">ID</th>
+                <th class="py-2">Req Type</th>
+                <th class="py-2">Description</th>
+                <th class="py-2">Date Submitted</th>
+                <th class="py-2">Status</th>
+            </tr>
+        `;
 
         // Loop and generate rows
         serviceRequests.forEach(request => {
@@ -290,8 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Filter the data based on search input
             const filtered = data.filter(item => {
-                // Assuming the "service" field exists, adjust this based on the actual field
-                const serviceType = item.reqType ? item.reqType.toLowerCase() : "";
+                const serviceType = item.requestType ? item.requestType.toLowerCase() : "";
                 const searchQuery = searchInput.value.toLowerCase();
                 return serviceType.includes(searchQuery);  // Match with search query
             });

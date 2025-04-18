@@ -48,24 +48,29 @@
                                     </span>
                                 </div>
 
-                                <ul class="dropdown-menu dropdown-menu-end shadow p-2" aria-labelledby="notifBell" id="notifDropdown" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
-                                    <!-- Header -->
-                                    <li class="dropdown-header d-flex justify-content-between align-items-center">
-                                        <span class="fw-semibold">Notifications</span>
+                                <!-- Replaced ul with div to allow non-li children -->
+                                <div class="dropdown-menu dropdown-menu-end shadow p-0" aria-labelledby="notifBell" style="min-width: 320px;">
 
-                                        <div class="dropdown dropstart">
-                                            <a href="/staff/notifications" class="btn btn-sm btn-light">View All Notifications</a>
-                                            <i class="bi bi-three-dots-vertical" role="button" data-bs-toggle="dropdown" aria-expanded="false"></i>
-                                            <ul class="dropdown-menu">
-                                                <li><button id="markAllReadBtn" class="dropdown-item" disabled>Mark all as Read</button></li>
-                                            </ul>
+                                    <!-- Sticky Header -->
+                                    <div class="sticky-top bg-white z-10 px-3 pt-2 pb-1 border-bottom">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-semibold">Notifications</span>
+                                            <div class="dropdown dropstart">
+                                                <a href="/staff/notifications" class="btn btn-sm btn-light">View All</a>
+                                                <i class="bi bi-three-dots-vertical ms-2" role="button" data-bs-toggle="dropdown" aria-expanded="false"></i>
+                                                <ul class="dropdown-menu">
+                                                    <li><button id="markAllReadBtn" class="dropdown-item" disabled>Mark all as Read</button></li>
+                                                </ul>
+                                            </div>
                                         </div>
-                                    </li>
-                                    <hr class="my-1" />
+                                        <hr class="my-1" />
+                                    </div>
 
-                                    <!-- Notifications list -->
-                                    <div id="notifListContainer"></div>
-                                </ul>
+                                    <!-- Scrollable Notifications List -->
+                                    <div id="notifListContainer" class="px-2 py-1" style="max-height: 400px; overflow-y: auto;">
+                                        <!-- Notifications will be appended here -->
+                                    </div>
+                                </div>
                             </div>
                         }
 
@@ -133,11 +138,11 @@
                         <div class="flex justify-end gap-3">
                             <button onclick="closeLogoutPopup()"
                                     class="px-4 py-2 rounded-lg">
-                                Cancel
+                                No, Cancel
                             </button>
                             <button onclick="logout()"
                                     class="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors">
-                                Logout
+                                Yes, Logout
                             </button>
                         </div>
                     </div>
@@ -145,7 +150,7 @@
             </div>
 
             <!-- Success Message -->
-            <div id="logoutMessage" class="fixed bottom-5 right-5 bg-green-500 text-white p-3 rounded-lg shadow-lg hidden">
+            <div id="logoutMessage" class="fixed bottom-5 right-5 bg-green-500 text-white p-3 rounded-lg shadow-lg hidden z-50">
                 <p>Logged out successfully!</p>
             </div>
 

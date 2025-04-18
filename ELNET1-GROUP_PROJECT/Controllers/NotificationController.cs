@@ -69,11 +69,13 @@ namespace YourNamespace.Controllers
         }
 
         // Mark a all notification as read
-        [HttpPut("mark-all-read/{userId}")]
-        public IActionResult MarkAllAsRead(int userId)
+        [HttpPut("mark-all-read/{selectedType}/{userId}")]
+        public IActionResult MarkAllAsRead(string selectedType, int userId)
         {
             var unread = _context.Notifications
-                .Where(n => n.UserId == userId && (n.IsRead == false || n.IsRead == null))
+                .Where(n => n.UserId == userId &&
+                            n.Type == selectedType &&
+                            (n.IsRead == false || n.IsRead == null))
                 .ToList();
 
             foreach (var n in unread)
@@ -177,19 +179,22 @@ namespace YourNamespace.Controllers
         }
 
         // Mark all as read
-        [HttpPut("staff/mark-all-read/{userId}")]
-        public async Task<IActionResult> StaffMarkAllAsRead(int userId)
+        [HttpPut("staff/mark-all-read/{selectedType}/{userId}")]
+        public async Task<IActionResult> StaffMarkAllAsRead(string selectedType, int userId)
         {
+            // Get all notification IDs for "Staff" and the selected type
             var allNotifIds = await _context.Notifications
-                .Where(n => n.TargetRole == "Staff")
+                .Where(n => n.TargetRole == "Staff" && n.Type == selectedType)
                 .Select(n => n.NotificationId)
                 .ToListAsync();
 
+            // Get all notification IDs already read by the user
             var alreadyRead = await _context.Notification_Reads
                 .Where(r => r.UserId == userId)
                 .Select(r => r.NotificationId)
                 .ToListAsync();
 
+            // Find only unread ones of the selected type
             var unreadNotifIds = allNotifIds.Except(alreadyRead).ToList();
 
             foreach (var notifId in unreadNotifIds)
@@ -297,11 +302,11 @@ namespace YourNamespace.Controllers
         }
 
         // Mark all as read
-        [HttpPut("admin/mark-all-read/{userId}")]
-        public async Task<IActionResult> AdminMarkAllAsRead(int userId)
+        [HttpPut("admin/mark-all-read/${selectedType}/{userId}")]
+        public async Task<IActionResult> AdminMarkAllAsRead(string selectedType, int userId)
         {
             var allNotifIds = await _context.Notifications
-                .Where(n => n.TargetRole == "Admin")
+                .Where(n => n.TargetRole == "Admin" && n.Type == selectedType)
                 .Select(n => n.NotificationId)
                 .ToListAsync();
 

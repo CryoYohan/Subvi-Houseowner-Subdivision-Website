@@ -158,10 +158,8 @@
                     <div class="col-md-4 border-end p-0 d-flex flex-column">
                         <!-- Tabs -->
                         <div class="bg-light p-2 d-flex justify-content-around border-bottom">
-                            <button class="btn btn-sm tab-btn active" data-type="Complaint">Complaint</button>
-                            <button class="btn btn-sm tab-btn" data-type="Resolved">Resolved</button>
-                            <button class="btn btn-sm tab-btn" data-type="Suggestion">Suggestion</button>
-                            <button class="btn btn-sm tab-btn" data-type="Compliment">Compliment</button>
+                            <button class="btn btn-sm inner-tab-btn active" data-type="Complaint">Complaint</button>
+                            <button class="btn btn-sm inner-tab-btn" data-type="Resolved">Resolved</button>
                         </div>
 
                         <!-- Search Toggle Icon -->
@@ -198,11 +196,6 @@
                             <!-- Messages loaded via JS -->
                         </div>
 
-                        <!-- Suggestion/Compliment Info Section -->
-                        <div id="infoContainer" class="flex-grow-1 overflow-auto p-3" style="display: none;">
-                            <!-- Loaded via JS -->
-                        </div>
-
                         <!-- Message Input (Complaint only) -->
                         <div id="messageInputSection" class="p-2 border-top d-none">
                             <div class="input-group">
@@ -236,13 +229,14 @@
                         <span class="cursor-pointer text-gray-400 text-2xl" onclick="setRating(5)">★</span>
                     </div>
                 </div>
+            <p id="ratingError" class="text-red-500 text-base mt-1 font-medium hidden">Rating is required for Compliment.</p>
 
                 <label for="feedbackDescription" class="block mb-2 font-medium">Description</label>
                 <textarea id="feedbackDescription"
-                          class="w-full border border-gray-300 rounded-md px-3 py-2 mb-1 resize-none"
-                          style="height: 200px"
+                      class="w-full border border-gray-300 rounded-md px-3 py-2 mb-1" rows="5" style="resize: none"
                           maxlength="255"
                           oninput="updateCharCount()"></textarea>
+                <p id="descriptionError" class="text-red-500 text-base font-medium mt-1 hidden">Description is required.</p>
                 <div class="flex justify-between items-center text-sm mb-4">
                     <span id="charCount" class="text-gray-500">0 / 255</span>
                     <span id="charError" class="text-red-500 hidden">Character limit reached!</span>
@@ -253,6 +247,46 @@
                     <button onclick="submitFeedback()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">Submit</button>
                 </div>
          </div>
+    </div>
+
+    <div class="modal fade" id="feedbackViewModal" tabindex="-1" aria-labelledby="feedbackViewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-lg rounded-4">
+                <div class="modal-header bg-blue-600 text-white">
+                    <h5 class="modal-title" id="feedbackViewModalLabel">Feedback Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <h6 class="text-muted">Type</h6>
+                        <p id="modalFeedbackType" class="fw-bold mb-0"></p>
+                    </div>
+
+                    <div class="mb-3" id="modalStatusContainer">
+                        <h6 class="text-muted">Status</h6>
+                        <p id="modalStatus" class="badge bg-secondary fs-6"></p>
+                    </div>
+
+                    <div class="mb-3" id="modalRatingContainer" style="display: none;">
+                        <h6 class="text-muted">Rating</h6>
+                        <div id="modalRating" class="text-warning"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-muted">Description</h6>
+                        <p id="modalDescription" class="mb-0"></p>
+                    </div>
+
+                    <div>
+                        <h6 class="text-muted">Date Submitted</h6>
+                        <p id="modalDate" class="text-secondary mb-0"></p>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- For Complaint Feedback Panel -->
@@ -272,6 +306,5 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="~/js/homeowner-feedback-create.js"></script>
 <script src="~/js/homeowner-feedback-complaint.js"></script>

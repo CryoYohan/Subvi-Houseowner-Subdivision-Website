@@ -9,6 +9,7 @@
         let currentTab = 'Complaint';
         let currentFeedbackId = null;
         let isSearchMode = false;
+        let homeowneruserid = '';
 
         function formatDate(dateString) {
             const date = new Date(dateString);
@@ -23,78 +24,102 @@
             return date.toLocaleString('en-US', options);
         }
 
-        // Toggle Search UI
         $('.tab-btn').click(function () {
             $('.tab-btn').removeClass('active');
             $(this).addClass('active');
             currentTab = $(this).data('type');
+            currentFeedbackId = null;
 
             $('#feedbackList').html('');
             $('#conversationSection').html('');
             $('#infoContainer').html('');
+            $('#searchToggle').removeClass('d-none');
             $('#viewDetailsBtn').addClass('d-none');
             $('#messageInputSection').addClass('d-none');
             $('.dropdown-toggle').addClass('d-none');
 
-            // Reset search mode when switching tabs
+            // Reset search mode
             isSearchMode = false;
             $('#searchInputContainer').hide();
             $('#searchInput').val('');
             $('#searchToggle').removeClass('fa-times').addClass('fa-search');
 
-            // Hide/show input based on tab
+            // Show/hide input section based on tab
             if (currentTab === 'Complaint') {
                 $('#messageInputSection').show();
-            } else {
-                $('#messageInputSection').hide();
             }
 
-            // Feedback header label
-            if (!currentFeedbackId) {
-                $('#feedbackTypeLabel').text(currentTab);
-                $('#feedbackMessage').removeClass('d-none');
-            } else {
-                $('#feedbackTypeLabel').text(`${currentTab} - ${currentFeedbackFullName}`);
-                $('#feedbackMessage').addClass('d-none');
-            }
+            // Update label
+            $('#feedbackTypeLabel').text(currentTab);
+            $('#feedbackMessage').removeClass('d-none');
 
-            // Determine API endpoint
+            // Determine API
             let apiUrl = `/staff/getfeedbacklist?type=${currentTab}`;
             if (currentTab === 'Resolved') {
                 apiUrl = `/staff/getresolvedfeedback`;
             }
 
-            // Fetch feedback
+            // Get feedback
             $.get(apiUrl, function (data) {
                 $('#feedbackList').append(`<h5 class="font-semibold text-center p-2 border-bottom">${currentTab}</h5>`);
+
+                if (data.length === 0) {
+                    $('#searchToggle').addClass('d-none');
+
+                    $('#feedbackList').append(`
+                        <div class="text-center text-muted p-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <div>No ${currentTab} feedback found.</div>
+                        </div>
+                    `);
+                    return;
+                }
 
                 data.forEach(item => {
                     let statusBadge = '';
 
-                    if (currentTab === 'Complaint' || currentTab === 'Resolved') {
+                    if (['Complaint', 'Resolved'].includes(currentTab)) {
                         if (item.complaintStatus === 'Resolved') {
                             statusBadge = '<span class="badge bg-success">Resolved</span>';
                         } else if (item.complaintStatus === 'Ongoing') {
                             statusBadge = '<span class="badge bg-yellow-500 p-2 text-1xl">Ongoing</span>';
-                        } else if (item.complaintStatus === 'Pending') {
+                        } else {
                             statusBadge = '<span class="badge bg-secondary">Pending</span>';
                         }
                     }
 
-                    if (currentTab === 'Resolved' && item.complaintStatus === 'Resolved') {
-                        statusBadge = '<span class="badge bg-success">Resolved</span>';
-                    }
+                    const isSelected = item.feedbackId === currentFeedbackId ? 'selected bg-light' : '';
 
-                    $('#feedbackList').append(`
-                        <div class="p-2 border-bottom feedback-item bg-white hover-bg cursor-pointer" style="cursor: pointer;" data-id="${item.feedbackId}" data-type="${currentTab}" data-fullname="${item.fullName}" data-status="${item.complaintStatus}">
+                    const feedbackItem = `
+                        <div class="p-2 border-bottom feedback-item bg-white hover-bg cursor-pointer ${isSelected} animate__animated animate__fadeInUp"
+                             data-id="${item.feedbackId}"
+                             data-type="${currentTab}"
+                             data-fullname="${item.fullName}"
+                             data-userid="${item.userId}"
+                             data-status="${item.complaintStatus}">
+
                             <div class="d-flex justify-content-between">
                                 <small class="text-muted">${item.fullName}</small>
                                 <small class="text-muted">${formatDate(item.dateSubmitted)}</small>
                             </div>
-                            <div class="feedback-description">${item.description.length > 55 ? item.description.substring(0, 55) + '...' : item.description}</div>
+                            <div class="feedback-description">
+                                ${item.description.length > 55 ? item.description.substring(0, 55) + '...' : item.description}
+                            </div>
                             <div class="text-right">${statusBadge}</div>
                         </div>
-                    `);
+                    `;
+
+                    $('#feedbackList').append(feedbackItem);
+                });
+
+                // Highlight selected feedback
+                $('.feedback-item').click(function () {
+                    $('.feedback-item').removeClass('selected bg-light');
+                    $(this).addClass('selected bg-light');
+                    currentFeedbackId = $(this).data('id');
+                    currentFeedbackFullName = $(this).data('fullname');
+                    $('#feedbackTypeLabel').text(`${currentTab} - ${currentFeedbackFullName}`);
+                    $('#feedbackMessage').addClass('d-none');
                 });
             });
         });
@@ -135,6 +160,7 @@
             const currentUserId = $('#currentUserId').val();
             currentFeedbackId = $(this).data('id');
             currentFeedbackFullName = $(this).data('fullname');
+            homeowneruserid = $(this).data('userid');
 
             $('#feedbackTypeLabel').text(`${currentTab} - ${currentFeedbackFullName}`);
             $('#messageInputSection').removeClass('d-none');
@@ -178,30 +204,38 @@
                         const isOwn = msg.userId == currentUserId;
                         const nextMsg = messages[i + 1];
                         const isLastFromSender = !nextMsg || nextMsg.userId !== msg.userId;
+                        const getDeterministicAvatar = (userId) => {
+                        const index = userId % 10 + 1;
+                            return `/images/avatars/avatar${index}.png`;
+                        };
+
+                        const profileImg = msg.profileImage && msg.profileImage.trim() !== "" 
+                            ? msg.profileImage 
+                            : getDeterministicAvatar(msg.userId);
 
                         let msgHtml = '';
 
                         if (isOwn) {
                             msgHtml = `
                                 <div class="d-flex justify-content-end animate__animated animate__fadeInUp">
-                                    <div class="bg-primary text-white p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
+                                    <div class="bg-primary text-white p-2 mb-1 rounded-3" style="max-width: 350px;">${msg.message}</div>
                                 </div>
                             `;
                         } else {
                             if (isLastFromSender) {
                                 msgHtml = `
                                     <div class="d-flex align-items-start animate__animated animate__fadeInUp">
-                                        <img src="${msg.profileImage || '/images/default-user.png'}" class="rounded-circle me-2" width="40" height="40" />
+                                        <img src="${profileImg}" class="rounded-circle me-2" width="40" height="40" />
                                         <div>
                                             <div class="fw-bold">${msg.fullName}</div>
-                                            <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
+                                            <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 350px;">${msg.message}</div>
                                         </div>
                                     </div>
                                 `;
                             } else {
                                 msgHtml = `
                                     <div class="d-flex align-items-start animate__animated animate__fadeInUp" style="margin-left: 48px;">
-                                        <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
+                                        <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 350px;">${msg.message}</div>
                                     </div>
                                 `;
                             }
@@ -268,7 +302,7 @@
                 url: '/staff/sendmessage',
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ feedbackId: currentFeedbackId, message }),
+                data: JSON.stringify({ feedbackId: currentFeedbackId, RecepientUserId: homeowneruserid, message }),
                 success: function () {
                     $('#messageInput').val('');
                     // Re-fetch messages
@@ -340,6 +374,96 @@
             }
         }
 
+        function updateCharCount() {
+            const textarea = document.getElementById("description");
+            const charCount = document.getElementById("charCount");
+            const charError = document.getElementById("charError");
+            const length = textarea.value.length;
+
+            charCount.textContent = `${length} / 255`;
+
+            if (length >= 255) {
+                charError.classList.remove("hidden");
+            } else {
+                charError.classList.add("hidden");
+            }
+        }
+
+        $('#scheduleServiceForm').on('submit', function (e) {
+            e.preventDefault();
+
+            // Inputs
+            const reqType = $('#reqType').val().trim();
+            const description = $('#description').val().trim();
+            const date = $('#scheduleDate').val();
+            const time = $('#scheduleTime').val();
+
+            // Flags
+            let isValid = true;
+
+            // Reset errors
+            $('.text-danger').addClass('d-none');
+
+            // Validation
+            if (!reqType) {
+                $('#reqTypeError').removeClass('d-none');
+                isValid = false;
+            }
+            if (!description) {
+                $('#descError').removeClass('d-none');
+                isValid = false;
+            }
+
+            const selectedDate = new Date(date);
+            const today = new Date();
+
+            today.setHours(0, 0, 0, 0);
+            if (!date || selectedDate < today) {
+                $('#dateError').removeClass('d-none');
+                isValid = false;
+            }
+
+            if (!time || time < '06:00' || time > '17:00') {
+                $('#timeError').removeClass('d-none');
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            // Submit
+            $.ajax({
+                url: '/staff/scheduleservice',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    homeownerId: homeowneruserid,
+                    reqType,
+                    description,
+                    scheduleDate: `${date}T${time}`
+                }),
+                success: function (res) {
+                    if (res.success === false) {
+                        showToast(res.message || "Something went wrong.", "red");
+                        return;
+                    }
+
+                    $('#scheduleServiceModal').modal('hide');
+                    $('#scheduleServiceForm')[0].reset();
+                    showToast("Successfully scheduled a new service schedule.");
+                },
+                error: function (xhr) {
+                    const errorMsg = xhr.responseJSON?.message || "An unexpected error occurred.";
+                    showToast(error, "red");
+                }
+            });
+        });
+
+        // Clear errors and reset on close
+        $('#scheduleServiceModal').on('hidden.bs.modal', function () {
+            $('#scheduleServiceForm')[0].reset();
+            $('.text-danger').addClass('d-none');
+        });
+
         // Resolve complaint
         let resolveModal = new bootstrap.Modal(document.getElementById('confirmResolveModal'));
 
@@ -348,11 +472,20 @@
         });
 
         $('#confirmResolveBtn').click(function () {
-            $.post(`/staff/markresolved/${currentFeedbackId}`, function () {
-                $('.tab-btn.active').click(); // reload the list
-                $('#conversationSection').html('<div class="text-center p-3">This complaint has been resolved.</div>');
-                resolveModal.hide(); // Hide the modal after action
-                showToast("Successfully resolved the complaint.")
+            $.ajax({
+                url: `/staff/markresolved/${currentFeedbackId}`,
+                type: 'POST',
+                success: function () {
+                    $('.tab-btn.active').click(); // reload the list
+                    $('#conversationSection').html('<div class="text-center p-3">The recent complaint has been resolved.</div>');
+                    resolveModal.hide(); // Hide the modal after action
+                    showToast("Successfully resolved the complaint.");
+                },
+                error: function (xhr, status, error) {
+                    resolveModal.hide(); // still hide modal
+                    showToast("Failed to resolve the complaint. Please try again.", "red");
+                    console.error("Error resolving complaint:", error);
+                }
             });
         });
 
@@ -375,6 +508,8 @@
         // Auto-load Complaint tab on start
         $(document).ready(() => {
             $('.tab-btn[data-type="Complaint"]').click();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("scheduleDate").setAttribute("min", today);
         });
     </script>
 }
@@ -506,7 +641,8 @@
                                 <div class="dropdown d-inline">
                                     <button class="btn btn-outline-secondary btn-sm dropdown-toggle d-none" type="button" data-bs-toggle="dropdown">⋮</button>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item text-success" href="#" id="resolveComplaint">Mark as Resolved</a></li>
+                                        <li><a class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#scheduleServiceModal">Schedule a Service</a></li>
+                                        <li><a class="dropdown-item text-success" id="resolveComplaint">Mark as Resolved</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -552,7 +688,53 @@
         </div>
     </div>
 
-    <!-- Confirmation Modal -->
+    <!-- Schedule Modal -->
+    <div class="modal fade" id="scheduleServiceModal" tabindex="-1" aria-labelledby="scheduleServiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="scheduleServiceForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="scheduleServiceModalLabel">Schedule a Service</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <label for="reqType" class="form-label">Request Type</label>
+                            <input type="text" class="form-control" id="reqType" required />
+                            <small class="text-danger d-none" id="reqTypeError">Request Type is required.</small>
+                        </div>
+                        <div class="mb-2">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea id="description" class="form-control" rows="5" style="resize: none;" maxlength="255" oninput="updateCharCount()" required></textarea>
+                            <small class="text-danger d-none" id="descError">Description is required.</small>
+                            <div class="flex justify-between items-center text-sm mb-4">
+                                <span id="charCount" class="text-gray-500">0 / 255</span>
+                                <span id="charError" class="text-red-500 hidden">Character limit reached!</span>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label for="scheduleDate" class="form-label">Schedule Date</label>
+                            <input type="date" class="form-control" id="scheduleDate" required />
+                            <small class="text-danger d-none" id="dateError">Please select a date that is tomorrow or above.</small>
+                        </div>
+                        <div class="mb-2">
+                            <label for="scheduleTime" class="form-label">Schedule Time</label>
+                            <input type="time" class="form-control" id="scheduleTime" required />
+                            <small class="text-danger d-none" id="timeError">Time must be between 06:00 AM and 5:00 PM.</small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Submit Request</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Resolved Confirmation Modal -->
     <div class="modal fade" id="confirmResolveModal" tabindex="-1" aria-labelledby="confirmResolveLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">

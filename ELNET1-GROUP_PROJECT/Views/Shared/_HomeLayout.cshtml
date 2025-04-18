@@ -44,27 +44,27 @@
                                     </span>
                                 </div>
 
-                                <ul class="dropdown-menu dropdown-menu-end shadow p-2" aria-labelledby="notifBell" id="notifDropdown" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
-                                    <!-- Header -->
-                                    <li class="dropdown-header d-flex justify-content-between align-items-center">
-                                        <span class="fw-semibold">Notifications</span>
-                                        <div class="dropdown dropstart">
-                                            <i class="bi bi-three-dots-vertical" role="button" data-bs-toggle="dropdown" aria-expanded="false"></i>
-                                            <ul class="dropdown-menu">
-                                                <li><button id="markAllReadBtn" class="dropdown-item" disabled>Mark all as Read</button></li>
-                                            </ul>
+                                <div class="dropdown-menu dropdown-menu-end shadow p-0" aria-labelledby="notifBell" style="min-width: 320px;">
+                                    <!-- Fixed Header -->
+                                    <div class="sticky-top bg-white z-10 px-3 pt-2 pb-1 border-bottom">
+                                        <div class="d-flex justify-content-between align-items-center dropdown-header px-0">
+                                            <span class="fw-semibold">Notifications</span>
+                                            <div class="dropdown dropstart">
+                                                <a asp-controller="Home" asp-action="Notifications" class="btn btn-sm btn-light">View All</a>
+                                                <i class="bi bi-three-dots-vertical ms-2" role="button" data-bs-toggle="dropdown" aria-expanded="false"></i>
+                                                <ul class="dropdown-menu">
+                                                    <li><button id="markAllReadBtn" class="dropdown-item" disabled>Mark all as Read</button></li>
+                                                </ul>
+                                            </div>
                                         </div>
-                                    </li>
-                                    <hr class="my-1" />
-
-                                    <!-- Notifications list -->
-                                    <div id="notifListContainer"></div>
-
-                                    <!-- Footer -->
-                                    <div class="text-end pt-2 pe-2">
-                                        <a asp-controller="Home" asp-action="Notifications" class="btn btn-sm btn-light">View All Notifications</a>
+                                        <hr class="my-1" />
                                     </div>
-                                </ul>
+
+                                    <!-- Scrollable notification list -->
+                                    <div id="notifListContainer" style="max-height: 400px; overflow-y: auto;" class="px-2 py-1">
+                                        <!-- Notifications will load here -->
+                                    </div>
+                                </div>
                             </div>
                         }
 
@@ -132,11 +132,11 @@
                     <div class="flex justify-end gap-3">
                         <button onclick="closeLogoutPopup()"
                                 class="px-4 py-2 rounded-lg">
-                            Cancel
+                            No, Cancel
                         </button>
                         <button onclick="logout()"
                                 class="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors">
-                            Logout
+                            Yes, Logout
                         </button>
                     </div>
                 </div>

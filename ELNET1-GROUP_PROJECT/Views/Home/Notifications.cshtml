@@ -122,7 +122,7 @@
         </div>
 
         <!-- Tabs -->
-        <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200">
+        <div class="flex flex-wrap gap-1 mb-3 border-b border-gray-200">
             <button data-type="Visitor"
                     class="px-4 py-2 rounded-t-lg flex items-center font-medium space-x-2 transition-colors notif-tab active-tab
                    bg-white border-b-4 border-blue-500 text-blue-600 hover:bg-blue-50">
@@ -137,11 +137,11 @@
                 <span>Vehicle</span>
                 <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="vehicle-count"></span>
             </button>
-            <button data-type="Feedback Reply"
+            <button data-type="Feedback Message"
                     class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                    hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
-                <i class="fas fa-bullhorn text-green-500 text-lg"></i>
-                <span>Feedback</span>
+                <i class="fas fa-envelope text-green-500 text-lg"></i>
+                <span>Feedback Message</span>
                 <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="feedback-count"></span>
             </button>
             <button data-type="Facility Reservation Schedule"
@@ -164,6 +164,27 @@
                 <i class="fas fa-file-invoice-dollar text-green-500 text-lg"></i>
                 <span>Billing</span>
                 <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="bill-count"></span>
+            </button>
+            <button data-type="Announcement"
+                    class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                   hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                <i class="fas fa-bullhorn text-green-500 text-lg"></i>
+                <span>Announcement</span>
+                <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="announcement-count"></span>
+            </button>
+            <button data-type="Event"
+                    class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                   hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                <i class="fas fa-calendar-alt text-green-500 text-lg"></i>
+                <span>Event</span>
+                <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="event-count"></span>
+            </button>
+            <button data-type="Poll"
+                    class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                   hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                <i class="fas fa-poll text-green-500 text-lg"></i>
+                <span>Poll</span>
+                <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="poll-count"></span>
             </button>
             <button data-type="Account"
                     class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
@@ -200,13 +221,16 @@
             </button>
         </div>
 
-        <!-- Notification List -->
-        <div id="notificationList" class="space-y-2">
-            <!-- Skeleton Loading -->
-            <div class="animate-pulse space-y-4" id="loadingSkeleton">
-                <div class="h-20 bg-gray-100 rounded-lg"></div>
-                <div class="h-20 bg-gray-100 rounded-lg"></div>
-                <div class="h-20 bg-gray-100 rounded-lg"></div>
+        <!-- Scrollable Container -->
+        <div style="max-height: 370px; overflow-y: auto;" class="pr-2">
+            <!-- Notification List -->
+            <div id="notificationList" class="space-y-2">
+                <!-- Skeleton Loading -->
+                <div class="animate-pulse space-y-4" id="loadingSkeleton">
+                    <div class="h-20 bg-gray-100 rounded-lg"></div>
+                    <div class="h-20 bg-gray-100 rounded-lg"></div>
+                    <div class="h-20 bg-gray-100 rounded-lg"></div>
+                </div>
             </div>
         </div>
 
@@ -220,8 +244,26 @@
         </div>
     </div>
 
+    <!-- Notification Details Modal -->
+    <div class="modal fade" id="notifModal" tabindex="-1" aria-labelledby="notifModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-3 shadow">
+                <div class="modal-header bg-green-100 border-bottom-0">
+                    <h5 class="modal-title fw-semibold" id="notifModalTitle">Notification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="notifModalBody">
+                    <!-- Message content inserted here -->
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Connection Status Indicator -->
-    <div id="connectionStatus" class="fixed bottom-2 text-right right-0 text-sm flex items-center bg-white px-3 py-1.5 rounded-full shadow">
+    <div id="connectionStatus" class="fixed top-2 text-right right-0 text-sm flex items-center bg-white px-3 py-1.5 rounded-full shadow">
         <i class="fas fa-circle text-gray-400 text-xs"></i>
         <span class="ml-2 text-gray-600">Connecting...</span>
     </div>
@@ -229,10 +271,10 @@
 
 <style>
     .active-tab {
-    background-color: white;
-    color: #2563eb; /* Tailwind blue-600 */
-    border-bottom: 4px solid #3b82f6; /* Tailwind border-blue-500 */
-}
+        background-color: white;
+        color: #16a34a; /* Tailwind green-600 */
+        border-bottom: 4px solid #10b981; /* Tailwind border-green-500 */
+    }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
@@ -252,11 +294,11 @@
     tabs.forEach(tab => {
         tab.addEventListener("click", () => {
             tabs.forEach(t => {
-                t.classList.remove("active-tab", "bg-white", "text-blue-600", "border-blue-500");
+                t.classList.remove("active-tab", "bg-white", "text-green-600", "border-green-500");
                 t.classList.add("text-gray-600", "border-transparent");
             });
 
-            tab.classList.add("active-tab", "bg-white", "text-blue-600", "border-blue-500");
+            tab.classList.add("active-tab", "bg-white", "text-green-600", "border-green-500");
             tab.classList.remove("text-gray-600", "border-transparent");
 
             selectedType = tab.dataset.type;
@@ -294,7 +336,7 @@
     // Mark All as Read
     markAllBtn.addEventListener("click", async () => {
         try {
-            await fetch(`/api/notifications/mark-all-read/${currentUserId}`, { method: "PUT" });
+            await fetch(`/api/notifications/mark-all-read/${selectedType}/${currentUserId}`, { method: "PUT" });
 
             // Update all local notifications as read
             allNotifs = allNotifs.map(n => ({
@@ -313,33 +355,40 @@
     function renderNotifications() {
         const filtered = allNotifs.filter(n =>
             n.type === selectedType &&
-            (!searchInput.value || n.title.toLowerCase().includes(searchInput.value.toLowerCase()) || n.title.toLowerCase().includes(searchInput.value.toLowerCase()))
-        ); 
+            (!searchInput.value || n.title.toLowerCase().includes(searchInput.value.toLowerCase()) || n.message.toLowerCase().includes(searchInput.value.toLowerCase()))
+        );
 
         list.innerHTML = "";
         document.getElementById('emptyState').classList.toggle('hidden', filtered.length > 0);
 
         filtered.forEach(n => {
             const card = document.createElement("div");
-            card.className = `group p-3 rounded-lg transition-all cursor-pointer shadow-sm
+            card.className = `group p-3 rounded-lg transition-all cursor-pointer shadow-sm relative
                             ${n.isRead ? 'hover:bg-gray-50' : 'bg-blue-50 border-l-4 border-blue-500'}`;
+
             card.innerHTML = `
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
                         <div class="flex items-center space-x-3 mb-1.5">
                             ${getTypeIcon(n.type)}
-                            <h4 class="font-semibold p-2 text-lg ${n.isRead ? 'text-gray-700' : 'text-gray-900'}">
+                            <h4 class="font-semibold text-lg ${n.isRead ? 'text-gray-700' : 'text-gray-900'}">
                                 ${n.title}
                             </h4>
                             ${!n.isRead ? '<span class="animate-pulse w-2 h-2 bg-blue-500 rounded-full"></span>' : ''}
                         </div>
-                        <p class="text-sm text-gray-600 text-base ml-6 p-2">${n.message}</p>
+                        <p class="text-sm text-gray-600 text-base ml-6">${n.message}</p>
                         <div class="flex items-center space-x-3 text-xs text-blue-900 mt-2 ml-6">
                             <span>${new Date(n.dateCreated).toLocaleDateString()}</span>
                             <span>•</span>
                             <span>${new Date(n.dateCreated).toLocaleTimeString()}</span>
                         </div>
                     </div>
+                    <button class="btn btn-outline-primary btn-sm ml-3 mt-1 viewNotifBtn"
+                            data-bs-toggle="modal" data-bs-target="#notifModal"
+                            data-title="${n.title}" data-message="${n.message}" data-date="${new Date(n.dateCreated).toLocaleString()}"
+                            data-type="${n.type}">
+                        View
+                    </button>
                 </div>
             `;
 
@@ -351,6 +400,29 @@
             } else {
                 markAllBtn.classList.add('hidden');
             }
+        });
+
+        // Attach modal content logic
+        document.querySelectorAll('.viewNotifBtn').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation(); // Prevent triggering the card click
+
+                const title = btn.getAttribute('data-title');
+                const message = btn.getAttribute('data-message');
+                const date = btn.getAttribute('data-date');
+                const type = btn.getAttribute('data-type');
+
+                // Inject content into the modal dynamically
+                document.getElementById('notifModalTitle').textContent = title;
+                document.getElementById('notifModalBody').innerHTML = `
+                    <div class="mb-2">
+                        <strong>Message:</strong> <p class="text-gray-700">${message}</p>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Received On:</strong> <span class="text-muted">${date}</span>
+                    </div>
+                `;
+            });
         });
     }
 
@@ -428,10 +500,13 @@
         return {
             'Visitor': '<i class="fas fa-user-check text-yellow-500"></i>',
             'Vehicle': '<i class="fas fa-car-side text-indigo-500"></i>',
-            'Feedback Reply': '<i class="fas fas fa-bullhorn text-blue-200"></i>',
+            'Feedback Message': '<i class="fas fa-envelope text-blue-200"></i>',
             'Facility Reservation Schedule': '<i class="fas fa-calendar-check text-blue-500"></i>',
             'Service Schedule': '<i class="fas fa-cogs text-green-500"></i>',
             'Bill': '<i class="fas fa-file-invoice-dollar text-green-500"></i>',
+            'Announcement': '<i class="fas fa-bullhorn text-orange-500"></i>', 
+            'Event': '<i class="fas fa-calendar-alt text-purple-500"></i>',  
+            'Poll': '<i class="fas fa-poll text-teal-500"></i>', 
             'Account': '<i class="fas fa-user text-green-500"></i>'
         }[type] || '<i class="fas fa-bell text-gray-400"></i>';
     }
@@ -444,10 +519,13 @@
             const countMap = {
                 'Visitor': 0,
                 'Vehicle': 0,
-                'Feedback Reply': 0,
+                'Feedback Message': 0,
                 'Facility Reservation Schedule': 0,
                 'Service Schedule': 0,
                 'Bill': 0,
+                'Announcement': 0,
+                'Event': 0,
+                'Poll': 0,
                 'Account': 0
             };
 
@@ -459,10 +537,13 @@
             const badgeMap = {
                 'Visitor': document.getElementById('visitor-count'),
                 'Vehicle': document.getElementById('vehicle-count'),
-                'Feedback Reply': document.getElementById('feedback-count'),
+                'Feedback Message': document.getElementById('feedback-count'),
                 'Facility Reservation Schedule': document.getElementById('facility-count'),
                 'Service Schedule': document.getElementById('service-count'),
                 'Bill': document.getElementById('bill-count'),
+                'Announcement': document.getElementById('announcement-count'),
+                'Event': document.getElementById('event-count'),
+                'Poll': document.getElementById('poll-count'),
                 'Account': document.getElementById('account-count')
             };
 
@@ -498,12 +579,15 @@
     function showNewNotificationToast(notif) {
         const toast = document.createElement('div');
         toast.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg border-l-4 ${
-            notif.type === 'Visitor' ? 'border-yellow-500 bg-yellow-50' :
-            notif.type === 'Vehicle' ? 'border-blue-500 bg-blue-50' :
-            notif.type === 'Feedback Reply' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Visitor' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Vehicle' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Feedback Message' ? 'border-green-500 bg-green-50' :
             notif.type === 'Facility Reservation Schedule' ? 'border-green-500 bg-green-50' :
             notif.type === 'Service Schedule' ? 'border-green-500 bg-green-50' :
             notif.type === 'Bill' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Announcement' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Event' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Poll' ? 'border-green-500 bg-green-50' :
             notif.type === 'Account' ? 'border-green-500 bg-green-50' :
             'border-purple-500 bg-purple-50'
         } animate-slide-in`;

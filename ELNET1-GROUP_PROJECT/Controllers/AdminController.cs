@@ -1096,11 +1096,17 @@ public class AdminController : Controller
 
     // Add a new announcement
     [HttpPost]
-    public IActionResult AddAnnouncement(string title, string description)
+    public async Task<IActionResult> AddAnnouncement(string title, string description)
     {
         RefreshJwtCookies();
         var userIdStr = Request.Cookies["Id"];
-        int userId = int.Parse(userIdStr);
+
+        if (!int.TryParse(userIdStr, out int userId))
+        {
+            TempData["ErrorMessage"] = "Invalid User ID.";
+            return RedirectToAction("Announcements");
+        }
+
         try
         {
             var newAnnouncement = new Announcement
@@ -1113,20 +1119,99 @@ public class AdminController : Controller
 
             _context.Announcement.Add(newAnnouncement);
             _context.SaveChanges();
+
+            // === Notification Logic ===
+            var notifTitle = "New Announcement Posted";
+            var notifMessage = $"A new announcement titled {title} was posted. Please check.";
+            var link = "/home/dashboard";
+
+            // Homeowner notifications
+            var homeowners = _context.User_Accounts
+                .Where(u => u.Role == "Homeowner")
+                .Select(u => new { u.Id })
+                .ToList();
+
+            foreach (var h in homeowners)
+            {
+                var notif = new Notification
+                {
+                    Title = notifTitle,
+                    Message = notifMessage,
+                    IsRead = false,
+                    Type = "Announcement",
+                    TargetRole = "Homeowner",
+                    Link = link,
+                    UserId = h.Id,
+                    DateCreated = DateTime.Now
+                };
+                _context.Notifications.Add(notif);
+
+                await _hubContext.Clients.User(h.Id.ToString()).SendAsync("ReceiveNotification", new
+                {
+                    Title = notif.Title,
+                    Message = notif.Message,
+                    DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                });
+            }
+
+            // Staff notification
+            var staffNotif = new Notification
+            {
+                Title = notifTitle,
+                Message = notifMessage,
+                IsRead = false,
+                Type = "Announcement",
+                TargetRole = "Staff",
+                Link = "/staff/dashboard",
+                UserId = null,
+                DateCreated = DateTime.Now
+            };
+            _context.Notifications.Add(staffNotif);
+
+            await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", new
+            {
+                Title = staffNotif.Title,
+                Message = staffNotif.Message,
+                DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+            });
+
+            // Admin notification
+            var adminNotif = new Notification
+            {
+                Title = notifTitle,
+                Message = notifMessage,
+                IsRead = false,
+                Type = "Announcement",
+                TargetRole = "Admin",
+                Link = "/admin/announcements",
+                UserId = null,
+                DateCreated = DateTime.Now
+            };
+            _context.Notifications.Add(adminNotif);
+
+            await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", new
+            {
+                Title = adminNotif.Title,
+                Message = adminNotif.Message,
+                DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+            });
+
+            _context.SaveChanges();
             TempData["SuccessMessage"] = "Announcement added successfully!";
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = ex.InnerException?.Message;
+            TempData["ErrorMessage"] = ex.InnerException?.Message ?? ex.Message;
         }
+
         return RedirectToAction("Announcements");
     }
 
-    // Edit an existing announcement
     [HttpPost]
-    public IActionResult EditAnnouncement(int id, string title, string description)
+    public async Task<IActionResult> EditAnnouncement(int id, string title, string description)
     {
         RefreshJwtCookies();
+
         try
         {
             var announcement = _context.Announcement.Find(id);
@@ -1135,6 +1220,82 @@ public class AdminController : Controller
                 announcement.Title = title;
                 announcement.Description = description;
                 _context.SaveChanges();
+
+                var notifTitle = "Announcement Updated";
+                var notifMessage = $"The announcement {title} has been updated.";
+                var link = "/home/dashboard";
+
+                // Notify Homeowners
+                var homeowners = _context.User_Accounts
+                    .Where(u => u.Role == "Homeowner")
+                    .Select(u => u.Id)
+                    .ToList();
+
+                foreach (var idHomeowner in homeowners)
+                {
+                    var notif = new Notification
+                    {
+                        Title = notifTitle,
+                        Message = notifMessage,
+                        IsRead = false,
+                        Type = "Announcement",
+                        TargetRole = "Homeowner",
+                        Link = link,
+                        UserId = idHomeowner,
+                        DateCreated = DateTime.Now
+                    };
+                    _context.Notifications.Add(notif);
+
+                    await _hubContext.Clients.User(idHomeowner.ToString()).SendAsync("ReceiveNotification", new
+                    {
+                        Title = notif.Title,
+                        Message = notif.Message,
+                        DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                    });
+                }
+
+                // Staff notification
+                var staffNotif = new Notification
+                {
+                    Title = notifTitle,
+                    Message = notifMessage,
+                    IsRead = false,
+                    Type = "Announcement",
+                    TargetRole = "Staff",
+                    Link = "/staff/dashboard",
+                    DateCreated = DateTime.Now
+                };
+                _context.Notifications.Add(staffNotif);
+
+                await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", new
+                {
+                    Title = staffNotif.Title,
+                    Message = staffNotif.Message,
+                    DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                });
+
+                // Admin notification
+                var adminNotif = new Notification
+                {
+                    Title = notifTitle,
+                    Message = notifMessage,
+                    IsRead = false,
+                    Type = "Announcement",
+                    TargetRole = "Admin",
+                    Link = "/admin/announcements",
+                    DateCreated = DateTime.Now
+                };
+                _context.Notifications.Add(adminNotif);
+
+                await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", new
+                {
+                    Title = adminNotif.Title,
+                    Message = adminNotif.Message,
+                    DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                });
+
+                _context.SaveChanges();
+
                 TempData["SuccessMessage"] = "Announcement updated successfully!";
             }
             else
@@ -1142,24 +1303,101 @@ public class AdminController : Controller
                 TempData["ErrorMessage"] = "Announcement not found.";
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             TempData["ErrorMessage"] = "Failed to update announcement. Please try again.";
         }
+
         return RedirectToAction("Announcements");
     }
 
     // Delete an announcement
     [HttpPost]
-    public IActionResult DeleteAnnouncement(int id)
+    public async Task<IActionResult> DeleteAnnouncement(int id)
     {
         RefreshJwtCookies();
+
         try
         {
             var announcement = _context.Announcement.Find(id);
             if (announcement != null)
             {
+                var title = announcement.Title;
                 _context.Announcement.Remove(announcement);
+                _context.SaveChanges();
+
+                var notifTitle = "Announcement Deleted";
+                var notifMessage = $"The announcement {title} has been deleted.";
+
+                // Notify Homeowners
+                var homeowners = _context.User_Accounts
+                    .Where(u => u.Role == "Homeowner")
+                    .Select(u => u.Id)
+                    .ToList();
+
+                foreach (var idHomeowner in homeowners)
+                {
+                    var notif = new Notification
+                    {
+                        Title = notifTitle,
+                        Message = notifMessage,
+                        IsRead = false,
+                        Type = "Announcement",
+                        TargetRole = "Homeowner",
+                        Link = "/home/dashboard",
+                        UserId = idHomeowner,
+                        DateCreated = DateTime.Now
+                    };
+                    _context.Notifications.Add(notif);
+
+                    await _hubContext.Clients.User(idHomeowner.ToString()).SendAsync("ReceiveNotification", new
+                    {
+                        Title = notif.Title,
+                        Message = notif.Message,
+                        DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                    });
+                }
+
+                // Staff notification
+                var staffNotif = new Notification
+                {
+                    Title = notifTitle,
+                    Message = notifMessage,
+                    IsRead = false,
+                    Type = "Announcement",
+                    TargetRole = "Staff",
+                    Link = "/staff/dashboard",
+                    DateCreated = DateTime.Now
+                };
+                _context.Notifications.Add(staffNotif);
+
+                await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", new
+                {
+                    Title = staffNotif.Title,
+                    Message = staffNotif.Message,
+                    DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                });
+
+                // Admin notification
+                var adminNotif = new Notification
+                {
+                    Title = notifTitle,
+                    Message = notifMessage,
+                    IsRead = false,
+                    Type = "Announcement",
+                    TargetRole = "Admin",
+                    Link = "/admin/announcements",
+                    DateCreated = DateTime.Now
+                };
+                _context.Notifications.Add(adminNotif);
+
+                await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", new
+                {
+                    Title = adminNotif.Title,
+                    Message = adminNotif.Message,
+                    DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                });
+
                 _context.SaveChanges();
                 TempData["SuccessMessage"] = "Announcement deleted successfully!";
             }
@@ -1168,10 +1406,11 @@ public class AdminController : Controller
                 TempData["ErrorMessage"] = "Announcement not found.";
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             TempData["ErrorMessage"] = "Failed to delete announcement. Please try again.";
         }
+
         return RedirectToAction("Announcements");
     }
 

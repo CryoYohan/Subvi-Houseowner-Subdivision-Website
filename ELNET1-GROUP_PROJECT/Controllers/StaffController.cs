@@ -25,6 +25,7 @@ using System.IO;
 using System.Reflection.Metadata;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Wordprocessing;
+using Azure.Core;
 
 [Route("staff")]
 public class StaffController : Controller
@@ -1170,6 +1171,7 @@ public class StaffController : Controller
         var now = DateTime.Now;
 
         var allPolls = await _context.Poll.ToListAsync();
+        var pollsWithStatusChanged = new List<Poll>();
 
         foreach (var poll in allPolls)
         {
@@ -1178,8 +1180,72 @@ public class StaffController : Controller
                 if (endDate < now && poll.Status == true) // if active but expired
                 {
                     poll.Status = false; // set to inactive
+                    pollsWithStatusChanged.Add(poll);
                 }
             }
+        }
+
+        if (pollsWithStatusChanged.Any())
+        {
+            var titlesList = pollsWithStatusChanged.Select(p => $"• {p.Title}").ToList();
+            var formattedTitles = string.Join("\n", titlesList);
+            string message = $"You can check and review it. The following poll(s) date is done:\n\n{formattedTitles}";
+
+            // === Staff notification ===
+            var staffNotification = new Notification
+            {
+                Title = "Poll Ended",
+                Message = message,
+                Type = "Poll",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Staff",
+                UserId = null,
+                Link = "/staff/polls"
+            };
+            _context.Notifications.Add(staffNotification);
+
+            // === Admin notification ===
+            var adminNotification = new Notification
+            {
+                Title = "Poll Ended",
+                Message = message,
+                Type = "Poll",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Admin",
+                UserId = null
+            };
+            _context.Notifications.Add(adminNotification);
+
+            // === Homeowners ===
+            var homeowners = await _context.User_Accounts
+                .Where(u => u.Role == "Homeowner")
+                .ToListAsync();
+
+            foreach (var homeowner in homeowners)
+            {
+                var homeownerNotification = new Notification
+                {
+                    Title = "Poll Ended",
+                    Message = $"You may no longer submit your vote. The following poll(s) date is done:\n\n{formattedTitles}",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Homeowner",
+                    UserId = homeowner.Id,
+                    Type = "Poll"
+                };
+
+                _context.Notifications.Add(homeownerNotification);
+
+                // Real-time to homeowner
+                await _hubContext.Clients.User(homeowner.Id.ToString())
+                    .SendAsync("ReceiveNotification", homeownerNotification);
+            }
+
+            // Real-time to staff/admin groups
+            await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", staffNotification);
+            await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", adminNotification);
         }
 
         await _context.SaveChangesAsync();
@@ -1251,24 +1317,64 @@ public class StaffController : Controller
 
         await _context.SaveChangesAsync();
 
-        // Create a notification for the homeowner
-        var notification = new Notification
+        // Create Staff notification
+        var staffNotification = new Notification
         {
-            UserId = userId,  // Send the notification to the vehicle owner
-            TargetRole = "Homeowner",
-            Type = "Poll",
             Title = "New Poll Created",
-            Message = $"The Poll Name {request.Title} you can now vote to choose your desired choice.",
+            Message = $"The Poll Name {request.Title} created. Please check to review it.",
+            Type = "Poll",
             IsRead = false,
-            DateCreated = DateTime.Now
+            DateCreated = DateTime.Now,
+            TargetRole = "Staff",
+            UserId = null,
+            Link = "/staff/poll_management"
         };
+        _context.Notifications.Add(staffNotification);
 
-        // Add the notification to the context
-        _context.Notifications.Add(notification);
+        // Create Admin notification
+        var adminNotification = new Notification
+        {
+            Title = "New Poll Created",
+            Message = $"The Poll Name {request.Title} created. You can check and review choices if it is good for voting and contact Staff if there is any changes.",
+            Type = "Poll",
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            TargetRole = "Admin",
+            UserId = null,
+            Link = "/admin/poll"
+        };
+        _context.Notifications.Add(adminNotification);
+
+        // Get all Homeowners and send them individual notifications
+        var homeowners = await _context.User_Accounts
+            .Where(u => u.Role == "Homeowner")
+            .ToListAsync();
+
+        foreach (var homeowner in homeowners)
+        {
+            var homeownerNotification = new Notification
+            {
+                Title = "New Poll Created",
+                Message = $"The Poll Name {request.Title} created. You can check it to review it.",
+                IsRead = false,
+                Type = "Poll",
+                DateCreated = DateTime.Now,
+                TargetRole = "Homeowner",
+                UserId = homeowner.Id,
+                Link = "/home/dashboard"
+            };
+
+            _context.Notifications.Add(homeownerNotification);
+
+            // Send real-time notification to each Homeowner
+            await _hubContext.Clients.User(homeowner.Id.ToString()).SendAsync("ReceiveNotification", homeownerNotification);
+        }
+
         await _context.SaveChangesAsync();
 
-        // Send real-time notification to the user
-        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
+        // Send real-time notifications to Staff and Admin
+        await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", staffNotification);
+        await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", adminNotification);
 
         return Ok(new { message = "Poll created successfully." });
     }
@@ -1291,7 +1397,6 @@ public class StaffController : Controller
             .OrderBy(c => c)
             .ToList();
 
-        // Duplicate detection
         var similarPolls = await _context.Poll
             .Where(p => p.PollId != pollId &&
                         p.Title.ToLower() == normalizedTitle &&
@@ -1315,19 +1420,15 @@ public class StaffController : Controller
             }
         }
 
-        // Update main fields
         poll.Title = request.Title;
         poll.Description = request.Description;
         poll.StartDate = request.StartDate;
         poll.EndDate = request.EndDate;
 
-        // Fetch existing choices
         var existingChoicesDetails = await _context.Poll_Choice
             .Where(c => c.PollId == pollId)
             .ToListAsync();
 
-        // === Update choices: rename-safe ===
-        // Map normalized text -> existing entity
         var existingChoiceMap = existingChoicesDetails.ToDictionary(
             c => c.Choice.Trim().ToLower(),
             c => c
@@ -1339,14 +1440,12 @@ public class StaffController : Controller
         {
             var normalized = newRaw.ToLower();
 
-            // 1. If exact match exists — keep it
             if (existingChoiceMap.TryGetValue(normalized, out var existing))
             {
                 updatedChoiceIds.Add(existing.ChoiceId);
                 continue;
             }
 
-            // 2. Else: try match by position — rename existing
             if (index < existingChoicesDetails.Count)
             {
                 var toRename = existingChoicesDetails[index];
@@ -1355,7 +1454,6 @@ public class StaffController : Controller
             }
             else
             {
-                // 3. Add new
                 _context.Poll_Choice.Add(new Poll_Choice
                 {
                     PollId = pollId,
@@ -1364,25 +1462,81 @@ public class StaffController : Controller
             }
         }
 
-        // Remove old choices that were not reused/renamed, but if someone already voted it will not delete
         foreach (var existing in existingChoicesDetails)
         {
             if (!updatedChoiceIds.Contains(existing.ChoiceId))
             {
-                // Check if votes exist for this choice
-                bool hasVotes = await _context.Vote
-                    .AnyAsync(v => v.ChoiceId == existing.ChoiceId);
-
-                if (hasVotes)
+                bool hasVotes = await _context.Vote.AnyAsync(v => v.ChoiceId == existing.ChoiceId);
+                if (!hasVotes)
                 {
-                    continue;
+                    _context.Poll_Choice.Remove(existing);
                 }
-
-                _context.Poll_Choice.Remove(existing);
             }
         }
 
         await _context.SaveChangesAsync();
+
+        // === Notifications ===
+
+        // Staff notification
+        var staffNotification = new Notification
+        {
+            Title = "Poll Updated",
+            Message = $"The Poll Name {request.Title} has been updated. You can review for changes.",
+            Type = "Poll",
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            TargetRole = "Staff",
+            UserId = null,
+            Link = "/staff/poll_management"
+        };
+        _context.Notifications.Add(staffNotification);
+
+        // Admin notification
+        var adminNotification = new Notification
+        {
+            Title = "Poll Updated",
+            Message = $"The Poll Name {request.Title} has been updated. You can check and review choices if it is good for voting and contact Staff if there is any changes.",
+            Type = "Poll",
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            TargetRole = "Admin",
+            UserId = null,
+            Link = "/admin/poll"
+        };
+        _context.Notifications.Add(adminNotification);
+
+        // Homeowner notifications
+        var homeowners = await _context.User_Accounts
+            .Where(u => u.Role == "Homeowner")
+            .ToListAsync();
+
+        foreach (var homeowner in homeowners)
+        {
+            var homeownerNotification = new Notification
+            {
+                Title = "Poll Updated",
+                Message = $"The Poll Name {request.Title} has been updated. You can check for changes.",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Homeowner",
+                UserId = homeowner.Id,
+                Type = "Poll",
+                Link = "/home/dashboard"
+            };
+
+            _context.Notifications.Add(homeownerNotification);
+
+            await _hubContext.Clients.User(homeowner.Id.ToString())
+                .SendAsync("ReceiveNotification", homeownerNotification);
+        }
+
+        await _context.SaveChangesAsync();
+
+        // Send real-time notifications to Staff and Admin
+        await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", staffNotification);
+        await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", adminNotification);
+
         return Ok(new { message = "Poll updated successfully." });
     }
 
@@ -1396,7 +1550,6 @@ public class StaffController : Controller
         return Ok(new { hasVotes });
     }
 
-    //Soft Delete 
     [HttpPatch("polls/{pollId}")]
     public async Task<IActionResult> SoftDeletePoll(int pollId)
     {
@@ -1405,6 +1558,69 @@ public class StaffController : Controller
 
         poll.Status = false;  // Mark as Inactive
         await _context.SaveChangesAsync();
+
+        string message = $"The poll titled {poll.Title} has been deactivated. You cannot vote anymore.";
+
+        // === Create and send Staff notification ===
+        var staffNotification = new Notification
+        {
+            Title = "Poll Deactivated",
+            Message = message,
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            TargetRole = "Staff",
+            Type = "Poll",
+            UserId = null,
+            Link = "/staff/polls"
+        };
+        _context.Notifications.Add(staffNotification);
+
+        // === Create and send Admin notification ===
+        var adminNotification = new Notification
+        {
+            Title = "Poll Deactivated",
+            Message = message,
+            Type = "Poll",
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            TargetRole = "Admin",
+            UserId = null
+        };
+        _context.Notifications.Add(adminNotification);
+
+        // === Send to all Homeowners ===
+        var homeowners = await _context.User_Accounts
+            .Where(u => u.Role == "Homeowner")
+            .ToListAsync();
+
+        foreach (var homeowner in homeowners)
+        {
+            var homeownerNotification = new Notification
+            {
+                Title = "Poll Deactivated",
+                Message = message,
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Homeowner",
+                UserId = homeowner.Id,
+                Type = "Poll"
+            };
+
+            _context.Notifications.Add(homeownerNotification);
+
+            // Real-time push to individual homeowner
+            await _hubContext.Clients.User(homeowner.Id.ToString())
+                .SendAsync("ReceiveNotification", homeownerNotification);
+        }
+
+        await _context.SaveChangesAsync();
+
+        // === Real-time push to Staff and Admin groups ===
+        await _hubContext.Clients.Group("staff")
+            .SendAsync("ReceiveNotification", staffNotification);
+        await _hubContext.Clients.Group("admin")
+            .SendAsync("ReceiveNotification", adminNotification);
+
         return Ok(new { message = "Poll deactivated." });
     }
 
@@ -1481,6 +1697,7 @@ public class StaffController : Controller
                       f.Description,
                       f.ComplaintStatus,
                       f.DateSubmitted,
+                      f.UserId,
                       FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
                                  (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower()
                   })
@@ -1554,7 +1771,8 @@ public class StaffController : Controller
                       c.Message,
                       c.DateSent,
                       c.UserId,
-                      FullName = u.Firstname + " " + u.Lastname,
+                      FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
+                                 (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower(),
                       ProfileImage = string.IsNullOrEmpty(u.Profile) ? null : u.Profile
                   })
             .OrderBy(c => c.DateSent)
@@ -1564,7 +1782,7 @@ public class StaffController : Controller
     }
 
     [HttpPost("sendmessage")]
-    public IActionResult SendMessage([FromBody] SendMessageDTO dto)
+    public async Task<IActionResult> SendMessage([FromBody] SendMessageDTO dto)
     {
         var Iduser = HttpContext.Request.Cookies["Id"];
         if (!int.TryParse(Iduser, out int userId))
@@ -1582,41 +1800,166 @@ public class StaffController : Controller
         };
         _context.FeedbackConversation.Add(convo);
         _context.SaveChanges();
+
+        // Create a notification for the homeowner
+        var notification = new Notification
+        {
+            UserId = dto.RecepientUserId, 
+            TargetRole = "Homeowner",
+            Type = "Feedback Message",
+            Title = "Complaint Feedback Message",
+            Message = $"You have a new message on your complaint feedback.",
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            Link = "/home/feedbacks"
+        };
+
+        // Add the notification to the context
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
+        // Send real-time notification to the user
+        await _hubContext.Clients.User(dto.RecepientUserId.ToString()).SendAsync("ReceiveNotification", notification);
         return Ok();
     }
 
     [HttpPost("markongoing")]
-    public IActionResult MarkOngoing(int feedbackId)
+    public async Task<IActionResult> MarkOngoing(int feedbackId)
     {
         var feedback = _context.Feedback.FirstOrDefault(f => f.FeedbackId == feedbackId && f.ComplaintStatus == "Pending");
 
-        if (feedback != null)
+        if (feedback == null)
         {
-            feedback.ComplaintStatus = "Ongoing";
-            _context.SaveChanges();
-            return Ok(new { success = true });
+            return BadRequest(new { error = "Invalid feedback or already updated." });
         }
 
-        return BadRequest(new { error = "Invalid feedback or already updated." });
+        // Update complaint status
+        feedback.ComplaintStatus = "Ongoing";
+        _context.SaveChanges();
+
+        // Create a notification for the homeowner
+        var notification = new Notification
+        {
+            UserId = feedback.UserId,
+            TargetRole = "Homeowner",
+            Type = "Feedback Message",
+            Title = "Complaint Feedback Status",
+            Message = "The complaint you submitted is currently being reviewed.",
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            Link = "/home/feedbacks"
+        };
+
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
+        // Send real-time notification
+        await _hubContext.Clients.User(feedback.UserId.ToString())
+            .SendAsync("ReceiveNotification", notification);
+
+        return Ok(new { success = true });
     }
 
     [HttpPost("markresolved/{id}")]
-    public IActionResult MarkResolved(int id)
+    public async Task<IActionResult> MarkResolved(int id)
     {
         var feedback = _context.Feedback.FirstOrDefault(f => f.FeedbackId == id);
-        if (feedback != null)
+        if (feedback == null)
         {
-            feedback.ComplaintStatus = "Resolved";
-            _context.SaveChanges();
+            return NotFound("Feedback not found.");
         }
+
+        // Update complaint status
+        feedback.ComplaintStatus = "Resolved";
+        _context.SaveChanges();
+
+        // Create a notification for the homeowner using the UserId from feedback
+        var notification = new Notification
+        {
+            UserId = feedback.UserId, // Use UserId from the feedback record
+            TargetRole = "Homeowner",
+            Type = "Feedback Message",
+            Title = "Complaint Feedback Status",
+            Message = "The complaint you submitted is resolved.",
+            IsRead = false,
+            DateCreated = DateTime.Now,
+            Link = "/home/feedbacks"
+        };
+
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
+        // Send real-time notification
+        await _hubContext.Clients.User(feedback.UserId.ToString())
+            .SendAsync("ReceiveNotification", notification);
+
         return Ok();
     }
 
     public class SendMessageDTO
     {
         public int FeedbackId { get; set; }
+        public int RecepientUserId { get; set; }
         public string Message { get; set; }
     }
+
+    //For Setting a schedule
+    [HttpPost("scheduleservice")]
+    public async Task<IActionResult> ScheduleService([FromBody] ScheduleServiceDTO dto)
+    {
+        if (dto.ScheduleDate < DateTime.Now)
+        {
+            return BadRequest(new { success = false, message = "Schedule date must be in the future." });
+        }
+
+        try
+        {
+            var request = new Service_Request
+            {
+                ReqType = dto.ReqType,
+                Description = dto.Description,
+                Status = "Scheduled",
+                DateSubmitted = DateTime.Now.ToString("yyyy-MM-dd"),
+                UserId = dto.HomeownerId,
+                ScheduleDate = dto.ScheduleDate
+            };
+
+            _context.Service_Request.Add(request);
+
+            var notification = new Notification
+            {
+                UserId = dto.HomeownerId,
+                TargetRole = "Homeowner",
+                Type = "Service Schedule",
+                Title = "Service Scheduled",
+                Message = $"You have a scheduled service. Please expect our worker on {dto.ScheduleDate:MM/dd/yyyy hh:mm tt} to come to your home and make sure anyone you trusted is at home for the visitation of our service worker. Thank you and have a great day ahead!",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                Link = "/home/feedbacks"
+            };
+
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.User(dto.HomeownerId.ToString()).SendAsync("ReceiveNotification", notification);
+
+            return Ok(new { success = true, message = "Service successfully scheduled." });
+        }
+        catch (Exception ex)
+        {
+            // Log error if necessary
+            return StatusCode(500, new { success = false, message = "Something went wrong while scheduling the service." });
+        }
+    }
+
+    public class ScheduleServiceDTO
+    {
+        public int HomeownerId { get; set; }
+        public string ReqType { get; set; }
+        public string Description { get; set; }
+        public DateTime ScheduleDate { get; set; }
+    }
+
 
     [Route("reports")]
     public IActionResult Reports()

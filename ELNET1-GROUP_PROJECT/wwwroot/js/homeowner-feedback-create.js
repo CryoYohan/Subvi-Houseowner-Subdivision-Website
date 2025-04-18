@@ -1,20 +1,5 @@
 ﻿let currentRating = 0;
 let currentfilterstatus = '';
-
-$('#tabFeedback').click(function () {
-    $('#tabFeedback').addClass('bg-blue-600 text-white').removeClass('bg-gray-200 text-gray-700');
-    $('#tabComplaint').removeClass('bg-blue-600 text-white').addClass('bg-gray-200 text-gray-700');
-    $('#panelFeedback').show();
-    $('#panelComplaint').hide();
-});
-
-$('#tabComplaint').click(function () {
-    $('#tabComplaint').addClass('bg-blue-600 text-white').removeClass('bg-gray-200 text-gray-700');
-    $('#tabFeedback').removeClass('bg-blue-600 text-white').addClass('bg-gray-200 text-gray-700');
-    $('#panelFeedback').hide();
-    $('#panelComplaint').show();
-});
-
 function loadFeedbacks() {
     const feedbackType = document.getElementById("filterType").value;
     currentfilterstatus = feedbackType;
@@ -23,36 +8,79 @@ function loadFeedbacks() {
         .then(data => {
             const list = document.getElementById("feedbackCreationList");
             list.innerHTML = "";
+
             if (data.length === 0) {
-                list.innerHTML = '<p class="text-gray-500 font-semibold text-base text-center">No ${currentfilterstatus} feedback yet.</p>';
+                list.innerHTML = `<p class="text-gray-500 font-semibold text-base text-center">No ${currentfilterstatus} feedback yet.</p>`;
                 return;
             }
 
             data.forEach(feedback => {
-                list.innerHTML += `
-                            <div class="p-4 border rounded-lg shadow-sm hover:shadow-md transition hover:blue-600" style="background-color:white">
-                                <div class="flex justify-between items-center">
-                                    <h3 class="text-lg font-semibold">${feedback.feedbackType}</h3>
-                                    ${feedback.feedbackType == 'Complaint' ? `
-                                          <p class="text-sm px-3 py-1 rounded-md ${feedback.complaintStatus === 'RESOLVED'
-                            ? 'bg-green-600 text-white'
-                            : feedback.complaintStatus === 'PENDING'
-                                ? 'bg-red-600 text-white'
-                                : feedback.complaintStatus === 'ONGOING'
-                                    ? 'bg-gray-500 text-white'
-                                    : 'hidden'
-                        }">
-                                            ${feedback.complaintStatus}
-                                          </p>
-                                        ` : ''}
-                                </div>
-                                <p class="text-gray-700 mt-2">${feedback.description}</p>
-                                <p class="text-sm text-gray-500 mt-1">${new Date(feedback.dateSubmitted).toLocaleString()}</p>
-                            </div>
-                        `;
+                const statusClass = feedback.complaintStatus === 'Resolved' ? 'bg-green-600' :
+                    feedback.complaintStatus === 'Pending' ? 'bg-red-600' :
+                        feedback.complaintStatus === 'Ongoing' ? 'bg-gray-500' : 'hidden';
+
+                const item = document.createElement('div');
+                item.className = 'p-4 border rounded-lg shadow-sm hover:shadow-md transition cursor-pointer bg-white hover:bg-blue-50';
+                item.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold">${feedback.feedbackType}</h3>
+                        ${feedback.feedbackType === 'Complaint' ? `
+                            <p class="text-sm px-3 py-1 rounded-md ${statusClass} text-white">
+                                ${feedback.complaintStatus}
+                            </p>
+                        ` : ''}
+                    </div>
+                    <p class="text-gray-700 mt-2">${feedback.description}</p>
+                    <p class="text-sm text-gray-500 mt-1">${new Date(feedback.dateSubmitted).toLocaleString()}</p>
+                `;
+
+                // On click, open modal with feedback details
+                item.addEventListener('click', () => {
+                    document.getElementById('modalFeedbackType').textContent = feedback.feedbackType;
+                    document.getElementById('modalDescription').textContent = feedback.description;
+                    document.getElementById('modalDate').textContent = new Date(feedback.dateSubmitted).toLocaleString();
+
+                    const statusElem = document.getElementById('modalStatusContainer');
+                    const starElem = document.getElementById('modalRatingContainer');
+
+                    if (feedback.feedbackType === 'Complaint') {
+                        statusElem.style.display = 'block';
+                        starElem.style.display = 'none';
+
+                        const statusText = feedback.complaintStatus ?? 'N/A';
+                        let badgeClass = 'bg-secondary';
+
+                        if (statusText === 'Pending') badgeClass = 'bg-danger';
+                        else if (statusText === 'Ongoing') badgeClass = 'bg-warning text-dark';
+                        else if (statusText === 'Resolved') badgeClass = 'bg-success';
+
+                        document.getElementById('modalStatus').textContent = statusText;
+                        document.getElementById('modalStatus').className = `badge fs-6 ${badgeClass}`;
+                    } else if (feedback.feedbackType === 'Compliment') {
+                        statusElem.style.display = 'none';
+                        starElem.style.display = 'block';
+                        const rating = feedback.rating || 0;
+                        const starIcons = Array.from({ length: 5 }, (_, i) =>
+                            `<i class="bi ${i < rating ? 'bi-star-fill text-yellow-500' : 'bi-star text-gray-400'} fs-5"></i>`
+                        ).join('');
+                        document.getElementById('modalRating').innerHTML = starIcons;
+                    } else {
+                        // Suggestion
+                        statusElem.style.display = 'none';
+                        starElem.style.display = 'none';
+                    }
+
+                    const modal = new bootstrap.Modal(document.getElementById('feedbackViewModal'));
+                    modal.show();
+                });
+
+                list.appendChild(item);
             });
         })
-        .catch(error => console.error(error));
+        .catch(error => {
+            console.error(error);
+            showToast("Failed to load feedbacks", "error");
+        });
 }
 
 function openFeedbackModal() {
@@ -100,11 +128,28 @@ function updateCharCount() {
 
 function submitFeedback() {
     const feedbackType = document.getElementById("feedbackType").value;
-    const description = document.getElementById("feedbackDescription").value;
-    if (!description.trim()) {
-        alert("Please enter a description.");
-        return;
+    const description = document.getElementById("feedbackDescription").value.trim();
+    const descriptionError = document.getElementById("descriptionError");
+
+    let valid = true;
+
+    // Validate description
+    if (!description) {
+        descriptionError.classList.remove("hidden");
+        valid = false;
+    } else {
+        descriptionError.classList.add("hidden");
     }
+
+    // Validate rating if type is Compliment
+    if (feedbackType === "Compliment" && currentRating === 0) {
+        document.getElementById("ratingError").classList.remove("hidden");
+        valid = false;
+    } else {
+        document.getElementById("ratingError").classList.add("hidden");
+    }
+
+    if (!valid) return;
 
     fetch('/Home/AddFeedback', {
         method: 'POST',
@@ -118,4 +163,6 @@ function submitFeedback() {
         .catch(error => console.error(error));
 }
 
-document.addEventListener('DOMContentLoaded', loadFeedbacks);
+$(function () {
+    loadFeedbacks();
+});

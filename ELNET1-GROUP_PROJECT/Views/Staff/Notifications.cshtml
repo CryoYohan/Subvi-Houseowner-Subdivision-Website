@@ -5,7 +5,7 @@
 
 <div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
     <!-- Sidebar -->
-    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 flex flex-col">
         <!-- Sidebar Header -->
         <div class="px-2 py-2  border-b border-gray-100">
             <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
@@ -79,7 +79,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 p-3 overflow-y-auto w-full fade-in">
+    <div class="flex-1 overflow-y-auto w-full fade-in">
         <div class="flex-1overflow-y-auto">
             <!-- Header -->
             <div class="p-6 rounded-2xl shadow-md w-full mx-auto">
@@ -109,14 +109,42 @@
                             class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                        hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
                         <i class="fas fa-comment-dots text-lg"></i>
-                        <span>Feedback</span>
+                        <span>Feedback Submission</span>
                         <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="feedback-count"></span>
                     </button>
-                    <button data-type="User Account"
+                    <button data-type="Feedback Message"
                             class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                        hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
-                        <i class="fas fa-comment-dots text-lg"></i>
-                        <span>Account</span>
+                        <i class="fas fa-envelope text-lg"></i>
+                        <span>Feedback Message</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="feedbackmessage-count"></span>
+                    </button>
+                    <button data-type="Announcement"
+                            class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                       hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                        <i class="fas fa-bullhorn text-lg"></i>
+                        <span>Announcement</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="announcement-count"></span>
+                    </button>
+                    <button data-type="Event"
+                            class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                       hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                        <i class="fas fa-calendar-alt text-lg"></i>
+                        <span>Event</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="event-count"></span>
+                    </button>
+                    <button data-type="Poll"
+                            class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                       hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                        <i class="fas fa-poll text-lg"></i>
+                        <span>Poll</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="poll-count"></span>
+                    </button>
+                    <button data-type="Account"
+                            class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                       hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                        <i class="fas fa-user text-lg"></i>
+                        <span>User Account</span>
                         <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="account-count"></span>
                     </button>
                 </div>
@@ -147,13 +175,16 @@
                     </button>
                 </div>
 
-                <!-- Notification List -->
-                <div id="notificationList" class="space-y-2">
-                    <!-- Skeleton Loading -->
-                    <div class="animate-pulse space-y-4" id="loadingSkeleton">
-                        <div class="h-20 bg-gray-100 rounded-lg"></div>
-                        <div class="h-20 bg-gray-100 rounded-lg"></div>
-                        <div class="h-20 bg-gray-100 rounded-lg"></div>
+                <!-- Scrollable Container -->
+                <div style="max-height: 400px; overflow-y: auto;" class="pr-2">
+                    <!-- Notification List -->
+                    <div id="notificationList" class="space-y-2">
+                        <!-- Skeleton Loading -->
+                        <div class="animate-pulse space-y-4" id="loadingSkeleton">
+                            <div class="h-20 bg-gray-100 rounded-lg"></div>
+                            <div class="h-20 bg-gray-100 rounded-lg"></div>
+                            <div class="h-20 bg-gray-100 rounded-lg"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -167,8 +198,26 @@
                 </div>
             </div>
 
+            <!-- Notification Details Modal -->
+            <div class="modal fade" id="notifModal" tabindex="-1" aria-labelledby="notifModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-3 shadow">
+                        <div class="modal-header bg-blue-100 border-bottom-0">
+                            <h5 class="modal-title fw-semibold" id="notifModalTitle">Notification</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id="notifModalBody">
+                            <!-- Message content inserted here -->
+                        </div>
+                        <div class="modal-footer border-top-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Connection Status Indicator -->
-            <div id="connectionStatus" class="fixed bottom-2 text-right right-0 text-sm flex items-center bg-white px-3 py-1.5 rounded-full shadow">
+            <div id="connectionStatus" class="fixed top-0 text-right right-0 text-sm flex items-center bg-white px-3 py-1.5 rounded-full shadow">
                 <i class="fas fa-circle text-gray-400 text-xs"></i>
                 <span class="ml-2 text-gray-600">Connecting...</span>
             </div>
@@ -243,7 +292,7 @@
     // Mark All as Read
     markAllBtn.addEventListener("click", async () => {
         try {
-            await fetch(`/api/notifications/staff/mark-all-read/${currentUserId}`, { method: "PUT" });
+            await fetch(`/api/notifications/staff/mark-all-read/${selectedType}/${currentUserId}`, { method: "PUT" });
 
             // Update all local notifications as read
             allNotifs = allNotifs.map(n => ({
@@ -259,7 +308,7 @@
     });
 
     // Render Notifications
-    function renderNotifications() {
+     function renderNotifications() {
         const filtered = allNotifs.filter(n =>
             n.type === selectedType &&
             (!searchInput.value || n.title.toLowerCase().includes(searchInput.value.toLowerCase()) || n.message.toLowerCase().includes(searchInput.value.toLowerCase()))
@@ -270,25 +319,32 @@
 
         filtered.forEach(n => {
             const card = document.createElement("div");
-            card.className = `group p-3 rounded-lg transition-all cursor-pointer shadow-sm
+            card.className = `group p-3 rounded-lg transition-all cursor-pointer shadow-sm relative
                             ${n.isRead ? 'hover:bg-gray-50' : 'bg-blue-50 border-l-4 border-blue-500'}`;
+
             card.innerHTML = `
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
                         <div class="flex items-center space-x-3 mb-1.5">
                             ${getTypeIcon(n.type)}
-                            <h4 class="font-semibold p-2 text-lg ${n.isRead ? 'text-gray-700' : 'text-gray-900'}">
+                            <h4 class="font-semibold text-lg ${n.isRead ? 'text-gray-700' : 'text-gray-900'}">
                                 ${n.title}
                             </h4>
                             ${!n.isRead ? '<span class="animate-pulse w-2 h-2 bg-blue-500 rounded-full"></span>' : ''}
                         </div>
-                        <p class="text-sm text-gray-600 text-base ml-2 p-2">${n.message}</p>
+                        <p class="text-sm text-gray-600 text-base ml-6">${n.message}</p>
                         <div class="flex items-center space-x-3 text-xs text-blue-900 mt-2 ml-6">
                             <span>${new Date(n.dateCreated).toLocaleDateString()}</span>
                             <span>•</span>
                             <span>${new Date(n.dateCreated).toLocaleTimeString()}</span>
                         </div>
                     </div>
+                    <button class="btn btn-outline-primary btn-sm ml-3 mt-1 viewNotifBtn"
+                            data-bs-toggle="modal" data-bs-target="#notifModal"
+                            data-title="${n.title}" data-message="${n.message}" data-date="${new Date(n.dateCreated).toLocaleString()}"
+                            data-type="${n.type}">
+                        View
+                    </button>
                 </div>
             `;
 
@@ -300,6 +356,29 @@
             } else {
                 markAllBtn.classList.add('hidden');
             }
+        });
+
+        // Attach modal content logic
+        document.querySelectorAll('.viewNotifBtn').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation(); // Prevent triggering the card click
+
+                const title = btn.getAttribute('data-title');
+                const message = btn.getAttribute('data-message');
+                const date = btn.getAttribute('data-date');
+                const type = btn.getAttribute('data-type');
+
+                // Inject content into the modal dynamically
+                document.getElementById('notifModalTitle').textContent = title;
+                document.getElementById('notifModalBody').innerHTML = `
+                    <div class="mb-2">
+                        <strong>Message:</strong> <p class="text-gray-700">${message}</p>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Received On:</strong> <span class="text-muted">${date}</span>
+                    </div>
+                `;
+            });
         });
     }
 
@@ -378,8 +457,12 @@
             'Facility Reservation Request': '<i class="fas fa-building text-blue-500"></i>',
             'Service Request': '<i class="fas fa-tools text-green-500"></i>',
             'Feedback Submitted': '<i class="fas fa-comment-dots text-purple-500"></i>',
-            'Account': '<i class="fas fa-tools text-green-500"></i>'
-        }[type] || '<i class="fas fa-bell text-gray-400"></i>'; 
+            'Feedback Message': '<i class="fas fa-envelope text-purple-500"></i>',
+            'Announcement': '<i class="fas fa-bullhorn text-orange-500"></i>',
+            'Event': '<i class="fas fa-calendar-alt text-pink-500"></i>',
+            'Poll': '<i class="fas fa-poll text-yellow-500"></i>',
+            'Account': '<i class="fas fa-user text-green-500"></i>'
+        }[type] || '<i class="fas fa-bell text-gray-400"></i>';
     }
 
     async function updateCountBadges() {
@@ -391,6 +474,10 @@
                 'Facility Reservation Request': 0,
                 'Service Request': 0,
                 'Feedback Submitted': 0,
+                'Feedback Message': 0,
+                'Announcement': 0,
+                'Event': 0,
+                'Poll': 0,
                 'Account': 0
             };
 
@@ -403,6 +490,10 @@
                 'Facility Reservation Request': document.getElementById('facility-count'),
                 'Service Request': document.getElementById('service-count'),
                 'Feedback Submitted': document.getElementById('feedback-count'),
+                'Feedback Message': document.getElementById('feedbackmessage-count'),
+                'Announcement': document.getElementById('announcement-count'),
+                'Event': document.getElementById('event-count'),
+                'Poll': document.getElementById('poll-count'),
                 'Account': document.getElementById('account-count')
             };
 
@@ -440,6 +531,11 @@
         toast.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg border-l-4 ${
             notif.type === 'Facility Reservation Request' ? 'border-blue-500 bg-blue-50' :
             notif.type === 'Service Request' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Feedback Submitted' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Feedback Message' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Announcement' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Event' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Poll' ? 'border-green-500 bg-green-50' :
             notif.type === 'Account' ? 'border-green-500 bg-green-50' :
             'border-purple-500 bg-purple-50'
         } animate-slide-in`;

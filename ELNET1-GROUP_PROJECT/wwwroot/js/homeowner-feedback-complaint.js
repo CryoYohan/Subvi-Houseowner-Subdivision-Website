@@ -2,6 +2,20 @@
 let currentFeedbackId = null;
 let isSearchMode = false;
 
+$('#tabFeedback').click(function () {
+    $('#tabFeedback').addClass('bg-blue-600 text-white').removeClass('bg-gray-200 text-gray-700');
+    $('#tabComplaint').removeClass('bg-blue-600 text-white').addClass('bg-gray-200 text-gray-700');
+    $('#panelFeedback').show();
+    $('#panelComplaint').hide();
+});
+
+$('#tabComplaint').click(function () {
+    $('#tabComplaint').addClass('bg-blue-600 text-white').removeClass('bg-gray-200 text-gray-700');
+    $('#tabFeedback').removeClass('bg-blue-600 text-white').addClass('bg-gray-200 text-gray-700');
+    $('#panelFeedback').hide();
+    $('#panelComplaint').show();
+});
+
 function formatDate(dateString) {
     const date = new Date(dateString);
     const options = {
@@ -15,15 +29,16 @@ function formatDate(dateString) {
     return date.toLocaleString('en-US', options);
 }
 
-// Toggle Search UI
-$('.tab-btn').click(function () {
-    $('.tab-btn').removeClass('active');
+$('.inner-tab-btn').click(function () {
+    $('.inner-tab-btn').removeClass('active');
     $(this).addClass('active');
     currentTab = $(this).data('type');
+    currentFeedbackId = null;
 
+    $('#feedbackTypeLabel').text(`${currentTab} Feedback`);
     $('#feedbackConvList').html('');
     $('#conversationSection').html('');
-    $('#infoContainer').html('');
+    $('#searchToggle').removeClass('d-none');
     $('#viewDetailsBtn').addClass('d-none');
     $('#messageInputSection').addClass('d-none');
 
@@ -35,6 +50,7 @@ $('.tab-btn').click(function () {
 
     // Hide/show input based on tab
     if (currentTab === 'Complaint') {
+        
         $('#messageInputSection').show();
     } else {
         $('#messageInputSection').hide();
@@ -57,6 +73,18 @@ $('.tab-btn').click(function () {
     $.get(apiUrl, function (data) {
         $('#feedbackConvList').append(`<h5 class="font-semibold text-center p-2 border-bottom">${currentTab}</h5>`);
 
+        if (data.length === 0) {
+            $('#searchToggle').addClass('d-none');
+
+            $('#feedbackConvList').append(`
+                <div class="text-center text-muted p-4">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                    <div>No ${currentTab} feedback found.</div>
+                </div>
+            `);
+            return;
+        }
+
         data.forEach(item => {
             let statusBadge = '';
 
@@ -74,13 +102,29 @@ $('.tab-btn').click(function () {
                 statusBadge = '<span class="badge bg-success">Resolved</span>';
             }
 
+            let isSelected = item.feedbackId === currentFeedbackId ? 'selected-feedback bg-light' : '';
+
             $('#feedbackConvList').append(`
-                       <div class="p-2 border-bottom feedback-item bg-white hover-bg cursor-pointer" style="cursor: pointer;" data-id="${item.feedbackId}" data-type="${currentTab}" data-status="${item.complaintStatus}">
-                           <small class="text-muted">${formatDate(item.dateSubmitted)}</small>
-                           <div class="feedback-description">${item.description.length > 55 ? item.description.substring(0, 55) + '...' : item.description}</div>
-                           <div class="text-right">${statusBadge}</div>
-                       </div>
-                   `);
+                <div class="p-2 border-bottom feedback-item bg-white hover-bg cursor-pointer ${isSelected}"
+                    style="cursor: pointer;"
+                    data-id="${item.feedbackId}"
+                    data-type="${currentTab}"
+                    data-status="${item.complaintStatus}">
+
+                    <small class="text-muted">${formatDate(item.dateSubmitted)}</small>
+                    <div class="feedback-description">
+                        ${item.description.length > 55 ? item.description.substring(0, 55) + '...' : item.description}
+                    </div>
+                    <div class="text-right">${statusBadge}</div>
+                </div>
+            `);
+        });
+
+        // Feedback item click to highlight
+        $('.feedback-item').click(function () {
+            $('.feedback-item').removeClass('selected-feedback bg-light');
+            $(this).addClass('selected-feedback bg-light');
+            currentFeedbackId = $(this).data('id');
         });
     });
 });
@@ -97,7 +141,7 @@ $('#searchToggle').click(function () {
         $('#searchInputContainer').hide();
         $(this).removeClass('fa-times').addClass('fa-search');
         $('#searchInput').val('');
-        $('.tab-btn.active').click();
+        $('.inner-tab-btn.active').click();
     }
 });
 
@@ -122,7 +166,6 @@ $(document).on('click', '.feedback-item', function () {
     currentFeedbackId = $(this).data('id');
 
     $('#conversationSection').hide().html('');
-    $('#infoContainer').hide().html('');
 
     if (currentFeedbackId) {
         $('#feedbackMessage').addClass('d-none');
@@ -149,30 +192,36 @@ $(document).on('click', '.feedback-item', function () {
                 const isOwn = msg.userId == currentUserId;
                 const nextMsg = messages[i + 1];
                 const isLastFromSender = !nextMsg || nextMsg.userId !== msg.userId;
+                const getRandomAvatar = () => {
+                const randomIndex = Math.floor(Math.random() * 10) + 1; // 1 to 10
+                    return `/images/avatars/avatar${randomIndex}.png`;
+                };
+
+                const profileImg = msg.profileImage && msg.profileImage.trim() !== "" ? msg.profileImage : getRandomAvatar();
 
                 let msgHtml = '';
 
                 if (isOwn) {
                     msgHtml = `
                                <div class="d-flex justify-content-end animate__animated animate__fadeInUp">
-                                   <div class="bg-primary text-white p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
+                                   <div class="bg-primary text-white p-2 mb-1 rounded-3" style="max-width: 350px;">${msg.message}</div>
                                </div>
                            `;
                 } else {
                     if (isLastFromSender) {
                         msgHtml = `
-                                   <div class="d-flex align-items-start animate__animated animate__fadeInUp">
-                                       <img src="${msg.profileImage || '/images/default-user.png'}" class="rounded-circle me-2" width="40" height="40" />
-                                       <div>
-                                           <div class="fw-bold">${msg.fullName}</div>
-                                           <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
-                                       </div>
-                                   </div>
-                               `;
+                            <div class="d-flex align-items-start animate__animated animate__fadeInUp">
+                                <img src="${profileImg}" class="rounded-circle me-2" width="40" height="40" />
+                                <div>
+                                    <div class="fw-bold">${msg.fullName}</div>
+                                    <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 350px">${msg.message}</div>
+                                </div>
+                            </div>
+                        `;
                     } else {
                         msgHtml = `
                                    <div class="d-flex align-items-start animate__animated animate__fadeInUp" style="margin-left: 48px;">
-                                       <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 60%;">${msg.message}</div>
+                                       <div class="bg-light p-2 mb-1 rounded-3" style="max-width: 350px">${msg.message}</div>
                                    </div>
                                `;
                     }
@@ -196,33 +245,6 @@ $(document).on('click', '.feedback-item', function () {
                 container.scrollTop(container[0].scrollHeight);
             }, 100);
         });
-    } else {
-        $('#infoContainer').show();
-
-        $.get(`/home/getfeedbackdetails?feedbackId=${currentFeedbackId}`, function (details) {
-            let extraContent = "";
-
-            if (type === 'Compliment') {
-                let stars = "";
-                for (let i = 1; i <= 5; i++) {
-                    stars += `<i class="bi ${i <= details.rating ? 'bi-star-fill text-warning' : 'bi-star text-secondary'} me-1"></i>`;
-                }
-
-                extraContent = `<p><strong>Rating:</strong> ${stars}</p>`;
-            }
-
-            $('#infoContainer').html(`
-                       <div class="p-3 animate__animated animate__fadeIn">
-                           <h5 class="text-secondary">${type} Details</h5>
-                           <p><strong>Submitted on:</strong> ${formatDate(details.dateSubmitted)}</p>
-                           ${extraContent}
-                           <div class="border p-3 bg-light rounded">${details.description}</div>
-                       </div>
-                   `);
-        });
-
-        $('#messageInputSection').hide();
-        $('#viewDetailsBtn').addClass('d-none');
     }
 });
 
@@ -305,5 +327,5 @@ function getStatusBadge(status) {
 
 // Auto-load Complaint tab on start
 $(function () {
-    $('.tab-btn[data-type="Complaint"]').click();
+    $('.inner-tab-btn[data-type="Complaint"]').click();
 });

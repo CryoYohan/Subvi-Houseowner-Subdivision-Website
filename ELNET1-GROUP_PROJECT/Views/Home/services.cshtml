@@ -196,9 +196,9 @@
                 <div class="bg-white p-4 rounded-xl shadow-md">
                     <h2 class="text-xl font-bold mb-4 text-[#1E3A8A]">Requested Services</h2>
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full" id="serviceRequestTable">
-                            <thead>
+                    <div class="overflow-x-auto relative" style="max-height: 200px">
+                        <table class="min-w-full table-auto" id="serviceRequestTable">
+                            <thead class="sticky top-0 z-10 shadow-sm" style="background-color: white">
                                 <!-- Dynamic thead will be populated by JavaScript -->
                             </thead>
                             <tbody class="text-sm" id="serviceRequestBody">

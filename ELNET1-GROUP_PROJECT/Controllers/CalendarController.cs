@@ -8,6 +8,8 @@ using ELNET1_GROUP_PROJECT.Data; // Adjust namespace based on your project
 using ELNET1_GROUP_PROJECT.Models;
 using Subvi.Models;
 using System.Globalization;
+using ELNET1_GROUP_PROJECT.SignalR;
+using Microsoft.AspNetCore.SignalR;
 
 namespace ELNET1_GROUP_PROJECT.Controllers
 {
@@ -16,10 +18,12 @@ namespace ELNET1_GROUP_PROJECT.Controllers
     public class CalendarController : ControllerBase
     {
         private readonly MyAppDBContext _context;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public CalendarController(MyAppDBContext context)
+        public CalendarController(MyAppDBContext context, IHubContext<NotificationHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         [HttpGet("schedules")]
@@ -109,6 +113,68 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             _context.Event_Calendar.Add(newEvent);
             await _context.SaveChangesAsync();
 
+            string message = $"A new event has been scheduled:\n\n{dto.Description}\nSchedule Date & Time: {parsedDate:MMMM dd, yyyy h:mm tt}";
+
+            // Staff Notification
+            var staffNotification = new Notification
+            {
+                Title = "New Event Posted",
+                Message = message,
+                Type = "Event",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Staff",
+                UserId = null,
+                Link = "/staff/event_management"
+            };
+            _context.Notifications.Add(staffNotification);
+
+            // Admin Notification
+            var adminNotification = new Notification
+            {
+                Title = "New Event Posted",
+                Message = message,
+                Type = "Event",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Admin",
+                UserId = null,
+                Link = "/event_schedules"
+            };
+            _context.Notifications.Add(adminNotification);
+
+            // Homeowner Notifications (individual)
+            var homeowners = await _context.User_Accounts
+                .Where(u => u.Role == "Homeowner")
+                .ToListAsync();
+
+            foreach (var homeowner in homeowners)
+            {
+                var homeownerNotification = new Notification
+                {
+                    Title = "Upcoming Event",
+                    Message = message,
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Homeowner",
+                    UserId = homeowner.Id,
+                    Type = "Event",
+                    Link = "/home/calendar"
+                };
+
+                _context.Notifications.Add(homeownerNotification);
+
+                // Real-time notification to homeowner
+                await _hubContext.Clients.User(homeowner.Id.ToString())
+                    .SendAsync("ReceiveNotification", homeownerNotification);
+            }
+
+            // Real-time for Staff and Admin groups
+            await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", staffNotification);
+            await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", adminNotification);
+
+            await _context.SaveChangesAsync();
+
             return Ok(new { message = "Event added successfully." });
         }
 
@@ -120,10 +186,74 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             if (eventToUpdate == null)
                 return NotFound();
 
+            // Save the updated details
             eventToUpdate.Description = dto.Description;
             eventToUpdate.DateTime = DateTime.Parse(dto.Date_Time);
 
             await _context.SaveChangesAsync();
+
+            string message = $"The event has been updated:\n\n{dto.Description}\nSchedule Date & Time: {eventToUpdate.DateTime:MMMM dd, yyyy h:mm tt}";
+
+            // Staff Notification
+            var staffNotification = new Notification
+            {
+                Title = "Event Updated",
+                Message = message,
+                Type = "Event",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Staff",
+                UserId = null,
+                Link = "/staff/event_management"
+            };
+            _context.Notifications.Add(staffNotification);
+
+            // Admin Notification
+            var adminNotification = new Notification
+            {
+                Title = "Event Updated",
+                Message = message,
+                Type = "Event",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Admin",
+                UserId = null,
+                Link = "/event_schedules"
+            };
+            _context.Notifications.Add(adminNotification);
+
+            // Homeowner Notifications (individual)
+            var homeowners = await _context.User_Accounts
+                .Where(u => u.Role == "Homeowner")
+                .ToListAsync();
+
+            foreach (var homeowner in homeowners)
+            {
+                var homeownerNotification = new Notification
+                {
+                    Title = "Event Update",
+                    Message = message,
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Homeowner",
+                    UserId = homeowner.Id,
+                    Type = "Event",
+                    Link = "/home/calendar"
+                };
+
+                _context.Notifications.Add(homeownerNotification);
+
+                // Real-time notification to homeowner
+                await _hubContext.Clients.User(homeowner.Id.ToString())
+                    .SendAsync("ReceiveNotification", homeownerNotification);
+            }
+
+            // Real-time for Staff and Admin groups
+            await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", staffNotification);
+            await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", adminNotification);
+
+            await _context.SaveChangesAsync();
+
             return Ok(new { message = "Event updated successfully." });
         }
 
@@ -135,7 +265,71 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             if (eventToDelete == null)
                 return NotFound();
 
+            // Capture event details for notification
+            string message = $"The event '{eventToDelete.Description}' scheduled for {eventToDelete.DateTime:MMMM dd, yyyy h:mm tt} has been deleted.";
+
+            // Remove the event
             _context.Event_Calendar.Remove(eventToDelete);
+            await _context.SaveChangesAsync();
+
+            // Staff Notification
+            var staffNotification = new Notification
+            {
+                Title = "Event Deleted",
+                Message = message,
+                Type = "Event",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Staff",
+                UserId = null,
+                Link = "/staff/event_management"
+            };
+            _context.Notifications.Add(staffNotification);
+
+            // Admin Notification
+            var adminNotification = new Notification
+            {
+                Title = "Event Deleted",
+                Message = message,
+                Type = "Event",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Admin",
+                UserId = null,
+                Link = "/event_schedules"
+            };
+            _context.Notifications.Add(adminNotification);
+
+            // Homeowner Notifications (individual)
+            var homeowners = await _context.User_Accounts
+                .Where(u => u.Role == "Homeowner")
+                .ToListAsync();
+
+            foreach (var homeowner in homeowners)
+            {
+                var homeownerNotification = new Notification
+                {
+                    Title = "Event Deleted",
+                    Message = message,
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Homeowner",
+                    UserId = homeowner.Id,
+                    Type = "Event",
+                    Link = "/home/calendar"
+                };
+
+                _context.Notifications.Add(homeownerNotification);
+
+                // Real-time notification to homeowner
+                await _hubContext.Clients.User(homeowner.Id.ToString())
+                    .SendAsync("ReceiveNotification", homeownerNotification);
+            }
+
+            // Real-time for Staff and Admin groups
+            await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", staffNotification);
+            await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", adminNotification);
+
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Event deleted successfully." });

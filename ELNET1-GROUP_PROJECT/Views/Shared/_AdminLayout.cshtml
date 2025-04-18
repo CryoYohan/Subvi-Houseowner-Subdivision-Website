@@ -100,23 +100,24 @@
     </main>
     
     <!-- Logout Confirmation Div -->
-	<div id="logoutPopup" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden z-50">
-		<div class="modal-content p-6 rounded-lg shadow-xl w-96 text-center animate-fade-in">
-			<h2 class="text-2xl font-semibold text-gray-800">Confirm Logout</h2>
-			<p class="mt-2 text-gray-600">Are you sure you want to log out?</p>
-
-			<div class="mt-4 flex justify-center space-x-4">
-				<button onclick="logout()"
-						class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
-					Yes, Logout
-				</button>
-				<button onclick="closeLogoutPopup()"
-						class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition">
-					Cancel
-				</button>
-			</div>
-		</div>
-	</div>
+        <div id="logoutPopup" class="fixed inset-0 bg-black/50 z-50 hidden">
+            <div class="flex items-center justify-center min-h-screen">
+                <div class="rounded-xl p-6 w-96 transform transition-all" style="background-color: white">
+                    <h2 class="text-xl font-semibold mb-4">Confirm Logout</h2>
+                    <p class="mb-6">Are you sure you want to log out?</p>
+                    <div class="flex justify-end gap-3">
+                        <button onclick="closeLogoutPopup()"
+                                class="px-4 py-2 rounded-lg">
+                            No, Cancel
+                        </button>
+                        <button onclick="logout()"
+                                class="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors">
+                            Yes, Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 	<!-- Success Message -->
 	<div id="logoutMessage" class="fixed bottom-5 right-5 bg-green-500 text-white p-3 rounded-lg shadow-lg hidden">
