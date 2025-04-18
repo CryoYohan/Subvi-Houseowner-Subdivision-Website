@@ -148,8 +148,19 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         public IActionResult Facilities()
         {
-            RefreshJwtCookies();
-            return View();
+            var facilities = _context.Facility
+                .Where(f => f.Status == "Active")
+                .Select(f => new
+                {
+                    f.FacilityId,
+                    Name = f.FacilityName,
+                    Description = f.Description,
+                    Image = f.Image,
+                    Time = f.AvailableTime
+                })
+                .ToList();
+
+            return View(facilities);
         }
 
         // Fetch Pending data

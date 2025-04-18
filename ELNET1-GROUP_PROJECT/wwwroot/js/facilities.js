@@ -1,7 +1,7 @@
 const facilityModal = document.getElementById('facilityModal');
-const facilityBootstrapModal = new bootstrap.Modal(facilityModal); // Add this line
+const facilityBootstrapModal = new bootstrap.Modal(facilityModal); // For the facility reservation modal
 
-const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
+const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal')); // For modal of the facility reservation modal
 
 facilityModal.addEventListener('show.bs.modal', function (event) {
     const button = event.relatedTarget;
@@ -151,6 +151,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const time = facilityModal.querySelector('#modalTime')?.textContent || '';
         const description = facilityModal.querySelector('#modalDescription')?.textContent || '';
         const image = facilityModal.querySelector('#modalImage')?.src || '';
+        const startTimeError = document.getElementById('startTimeError');
+        const endTimeError = document.getElementById('endTimeError');
+
+        // Clear previous errors
+        startTimeError.textContent = "";
+        endTimeError.textContent = "";
 
         // Populate reservation modal with the selected data
         document.getElementById('reservationTitle').textContent = title;
@@ -287,6 +293,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let reserveFacilityBtn = document.getElementById('confirmReservationBtn');
 
+    function parseTimeToDate(timeStr) {
+        const [time, modifier] = timeStr.split(' '); // Split "7:30 AM"
+        let [hours, minutes] = time.split(':').map(Number);
+
+        if (modifier === 'PM' && hours !== 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+
+        // Always use a fixed date to compare times
+        return new Date(1970, 0, 1, hours, minutes);
+    }
+
     reserveFacilityBtn.addEventListener('click', async function () {
         const selectedDateEl = document.querySelector('#calendarTable .selected');
         const startTime = document.getElementById('startTimeSlot').value;
@@ -295,9 +312,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const startTimeError = document.getElementById('startTimeError');
         const endTimeError = document.getElementById('endTimeError');
 
-        // Clear previous errors
-        startTimeError.textContent = "";
-        endTimeError.textContent = "";
         startTimeError.classList.add("hidden");
         endTimeError.classList.add("hidden");
 
@@ -313,10 +327,18 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const start = new Date(`1970-01-01T${startTime}`);
-        const end = new Date(`1970-01-01T${endTime}`);
+        const start = parseTimeToDate(startTime);
+        const end = parseTimeToDate(endTime);
 
-        if (start >= end) {
+        if (start.getTime() === end.getTime()) {
+            startTimeError.textContent = "Start and end times cannot be the same.";
+            endTimeError.textContent = "Start and end times cannot be the same.";
+            startTimeError.classList.remove("hidden");
+            endTimeError.classList.remove("hidden");
+            return;
+        }
+
+        if (start > end) {
             startTimeError.textContent = "Start time must be before end time.";
             endTimeError.textContent = "End time must be after start time.";
             startTimeError.classList.remove("hidden");

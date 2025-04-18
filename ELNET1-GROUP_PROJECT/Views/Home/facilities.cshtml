@@ -1,4 +1,5 @@
-﻿@{
+﻿@model IEnumerable<dynamic>
+@{
     Layout = "_HomeLayout";
     ViewData["Title"] = "Subvi | Facilities";
 
@@ -181,36 +182,27 @@
         <div class="row">
             <!-- Left Side: Facilities List as Card Containers -->
             <div class="col-md-7 p-lg-5" style="margin-top: -60px;">
-                <div class="bg-white rounded-lg shadow-md p-5">
-                    <h2 class="text-3xl font-bold text-center text-blue-900 mb-6">List of Facilities</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        @{
-                            var facilities = new[]
-                            {
-                        new { Name = "Swimming Pool", Image = "/images/swimmingpool.jpg", Desc = "A refreshing pool for leisure and fitness.", Time = "9:30 AM - 4:30 PM" },
-                        new { Name = "Playground & Park", Image = "/images/playground.jpg", Desc = "A fun and safe area for children.",Time = "8:00 AM - 6:00 PM" },
-                        new { Name = "Basketball Court", Image = "/images/court.jpg", Desc = "A court for games and practice.", Time = "7:00 AM - 9:00 PM" },
-                        new { Name = "Fitness Gym", Image = "/images/gym.jpg", Desc = "A space for exercise and fitness.", Time = "6:00 AM - 10:00 PM" },
-                        };
-                        }
-
-                        @foreach (var f in facilities)
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h2 class="text-4xl font-extrabold text-center text-blue-900 mb-8">Community Facilities</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+                        @foreach (var f in Model)
                         {
-                            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                                <img src="@f.Image" alt="@f.Name" class="w-full h-48 object-cover">
-                                <div class="p-4 text-center">
-                                    <h2 class="text-xl font-semibold text-blue-800">@f.Name</h2>
-                                    <p class="text-gray-600">@f.Desc</p>
+                            <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden">
+                                <img src="@f.Image" alt="@f.Name" class="w-full h-52 object-cover rounded-t-2xl">
+                                <div class="p-5 text-center">
+                                    <h3 class="text-2xl font-semibold text-blue-800 mb-2">@f.Name</h3>
+                                    <p class="text-gray-600 mb-3">@f.Description</p>
+                                    <p class="text-sm text-blue-500 font-medium">Available: @f.Time</p>
                                 </div>
-                                <div class="p-4 flex justify-center">
-                                    <button class="px-6 py-2 border rounded-lg text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white"
+                                <div class="px-5 pb-5 flex justify-center">
+                                    <button class="w-full py-2 rounded-lg text-blue-600 border border-blue-500 hover:bg-blue-600 hover:text-white font-semibold transition"
                                             data-bs-toggle="modal"
                                             data-bs-target="#facilityModal"
                                             data-facility="@f.Name"
                                             data-image="@f.Image"
-                                            data-description="@f.Desc"
+                                            data-description="@f.Description"
                                             data-time="@f.Time">
-                                        View
+                                        View Details
                                     </button>
                                 </div>
                             </div>

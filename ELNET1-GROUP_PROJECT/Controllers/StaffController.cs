@@ -719,6 +719,23 @@ public class StaffController : Controller
         return Ok(new { message = $"The Facility Reservation has been {request.Status.ToLower()}." });
     }
 
+    [HttpGet("by-status/{status}")]
+    public IActionResult GetFacilitiesByStatus(string status)
+    {
+        var facilities = _context.Facility
+            .Where(f => f.Status == status)
+            .Select(f => new {
+                f.FacilityId,
+                f.FacilityName,
+                f.Description,
+                f.Image,
+                f.AvailableTime
+            }).ToList();
+
+        return Ok(facilities);
+    }
+
+
     [Route("requests/services")]
     public IActionResult ServiceRequests()
     {
