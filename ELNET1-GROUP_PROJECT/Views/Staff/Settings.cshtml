@@ -257,7 +257,6 @@
             nameElement.textContent = `${user.firstname} ${user.lastname}`;
             nameElement.classList.remove('opacity-0');
             nameElement.classList.add('opacity-100', 'transition-opacity', 'duration-300');
-            console.log(user.profile);
 
             // Handle profile image
             const profilePreview = document.getElementById('profilePreview');
@@ -538,7 +537,7 @@
                 initializeProfile();
                 document.getElementById('confirmCrop').classList.add('hidden');
                 document.getElementById('cancelCrop').classList.add('hidden');
-
+                setTimeout(() => location.reload(), 800);
             } else {
                 showToast('Failed to update profile image.', 'error');
             }

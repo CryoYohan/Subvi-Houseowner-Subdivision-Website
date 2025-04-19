@@ -556,7 +556,7 @@
     });
 
     // Save the cropped image
-    async function saveProfileImage() {
+        async function saveProfileImage() {
         if (!cropper) return; // Ensure cropper exists before proceeding
 
         const canvas = cropper.getCroppedCanvas({
@@ -579,12 +579,17 @@
             const result = await response.json();
             if (response.ok) {
                 // Update profile image UI
-                document.getElementById('profileImageContainer').innerHTML = `<img src="${result.path}" class="w-full h-full object-contain" style="border-radius: 50%;">`;
+                document.getElementById('profileImageContainer').innerHTML = `
+                    <img src="${result.path}" class="w-full h-full object-contain" style="border-radius: 50%;">
+                `;
                 showToast('Profile image updated successfully.', 'success');
+
                 resetModal();
                 initializeProfile();
                 document.getElementById('confirmCrop').classList.add('hidden');
                 document.getElementById('cancelCrop').classList.add('hidden');
+
+                setTimeout(() => location.reload(), 800);
 
             } else {
                 showToast('Failed to update profile image.', 'error');

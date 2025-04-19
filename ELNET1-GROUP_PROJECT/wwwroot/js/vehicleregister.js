@@ -305,13 +305,13 @@ function deleteVehicleConfirmed() {
 
     // Proceed with the deletion and show a success message after deletion
     $.ajax({
-        url: `/staff/VehicleRegistration/${deleteId}`,
-        type: 'DELETE',
+        url: `/staff/vehicleregistration/${deleteId}/deactivate`,
+        type: 'PUT',
         success: function () {
             Swal.fire({
                 icon: 'success',
-                title: 'Deleted!',
-                text: 'The vehicle has been deleted successfully.',
+                title: 'Deactivated Success!',
+                text: 'The vehicle has been deactivated successfully.',
                 confirmButtonText: 'OK'
             }).then(() => {
                 location.reload(); // Reload page after deletion

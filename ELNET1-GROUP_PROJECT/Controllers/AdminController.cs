@@ -12,6 +12,7 @@ using System.Globalization;
 using ELNET1_GROUP_PROJECT.SignalR;
 using Microsoft.AspNetCore.SignalR;
 using DocumentFormat.OpenXml.Spreadsheet;
+using System.Dynamic;
 
 public class AdminController : Controller
 {
@@ -2109,8 +2110,26 @@ public class AdminController : Controller
         return View();
     }
 
+    //For fetching choices data for vehicle report
+    public IActionResult GetVehicleFilterOptions()
+    {
+        var types = _context.Vehicle_Registration
+            .Select(v => v.Type)
+            .Distinct()
+            .OrderBy(t => t)
+            .ToList();
+
+        var carbrands = _context.Vehicle_Registration
+            .Select(v => v.CarBrand)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToList();
+
+        return Json(new { types, carbrands });
+    }
+
     [HttpPost]
-    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string color)
+    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string carbrand)
     {
         var result = new List<object>();
 
@@ -2124,25 +2143,31 @@ public class AdminController : Controller
                         (vehicle, user) => new { vehicle, user })
                     .AsQueryable();
 
-                if (!string.IsNullOrEmpty(vehicleType))
+                if (!string.IsNullOrEmpty(vehicleType) && vehicleType != "All")
                 {
                     vehicleQuery = vehicleQuery.Where(v => v.vehicle.Type == vehicleType);
                 }
 
-                if (!string.IsNullOrEmpty(color))
+                if (!string.IsNullOrEmpty(carbrand) && carbrand != "All")
                 {
-                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.Color == color);
+                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.CarBrand == carbrand);
+                }
+
+                if (!string.IsNullOrEmpty(status) && status != "All")
+                {
+                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.Status == status);
                 }
 
                 result = vehicleQuery.Select(v => new
                 {
                     v.vehicle.VehicleId,
                     v.vehicle.PlateNumber,
+                    v.vehicle.CarBrand,
                     v.vehicle.Type,
                     v.vehicle.Color,
                     v.vehicle.Status,
                     OwnerName = char.ToUpper(v.user.Firstname[0]) + v.user.Firstname.Substring(1).ToLower() + " " +
-                            char.ToUpper(v.user.Lastname[0]) + v.user.Lastname.Substring(1).ToLower()
+                                char.ToUpper(v.user.Lastname[0]) + v.user.Lastname.Substring(1).ToLower()
                 }).ToList<object>();
                 break;
 
@@ -2153,7 +2178,7 @@ public class AdminController : Controller
                 var startDateOnly = DateOnly.FromDateTime(startR);
                 var endDateOnly = DateOnly.FromDateTime(endR);
 
-                var reservations = _context.Reservations
+                var reservationsQuery = _context.Reservations
                     .Join(_context.Facility,
                         res => res.FacilityId,
                         fac => fac.FacilityId,
@@ -2163,9 +2188,15 @@ public class AdminController : Controller
                         user => user.Id,
                         (combined, user) => new { combined.res, combined.fac, user })
                     .Where(x =>
-                        x.res.Status == status &&
                         x.res.SchedDate >= startDateOnly &&
-                        x.res.SchedDate <= endDateOnly)
+                        x.res.SchedDate <= endDateOnly);
+
+                if (status != "All")
+                {
+                    reservationsQuery = reservationsQuery.Where(x => x.res.Status == status);
+                }
+
+                var reservations = reservationsQuery
                     .Select(x => new
                     {
                         x.res.ReservationId,
@@ -2181,33 +2212,56 @@ public class AdminController : Controller
                 result = reservations;
                 break;
 
-
             case "SERVICE_REQUEST":
                 DateTime.TryParse(startDate, out var startS);
                 DateTime.TryParse(endDate, out var endS);
                 string startDateStr = startS.ToString("yyyy-MM-dd HH:mm:ss");
                 string endDateStr = endS.ToString("yyyy-MM-dd HH:mm:ss");
 
-                var services = _context.Service_Request
+                var serviceQuery = _context.Service_Request
                     .Join(_context.User_Accounts,
                         request => request.UserId,
                         user => user.Id,
                         (request, user) => new { request, user })
                     .Where(x =>
-                        x.request.Status == status &&
                         string.Compare(x.request.DateSubmitted, startDateStr) >= 0 &&
-                        string.Compare(x.request.DateSubmitted, endDateStr) <= 0)
-                    .Select(x => new
+                        string.Compare(x.request.DateSubmitted, endDateStr) <= 0);
+
+                if (status != "All")
+                {
+                    serviceQuery = serviceQuery.Where(x => x.request.Status == status);
+                }
+
+                var services = serviceQuery
+                    .AsEnumerable()
+                    .Select(x =>
                     {
-                        x.request.ServiceRequestId,
-                        x.request.ReqType,
-                        x.request.Description,
-                        x.request.Status,
-                        x.request.DateSubmitted,
-                        RequestedBy =
+                        var obj = new ExpandoObject() as IDictionary<string, object>;
+
+                        obj["ServiceRequestId"] = x.request.ServiceRequestId;
+                        obj["ReqType"] = x.request.ReqType;
+                        obj["Description"] = x.request.Description;
+                        obj["Status"] = x.request.Status;
+
+                        if (DateTime.TryParse(x.request.DateSubmitted, out var submittedDate))
+                            obj["DateSubmitted"] = submittedDate.ToString("MM/dd/yyyy hh:mm tt");
+
+                        if (x.request.Status == "Rejected" && !string.IsNullOrEmpty(x.request.RejectedReason))
+                            obj["RejectedReason"] = x.request.RejectedReason;
+
+                        if ((x.request.Status == "Scheduled" || x.request.Status == "Completed" || x.request.Status == "Cancelled")
+                            && x.request.ScheduleDate.HasValue)
+                        {
+                            obj["ScheduleDate"] = x.request.ScheduleDate.Value.ToString("MM/dd/yyyy hh:mm tt");
+                        }
+
+                        obj["RequestedBy"] =
                             char.ToUpper(x.user.Firstname[0]) + x.user.Firstname.Substring(1).ToLower() + " " +
-                            char.ToUpper(x.user.Lastname[0]) + x.user.Lastname.Substring(1).ToLower()
-                    }).ToList<object>();
+                            char.ToUpper(x.user.Lastname[0]) + x.user.Lastname.Substring(1).ToLower();
+
+                        return obj;
+                    })
+                    .ToList<object>();
 
                 result = services;
                 break;
@@ -2216,22 +2270,27 @@ public class AdminController : Controller
                 DateTime.TryParse(startDate, out var startV);
                 DateTime.TryParse(endDate, out var endV);
 
-                var passes = (from pass in _context.Visitor_Pass
-                              join user in _context.User_Accounts on pass.UserId equals user.Id
-                              where pass.Status == status && pass.DateTime >= startV && pass.DateTime <= endV
-                              select new
-                              {
-                                  pass.VisitorId,
-                                  pass.VisitorName,
-                                  pass.DateTime,
-                                  pass.Status,
-                                  pass.Relationship,
-                                  HomeownerName = Capitalize(user.Firstname) + " " + Capitalize(user.Lastname)
-                              }).ToList<object>();
+                var visitorQuery = from pass in _context.Visitor_Pass
+                                   join user in _context.User_Accounts on pass.UserId equals user.Id
+                                   where pass.DateTime >= startV && pass.DateTime <= endV
+                                   select new
+                                   {
+                                       pass.VisitorId,
+                                       pass.VisitorName,
+                                       pass.DateTime,
+                                       pass.Status,
+                                       pass.Relationship,
+                                       HomeownerName = Capitalize(user.Firstname) + " " + Capitalize(user.Lastname)
+                                   };
 
+                if (status != "All")
+                {
+                    visitorQuery = visitorQuery.Where(v => v.Status == status);
+                }
+
+                var passes = visitorQuery.ToList<object>();
                 result = passes;
                 break;
-
         }
 
         return Json(result);

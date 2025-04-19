@@ -4,6 +4,7 @@ using ELNET1_GROUP_PROJECT.Data;
 using ELNET1_GROUP_PROJECT.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Dynamic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
@@ -596,9 +597,9 @@ public class StaffController : Controller
         return Ok(vehicle);
     }
 
-    // DELETE: staff/VehicleRegistration/5
-    [HttpDelete("VehicleRegistration/{id}")]
-    public async Task<IActionResult> DeleteVehicle(int id)
+    // PUT: staff/VehicleRegistration/5/deactivate
+    [HttpPut("vehicleregistration/{id}/deactivate")]
+    public async Task<IActionResult> DeactivateVehicle(int id)
     {
         // Fetch the vehicle first to get the necessary details (e.g., UserId)
         var vehicle = _context.Vehicle_Registration.FirstOrDefault(v => v.VehicleId == id);
@@ -614,18 +615,19 @@ public class StaffController : Controller
         // Mask the plate number (show only the last 4 characters)
         string maskedPlateNumber = MaskPlateNumber(plateNumber);
 
-        // Mark the vehicle as deleted in the database
-        _context.Vehicle_Registration.Remove(vehicle);
+        // Set the vehicle status to Inactive instead of deleting
+        vehicle.Status = "Inactive";
+        _context.Vehicle_Registration.Update(vehicle);
         await _context.SaveChangesAsync();
 
-        // Create a notification for the homeowner about the vehicle deletion
+        // Create a notification for the homeowner about the vehicle deactivation
         var notification = new Notification
         {
             UserId = userId,  // Send the notification to the vehicle owner
             TargetRole = "Homeowner",
             Type = "Vehicle",
-            Title = "Vehicle Registration Deleted",
-            Message = $"Your vehicle (Plate: {maskedPlateNumber}) registration has been deleted as of today {DateTime.Now.ToString("MM/dd/yyyy")}.",
+            Title = "Vehicle Registration Deactivated",
+            Message = $"Your vehicle Plate: {maskedPlateNumber} registration has been marked as inactive as of today {DateTime.Now:MM/dd/yyyy}.",
             IsRead = false,
             DateCreated = DateTime.Now
         };
@@ -637,7 +639,7 @@ public class StaffController : Controller
         // Send real-time notification to the user
         await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
 
-        return Ok(new { success = true, message = "Vehicle deleted successfully." });
+        return Ok(new { success = true, message = "Vehicle marked as inactive successfully." });
     }
 
     // Helper method to mask plate number
@@ -1698,9 +1700,9 @@ public class StaffController : Controller
         {
             if (DateTime.TryParse(poll.EndDate, out DateTime endDate))
             {
-                if (endDate < now && poll.Status == true) // if active but expired
+                if (endDate.Date > DateTime.Today && poll.Status == true)
                 {
-                    poll.Status = false; // set to inactive
+                    poll.Status = false;
                     pollsWithStatusChanged.Add(poll);
                 }
             }
@@ -1712,7 +1714,7 @@ public class StaffController : Controller
             var formattedTitles = string.Join("\n", titlesList);
             string message = $"You can check and review it. The following poll(s) date is done:\n\n{formattedTitles}";
 
-            // === Staff notification ===
+            // Staff notification
             var staffNotification = new Notification
             {
                 Title = "Poll Ended",
@@ -1726,7 +1728,7 @@ public class StaffController : Controller
             };
             _context.Notifications.Add(staffNotification);
 
-            // === Admin notification ===
+            // Admin notification 
             var adminNotification = new Notification
             {
                 Title = "Poll Ended",
@@ -1739,7 +1741,7 @@ public class StaffController : Controller
             };
             _context.Notifications.Add(adminNotification);
 
-            // === Homeowners ===
+            // Homeowners 
             var homeowners = await _context.User_Accounts
                 .Where(u => u.Role == "Homeowner")
                 .ToListAsync();
@@ -2506,7 +2508,7 @@ public class StaffController : Controller
             .Select(r => new
             {
                 // Convert JSType.Date to DateTime and format as YYYY-MM
-                Month = DateTime.Parse(r.SchedDate.ToString()).ToString("yyyy-MM")
+                Month = DateTime.Parse(r.SchedDate.ToString()).ToString("MM/dd/yyyy")
             })
             .GroupBy(r => r.Month)
             .OrderBy(g => g.Key)
@@ -2522,7 +2524,7 @@ public class StaffController : Controller
             .AsEnumerable() // Forces client-side evaluation
             .Select(p => new
             {
-                Month = DateTime.ParseExact(p.DatePaid, "yyyy-MM-dd", CultureInfo.InvariantCulture).ToString("yyyy-MM"),
+                Month = DateTime.ParseExact(p.DatePaid, "yyyy-MM-dd", CultureInfo.InvariantCulture).ToString("MM/dd/yyyy"),
                 AmountPaid = p.AmountPaid
             })
             .GroupBy(p => p.Month)
@@ -2536,7 +2538,7 @@ public class StaffController : Controller
 
         // Feedback Ratings Breakdown
         var feedbackRatings = _context.Feedback
-            .Where(f => f.FeedbackType == "Complement") // Filter by Type = 'Complement'
+            .Where(f => f.FeedbackType == "Compliment") // Filter by Type = 'Complement'
             .GroupBy(f => f.Rating) // Group by Rating
             .Select(g => new { Rating = g.Key, Count = g.Count() }) // Select Rating and Count
             .ToList();
@@ -2554,9 +2556,29 @@ public class StaffController : Controller
         return View();
     }
 
+    //Fetch Data Choices for vehicle type and brand
+    [HttpGet("getvehiclefilteroptions")]
+    public IActionResult GetVehicleFilterOptions()
+    {
+        var types = _context.Vehicle_Registration
+            .Select(v => v.Type)
+            .Distinct()
+            .OrderBy(t => t)
+            .ToList();
+
+        var carbrands = _context.Vehicle_Registration
+            .Select(v => v.CarBrand)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToList();
+
+        return Json(new { types, carbrands });
+    }
+
+
     //For fetching data for report
     [HttpPost("GetReportData")]
-    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string color)
+    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string carbrand)
     {
         var result = new List<object>();
 
@@ -2570,25 +2592,31 @@ public class StaffController : Controller
                         (vehicle, user) => new { vehicle, user })
                     .AsQueryable();
 
-                if (!string.IsNullOrEmpty(vehicleType))
+                if (!string.IsNullOrEmpty(vehicleType) && vehicleType != "All")
                 {
                     vehicleQuery = vehicleQuery.Where(v => v.vehicle.Type == vehicleType);
                 }
 
-                if (!string.IsNullOrEmpty(color))
+                if (!string.IsNullOrEmpty(carbrand) && carbrand != "All")
                 {
-                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.Color == color);
+                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.CarBrand == carbrand);
+                }
+
+                if (!string.IsNullOrEmpty(status) && status != "All")
+                {
+                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.Status == status);
                 }
 
                 result = vehicleQuery.Select(v => new
                 {
                     v.vehicle.VehicleId,
                     v.vehicle.PlateNumber,
+                    v.vehicle.CarBrand,
                     v.vehicle.Type,
                     v.vehicle.Color,
                     v.vehicle.Status,
                     OwnerName = char.ToUpper(v.user.Firstname[0]) + v.user.Firstname.Substring(1).ToLower() + " " +
-                            char.ToUpper(v.user.Lastname[0]) + v.user.Lastname.Substring(1).ToLower()
+                                char.ToUpper(v.user.Lastname[0]) + v.user.Lastname.Substring(1).ToLower()
                 }).ToList<object>();
                 break;
 
@@ -2599,7 +2627,7 @@ public class StaffController : Controller
                 var startDateOnly = DateOnly.FromDateTime(startR);
                 var endDateOnly = DateOnly.FromDateTime(endR);
 
-                var reservations = _context.Reservations
+                var reservationsQuery = _context.Reservations
                     .Join(_context.Facility,
                         res => res.FacilityId,
                         fac => fac.FacilityId,
@@ -2609,9 +2637,15 @@ public class StaffController : Controller
                         user => user.Id,
                         (combined, user) => new { combined.res, combined.fac, user })
                     .Where(x =>
-                        x.res.Status == status &&
                         x.res.SchedDate >= startDateOnly &&
-                        x.res.SchedDate <= endDateOnly)
+                        x.res.SchedDate <= endDateOnly);
+
+                if (status != "All")
+                {
+                    reservationsQuery = reservationsQuery.Where(x => x.res.Status == status);
+                }
+
+                var reservations = reservationsQuery
                     .Select(x => new
                     {
                         x.res.ReservationId,
@@ -2627,33 +2661,56 @@ public class StaffController : Controller
                 result = reservations;
                 break;
 
-
             case "SERVICE_REQUEST":
                 DateTime.TryParse(startDate, out var startS);
                 DateTime.TryParse(endDate, out var endS);
                 string startDateStr = startS.ToString("yyyy-MM-dd HH:mm:ss");
                 string endDateStr = endS.ToString("yyyy-MM-dd HH:mm:ss");
 
-                var services = _context.Service_Request
+                var serviceQuery = _context.Service_Request
                     .Join(_context.User_Accounts,
                         request => request.UserId,
                         user => user.Id,
                         (request, user) => new { request, user })
                     .Where(x =>
-                        x.request.Status == status &&
                         string.Compare(x.request.DateSubmitted, startDateStr) >= 0 &&
-                        string.Compare(x.request.DateSubmitted, endDateStr) <= 0)
-                    .Select(x => new
+                        string.Compare(x.request.DateSubmitted, endDateStr) <= 0);
+
+                if (status != "All")
+                {
+                    serviceQuery = serviceQuery.Where(x => x.request.Status == status);
+                }
+
+                var services = serviceQuery
+                    .AsEnumerable()
+                    .Select(x =>
                     {
-                        x.request.ServiceRequestId,
-                        x.request.ReqType,
-                        x.request.Description,
-                        x.request.Status,
-                        x.request.DateSubmitted,
-                        RequestedBy =
+                        var obj = new ExpandoObject() as IDictionary<string, object>;
+
+                        obj["ServiceRequestId"] = x.request.ServiceRequestId;
+                        obj["ReqType"] = x.request.ReqType;
+                        obj["Description"] = x.request.Description;
+                        obj["Status"] = x.request.Status;
+
+                        if (DateTime.TryParse(x.request.DateSubmitted, out var submittedDate))
+                            obj["DateSubmitted"] = submittedDate.ToString("MM/dd/yyyy hh:mm tt");
+
+                        if (x.request.Status == "Rejected" && !string.IsNullOrEmpty(x.request.RejectedReason))
+                            obj["RejectedReason"] = x.request.RejectedReason;
+
+                        if ((x.request.Status == "Scheduled" || x.request.Status == "Completed" || x.request.Status == "Cancelled")
+                            && x.request.ScheduleDate.HasValue)
+                        {
+                            obj["ScheduleDate"] = x.request.ScheduleDate.Value.ToString("MM/dd/yyyy hh:mm tt");
+                        }
+
+                        obj["RequestedBy"] =
                             char.ToUpper(x.user.Firstname[0]) + x.user.Firstname.Substring(1).ToLower() + " " +
-                            char.ToUpper(x.user.Lastname[0]) + x.user.Lastname.Substring(1).ToLower()
-                    }).ToList<object>();
+                            char.ToUpper(x.user.Lastname[0]) + x.user.Lastname.Substring(1).ToLower();
+
+                        return obj;
+                    })
+                    .ToList<object>();
 
                 result = services;
                 break;
@@ -2662,22 +2719,27 @@ public class StaffController : Controller
                 DateTime.TryParse(startDate, out var startV);
                 DateTime.TryParse(endDate, out var endV);
 
-                var passes = (from pass in _context.Visitor_Pass
-                              join user in _context.User_Accounts on pass.UserId equals user.Id
-                              where pass.Status == status && pass.DateTime >= startV && pass.DateTime <= endV
-                              select new
-                              {
-                                  pass.VisitorId,
-                                  pass.VisitorName,
-                                  pass.DateTime,
-                                  pass.Status,
-                                  pass.Relationship,
-                                  HomeownerName = Capitalize(user.Firstname) + " " + Capitalize(user.Lastname)
-                              }).ToList<object>();
+                var visitorQuery = from pass in _context.Visitor_Pass
+                                   join user in _context.User_Accounts on pass.UserId equals user.Id
+                                   where pass.DateTime >= startV && pass.DateTime <= endV
+                                   select new
+                                   {
+                                       pass.VisitorId,
+                                       pass.VisitorName,
+                                       pass.DateTime,
+                                       pass.Status,
+                                       pass.Relationship,
+                                       HomeownerName = Capitalize(user.Firstname) + " " + Capitalize(user.Lastname)
+                                   };
 
+                if (status != "All")
+                {
+                    visitorQuery = visitorQuery.Where(v => v.Status == status);
+                }
+
+                var passes = visitorQuery.ToList<object>();
                 result = passes;
                 break;
-
         }
 
         return Json(result);

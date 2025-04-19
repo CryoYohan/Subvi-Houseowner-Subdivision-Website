@@ -251,11 +251,8 @@
             nameElement.classList.add('opacity-100', 'transition-opacity', 'duration-300');
             const profilePreview = document.getElementById('profilePreview');
             const defaultIcon = document.getElementById('defaultIcon');
-            profilePreview.style.display = 'none';
-            defaultIcon.style.display = 'block';
 
             // Handle profile image
-            
             if (user.profile) {
                 profilePreview.src = `${user.profile}`;
                 profilePreview.style.display = 'block';
@@ -532,7 +529,7 @@
                 initializeProfile();
                 document.getElementById('confirmCrop').classList.add('hidden');
                 document.getElementById('cancelCrop').classList.add('hidden');
-
+                setTimeout(() => location.reload(), 800);
             } else {
                 showToast('Failed to update profile image.', 'error');
             }
