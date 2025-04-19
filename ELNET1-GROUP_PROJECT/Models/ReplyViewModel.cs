@@ -9,6 +9,7 @@ namespace ELNET1_GROUP_PROJECT.Models
         public string Content { get; set; }
         public DateTime Date { get; set; }
         public int UserId { get; set; }
+        public string? Profile { get; set; }
         public string FullName { get; set; }
         public string Firstname { get; set; }
         public string Lastname { get; set; }

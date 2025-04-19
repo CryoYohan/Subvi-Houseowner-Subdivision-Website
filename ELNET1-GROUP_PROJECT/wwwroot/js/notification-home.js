@@ -40,16 +40,24 @@ async function loadNotifications() {
     if (notifications.length > 0) {
         notifications.forEach(n => {
             const hasLink = n.link && n.link.trim() !== "";
+            const isUnread = !n.isRead;
+
             const notifHtml = `
-                <div class="dropdown-item notif-entry ${!n.isRead ? 'bg-blue-100 font-semibold' : ''} 
-                    hover:bg-blue-50 transition-colors rounded-md p-2 mb-1" 
+                <div class="dropdown-item notif-entry ${isUnread ? 'bg-blue-50 border-l-4 border-blue-600 shadow-sm' : ''} 
+                    hover:bg-blue-100 transition-colors rounded-md p-2 mb-1" 
                     data-id="${n.notificationId}" data-link="${n.link || ''}" style="cursor: pointer;">
-        
-                    <div class="text-sm text-gray-900 font-medium">${n.title}</div>
+                    
+                    <div class="flex justify-between items-start">
+                        <div class="text-sm text-gray-900 ${isUnread ? 'font-semibold' : 'font-medium'}">
+                            ${n.title}
+                        </div>
+                        ${isUnread ? '<span class="ms-2 mt-1 inline-block w-2 h-2 bg-blue-600 rounded-full"></span>' : ''}
+                    </div>
+
                     <div class="text-sm text-gray-700">
                         ${n.message.length > 65 ? n.message.slice(0, 65) + '...' : n.message}
                     </div>
-        
+
                     <div class="d-flex justify-content-between align-items-center mt-1 text-xs text-gray-500">
                         <span>${new Date(n.dateCreated).toLocaleString()}</span>
                         ${hasLink ? '<span class="text-blue-600 hover:underline">View</span>' : ''}

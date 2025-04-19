@@ -36,18 +36,25 @@ async function loadNotifications() {
     }
 
     notifListContainer.innerHTML = "";
-    
+
     if (notifications.length > 0) {
         notifications.forEach(n => {
             const hasLink = n.link && n.link.trim() !== "";
+            const isUnread = !n.isRead;
             const notifHtml = `
-                <div class="dropdown-item notif-entry ${!n.isRead ? 'fw-bold bg-blue-200' : ''}" 
+                <div class="dropdown-item notif-entry ${isUnread ? 'bg-blue-50 border-start border-3 border-primary shadow-sm' : ''}" 
                     data-id="${n.notificationId}" data-link="${n.link || ''}" style="cursor: pointer;">
-                    <div><strong>${n.title}</strong></div>
-                    <div><small>${n.message}</small></div>
+                    
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <strong class="text-dark">${n.title}</strong>
+                        ${isUnread ? '<span class="badge bg-primary rounded-circle p-1 ms-2" style="width: 10px; height: 10px;"></span>' : ''}
+                    </div>
+                    
+                    <div><small class="text-secondary">${n.message}</small></div>
+                    
                     <div class="d-flex justify-content-between align-items-center mt-1">
                         <small class="text-muted">${new Date(n.dateCreated).toLocaleString()}</small>
-                        <span class="text-primary small">${hasLink ? 'View' : ''}</span>
+                        ${hasLink ? '<span class="text-primary small">View</span>' : ''}
                     </div>
                 </div>
             `;

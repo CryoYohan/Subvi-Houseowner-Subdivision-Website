@@ -74,7 +74,7 @@
                     @Model.Post.Firstname[0]@Model.Post.Lastname[0]
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold text-slate-800 mb-2">@Model.Post.Title</h1>
+                    <h1 class="text-3xl font-bold text-slate-800 mb-2">@Model.Post.Title @Model.Post.Profile</h1>
                     <p class="text-slate-500 text-sm">
                         Posted by <span class="font-medium">@Model.Post.Firstname @Model.Post.Lastname</span>
                         · @Model.Post.DatePosted.ToString("MMM dd, yyyy 'at' h:mm tt")
@@ -105,13 +105,21 @@
             }
             else
             {
-                @foreach (var reply in Model.Replies)
+                @foreach (var reply in Model.Replies.OrderByDescending(r => r.Date))
                 {
                     <div class="reply">
                         <div class="flex items-start gap-3 mb-3">
-                            <div class="user-avatar text-sm">
-                                @reply.Firstname[0]@reply.Lastname[0]
-                            </div>
+                            @if (string.IsNullOrEmpty(reply.Profile))
+                            {
+                                <div class="user-avatar bg-blue-100 text-blue-700 font-semibold rounded-full w-10 h-10 flex items-center justify-center text-sm">
+                                    @reply.Firstname[0]@reply.Lastname[0]
+                                </div>
+                            }
+                            else
+                            {
+                                <img src="@reply.Profile" alt="Profile" class="w-10 h-10 rounded-full object-cover" />
+                            }
+
                             <div>
                                 <div class="font-medium text-slate-800">@reply.FullName</div>
                                 <div class="text-sm text-slate-500">

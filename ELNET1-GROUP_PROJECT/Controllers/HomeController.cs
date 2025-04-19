@@ -12,6 +12,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Net.Http;
 using Microsoft.AspNetCore.SignalR;
 using ELNET1_GROUP_PROJECT.SignalR;
+using Azure.Core;
 
 namespace ELNET1_GROUP_PROJECT.Controllers
 {
@@ -144,10 +145,11 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             RefreshJwtCookies();
             return View();
         }
-        // There is a seperation controller api for this calendar
+        // There is a seperation controller api for this calendar named CalendarController
 
         public IActionResult Facilities()
         {
+            RefreshJwtCookies();
             var facilities = _context.Facility
                 .Where(f => f.Status == "Active")
                 .Select(f => new
@@ -750,6 +752,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
                 var notification = new Notification
                 {
+                    UserId = null,
                     TargetRole = "Staff",
                     Title = $"New {request.ServiceName} Request",
                     Message = $"There is a new service request submission made by {personName}. Please review it.",
@@ -900,17 +903,50 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
             try
             {
+                // Get full name of the user
+                var user = await _context.User_Accounts.FindAsync(userId);
+                if (user == null)
+                    return BadRequest("User not found.");
+
+                string Capitalize(string name) => string.IsNullOrEmpty(name) ? "" : char.ToUpper(name[0]) + name.Substring(1).ToLower();
+                string personname = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
+
                 var newPost = new Forum
                 {
                     Title = char.ToUpper(title[0]) + title.Substring(1),
                     Content = content,
                     DatePosted = DateTime.Now,
                     UserId = userId,
-                    Hashtag = hashtag 
+                    Hashtag = hashtag
                 };
 
                 _context.Forum.Add(newPost);
                 await _context.SaveChangesAsync();
+
+                // Add notification for admin
+                var notification = new Notification
+                {
+                    UserId = null,
+                    TargetRole = "Admin",
+                    Title = "Post Like",
+                    Message = $"There is a new post created by {personname} with Title {title}.",
+                    DateCreated = DateTime.UtcNow,
+                    IsRead = false,
+                    Type = "Post Creation",
+                    Link = "/admin/communityforum"
+                };
+
+                _context.Notifications.Add(notification);
+                await _context.SaveChangesAsync();
+
+                // Notify admin via SignalR
+                await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", new
+                {
+                    Title = notification.Title,
+                    Message = notification.Message,
+                    DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                });
+
                 return RedirectToAction("Forums");
             }
             catch (Exception ex)
@@ -954,6 +990,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     // Add notification (ONLY for new likes)
                     var notification = new Notification
                     {
+                        UserId = null,
                         TargetRole = "Admin",
                         Title = "Post Like",
                         Message = $"{personName} liked the post {title}.",
@@ -1085,6 +1122,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             // Create the notification
             var notification = new Notification
             {
+                UserId = null,
                 TargetRole = "Admin",
                 Title = "Post Reply",
                 Message = $"{personName} replied to the post {title}.",
@@ -1199,6 +1237,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
             var notification = new Notification
             {
+                UserId = null,
                 TargetRole = "Staff",
                 Title = notifTitle,
                 Message = notifMessage,

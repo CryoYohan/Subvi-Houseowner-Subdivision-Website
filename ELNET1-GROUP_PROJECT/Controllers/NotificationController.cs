@@ -19,11 +19,22 @@ namespace YourNamespace.Controllers
         }
 
         // Get unread notifications for a specific user
-        [HttpGet("{userId}")]
-        public IActionResult GetAllHomeownerNotifications(int userId)
+        [HttpGet("{userId}/{selectedType?}")]
+        public IActionResult GetAllHomeownerNotifications(int userId, string? selectedType)
         {
-            var notifications = _context.Notifications
-                .Where(n => n.UserId == userId && n.TargetRole == "Homeowner")
+            var query = _context.Notifications
+                .Where(n => n.UserId == userId && n.TargetRole == "Homeowner");
+
+            if (!string.IsNullOrWhiteSpace(selectedType))
+            {
+                query = query.Where(n => n.Type == selectedType);
+            }
+            else
+            {
+                query = query.OrderByDescending(n => n.DateCreated).Take(25);
+            }
+
+            var notifications = query
                 .OrderByDescending(n => n.DateCreated)
                 .ToList();
 
@@ -69,16 +80,21 @@ namespace YourNamespace.Controllers
         }
 
         // Mark a all notification as read
-        [HttpPut("mark-all-read/{selectedType}/{userId}")]
-        public IActionResult MarkAllAsRead(string selectedType, int userId)
+        [HttpPut("mark-all-read/{userId}/{selectedType?}")]
+        public IActionResult MarkAllAsRead(int userId, string? selectedType)
         {
             var unread = _context.Notifications
                 .Where(n => n.UserId == userId &&
-                            n.Type == selectedType &&
-                            (n.IsRead == false || n.IsRead == null))
-                .ToList();
+                            (n.IsRead == false || n.IsRead == null));
 
-            foreach (var n in unread)
+            if (!string.IsNullOrWhiteSpace(selectedType))
+            {
+                unread = unread.Where(n => n.Type == selectedType);
+            }
+
+            var unreadList = unread.ToList();
+
+            foreach (var n in unreadList)
             {
                 n.IsRead = true;
                 n.DateRead = DateTime.UtcNow;
@@ -90,11 +106,22 @@ namespace YourNamespace.Controllers
         }
 
         // Get all staff notifications
-        [HttpGet("staff/{userId}")]
-        public IActionResult GetAllStaffNotifications(int userId)
+        [HttpGet("staff/{userId}/{selectedType?}")]
+        public IActionResult GetAllStaffNotifications(int userId, string? selectedType)
         {
-            var allNotifs = _context.Notifications
-                .Where(n => n.TargetRole == "Staff")
+            var query = _context.Notifications
+                .Where(n => n.TargetRole == "Staff");
+
+            if (!string.IsNullOrWhiteSpace(selectedType))
+            {
+                query = query.Where(n => n.Type == selectedType);
+            }
+            else
+            {
+                query = query.OrderByDescending(n => n.DateCreated).Take(25);
+            }
+
+            var notifications = query
                 .OrderByDescending(n => n.DateCreated)
                 .ToList();
 
@@ -103,7 +130,7 @@ namespace YourNamespace.Controllers
                 .Select(r => r.NotificationId)
                 .ToList();
 
-            var results = allNotifs.Select(n => new
+            var results = notifications.Select(n => new
             {
                 n.NotificationId,
                 n.Title,
@@ -179,22 +206,26 @@ namespace YourNamespace.Controllers
         }
 
         // Mark all as read
-        [HttpPut("staff/mark-all-read/{selectedType}/{userId}")]
-        public async Task<IActionResult> StaffMarkAllAsRead(string selectedType, int userId)
+        [HttpPut("staff/mark-all-read/{userId}/{selectedType?}")]
+        public async Task<IActionResult> StaffMarkAllAsRead(int userId, string? selectedType)
         {
-            // Get all notification IDs for "Staff" and the selected type
-            var allNotifIds = await _context.Notifications
-                .Where(n => n.TargetRole == "Staff" && n.Type == selectedType)
+            var query = _context.Notifications
+                .Where(n => n.TargetRole == "Staff");
+
+            if (!string.IsNullOrWhiteSpace(selectedType))
+            {
+                query = query.Where(n => n.Type == selectedType);
+            }
+
+            var allNotifIds = await query
                 .Select(n => n.NotificationId)
                 .ToListAsync();
 
-            // Get all notification IDs already read by the user
             var alreadyRead = await _context.Notification_Reads
                 .Where(r => r.UserId == userId)
                 .Select(r => r.NotificationId)
                 .ToListAsync();
 
-            // Find only unread ones of the selected type
             var unreadNotifIds = allNotifIds.Except(alreadyRead).ToList();
 
             foreach (var notifId in unreadNotifIds)
@@ -213,11 +244,22 @@ namespace YourNamespace.Controllers
         }
 
         // Get all admin notifications
-        [HttpGet("admin/{userId}")]
-        public IActionResult GetAllAdminNotifications(int userId)
+        [HttpGet("admin/{userId}/{selectedType?}")]
+        public IActionResult GetAllAdminNotifications(int userId, string? selectedType)
         {
-            var allNotifs = _context.Notifications
-                .Where(n => n.TargetRole == "Admin")
+            var query = _context.Notifications
+                .Where(n => n.TargetRole == "Admin");
+
+            if (!string.IsNullOrWhiteSpace(selectedType))
+            {
+                query = query.Where(n => n.Type == selectedType);
+            }
+            else
+            {
+                query = query.OrderByDescending(n => n.DateCreated).Take(25);
+            }
+
+            var notifications = query
                 .OrderByDescending(n => n.DateCreated)
                 .ToList();
 
@@ -226,7 +268,7 @@ namespace YourNamespace.Controllers
                 .Select(r => r.NotificationId)
                 .ToList();
 
-            var results = allNotifs.Select(n => new
+            var results = notifications.Select(n => new
             {
                 n.NotificationId,
                 n.Title,
@@ -302,11 +344,18 @@ namespace YourNamespace.Controllers
         }
 
         // Mark all as read
-        [HttpPut("admin/mark-all-read/${selectedType}/{userId}")]
-        public async Task<IActionResult> AdminMarkAllAsRead(string selectedType, int userId)
+        [HttpPut("admin/mark-all-read/{userId}/{selectedType?}")]
+        public async Task<IActionResult> AdminMarkAllAsRead(int userId, string? selectedType)
         {
-            var allNotifIds = await _context.Notifications
-                .Where(n => n.TargetRole == "Admin" && n.Type == selectedType)
+            var query = _context.Notifications
+                .Where(n => n.TargetRole == "Admin");
+
+            if (!string.IsNullOrWhiteSpace(selectedType))
+            {
+                query = query.Where(n => n.Type == selectedType);
+            }
+
+            var allNotifIds = await query
                 .Select(n => n.NotificationId)
                 .ToListAsync();
 

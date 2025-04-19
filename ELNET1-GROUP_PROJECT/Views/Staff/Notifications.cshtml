@@ -90,8 +90,15 @@
                 </div>
 
                 <!-- Tabs -->
-                <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200">
+                <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 items-center justify-center">
                     <button data-type="Facility Reservation Request"
+                            class="px-4 py-2 rounded-t-lg flex items-center font-medium space-x-2 transition-colors notif-tab active-tab
+                       bg-white border-b-4 border-blue-500 text-blue-600 hover:bg-blue-50">
+                        <i class="fas fa-clipboard-list text-lg"></i>
+                        <span>Facility</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="facility-reservation-count"></span>
+                    </button>
+                    <button data-type="Facility"
                             class="px-4 py-2 rounded-t-lg flex items-center font-medium space-x-2 transition-colors notif-tab active-tab
                        bg-white border-b-4 border-blue-500 text-blue-600 hover:bg-blue-50">
                         <i class="fas fa-building text-lg"></i>
@@ -177,14 +184,16 @@
 
                 <!-- Scrollable Container -->
                 <div style="max-height: 400px; overflow-y: auto;" class="pr-2">
+
+                    <!-- Skeleton Loading -->
+                    <div class="animate-pulse space-y-4" id="loadingSkeleton">
+                        <div class="h-20 bg-gray-100 rounded-lg"></div>
+                        <div class="h-20 bg-gray-100 rounded-lg"></div>
+                        <div class="h-20 bg-gray-100 rounded-lg"></div>
+                    </div>
+
                     <!-- Notification List -->
-                    <div id="notificationList" class="space-y-2">
-                        <!-- Skeleton Loading -->
-                        <div class="animate-pulse space-y-4" id="loadingSkeleton">
-                            <div class="h-20 bg-gray-100 rounded-lg"></div>
-                            <div class="h-20 bg-gray-100 rounded-lg"></div>
-                            <div class="h-20 bg-gray-100 rounded-lg"></div>
-                        </div>
+                    <div id="notificationList" class="space-y-2">    
                     </div>
                 </div>
 
@@ -258,7 +267,7 @@
             tab.classList.remove("text-gray-600", "border-transparent");
 
             selectedType = tab.dataset.type;
-            renderNotifications();
+            loadNotifications();
         });
     });
 
@@ -290,15 +299,17 @@
     searchInput.addEventListener("input", renderNotifications);
 
     // Mark All as Read
-    markAllBtn.addEventListener("click", async () => {
+     markAllBtn.addEventListener("click", async () => {
         try {
-            await fetch(`/api/notifications/staff/mark-all-read/${selectedType}/${currentUserId}`, { method: "PUT" });
+            // Send request to mark all notifications of selected type as read for staff
+            await fetch(`/api/notifications/staff/mark-all-read/${currentUserId}/${selectedType}`, {
+                method: "PUT"
+            });
 
-            // Update all local notifications as read
-            allNotifs = allNotifs.map(n => ({
-                ...n,
-                isRead: n.type === selectedType ? true : n.isRead
-            }));
+            // Update local notifications state
+            allNotifs = allNotifs.map(n =>
+                n.type === selectedType ? { ...n, isRead: true } : n
+            );
 
             renderNotifications();
             updateCountBadges();
@@ -350,13 +361,10 @@
 
             card.onclick = () => handleNotificationClick(n);
             list.appendChild(card);
-
-            if (!n.isRead){
-                markAllBtn.classList.remove('hidden');
-            } else {
-                markAllBtn.classList.add('hidden');
-            }
         });
+
+        const hasUnread = filtered.some(n => !n.isRead);
+        markAllBtn.classList.toggle('hidden', !hasUnread);
 
         // Attach modal content logic
         document.querySelectorAll('.viewNotifBtn').forEach(btn => {
@@ -440,7 +448,7 @@
     async function loadNotifications() {
         try {
             document.getElementById('loadingSkeleton').classList.remove('hidden');
-            const res = await fetch(`/api/notifications/staff/${currentUserId}`);
+            const res = await fetch(`/api/notifications/staff/${currentUserId}/${selectedType}`);
             allNotifs = await res.json();
             updateCountBadges();
             renderNotifications();
@@ -454,7 +462,8 @@
     // Helper Functions
     function getTypeIcon(type) {
         return {
-            'Facility Reservation Request': '<i class="fas fa-building text-blue-500"></i>',
+            'Facility Reservation Request': '<i class="fas fa-clipboard-list text-blue-500"></i>',
+            'Facility': '<i class="fas fa-building text-blue-500"></i>',
             'Service Request': '<i class="fas fa-tools text-green-500"></i>',
             'Feedback Submitted': '<i class="fas fa-comment-dots text-purple-500"></i>',
             'Feedback Message': '<i class="fas fa-envelope text-purple-500"></i>',
@@ -472,6 +481,7 @@
 
             const countMap = {
                 'Facility Reservation Request': 0,
+                'Facility': 0,
                 'Service Request': 0,
                 'Feedback Submitted': 0,
                 'Feedback Message': 0,
@@ -487,7 +497,8 @@
 
             // Update UI
             const badgeMap = {
-                'Facility Reservation Request': document.getElementById('facility-count'),
+                'Facility Reservation Request': document.getElementById('facility-reservation-count'),
+                'Facility': document.getElementById('facility-count'),
                 'Service Request': document.getElementById('service-count'),
                 'Feedback Submitted': document.getElementById('feedback-count'),
                 'Feedback Message': document.getElementById('feedbackmessage-count'),
@@ -530,6 +541,7 @@
         const toast = document.createElement('div');
         toast.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg border-l-4 ${
             notif.type === 'Facility Reservation Request' ? 'border-blue-500 bg-blue-50' :
+            notif.type === 'Facility' ? 'border-blue-500 bg-blue-50' :
             notif.type === 'Service Request' ? 'border-green-500 bg-green-50' :
             notif.type === 'Feedback Submitted' ? 'border-green-500 bg-green-50' :
             notif.type === 'Feedback Message' ? 'border-green-500 bg-green-50' :

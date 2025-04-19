@@ -303,11 +303,12 @@
             nameElement.textContent = `${user.firstname} ${user.lastname}`;
             nameElement.classList.remove('opacity-0');
             nameElement.classList.add('opacity-100', 'transition-opacity', 'duration-300');
-            console.log(user.profile);
 
             // Handle profile image
             const profilePreview = document.getElementById('profilePreview');
             const defaultIcon = document.getElementById('defaultIcon');
+            profilePreview.style.display = 'none';
+
             if (user.profile) {
                 profilePreview.src = `${user.profile}`;
                 profilePreview.style.display = 'block';

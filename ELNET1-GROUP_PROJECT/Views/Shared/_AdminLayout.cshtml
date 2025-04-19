@@ -3,6 +3,7 @@
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var isEventPage = currentController == "admin" && currentAction == "event";
     var isCommunityForumPage = currentController == "admin" && currentAction == "communityforum";
+    var isFacilitiesPage = currentController == "admin" && currentAction == "facilities";
 }
 
 <!-- Views/Shared/_AdminLayout.cshtml -->
@@ -55,6 +56,13 @@
                            asp-controller="admin"
                            asp-action="event">
                             Event
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(isFacilitiesPage ? "active bg-primary text-white rounded" : "")"
+                           asp-controller="admin"
+                           asp-action="facilities">
+                            Facility
                         </a>
                     </li>
                     <li class="dropdown nav-item">

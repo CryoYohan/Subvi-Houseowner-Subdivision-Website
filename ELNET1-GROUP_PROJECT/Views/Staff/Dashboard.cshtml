@@ -9,7 +9,7 @@
 
 <div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
     <!-- Sidebar -->
-    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 flex flex-col">
         <!-- Sidebar Header -->
         <div class="px-2 py-2 border-b border-gray-100">
             <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
@@ -83,43 +83,255 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 p-8 overflow-y-auto fade-in">
+    <div class="flex-1 p-2 overflow-y-auto fade-in">
         <div class="container">
-            <div class="mb-8">
+            <div class="mb-3">
                 <h1 class="text-3xl font-bold text-blue-600">Welcome, Staff!</h1>
                 <p class="text-gray-600">Stay organized and manage your tasks efficiently.</p>
             </div>
 
             <!-- Quick Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-blue-50 p-6 rounded-lg shadow-sm">
-                    <h3 class="text-lg font-semibold text-blue-600">Assigned Tasks</h3>
-                    <p class="text-2xl font-bold">12</p>
+                <div class="bg-blue-50 p-6 rounded-lg shadow-sm text-center">
+                    <h3 class="text-lg font-semibold text-blue-600">Pending Facility Reservation Requests</h3>
+                    <p id="pendingCount" class="text-3xl font-bold">0</p>
                 </div>
-                <div class="bg-blue-50 p-6 rounded-lg shadow-sm">
-                    <h3 class="text-lg font-semibold text-blue-600">Completed Tasks</h3>
-                    <p class="text-2xl font-bold">8</p>
+                <div class="bg-blue-50 p-6 rounded-lg shadow-sm text-center" id="quoteBox">
+                    <h3 class="text-lg font-semibold text-blue-600 mb-2">💡 Motivation for Today</h3>
+                    <p id="quoteText" class="text-gray-700 italic text-lg">Loading quote...</p>
                 </div>
-                <div class="bg-blue-50 p-6 rounded-lg shadow-sm">
-                    <h3 class="text-lg font-semibold text-blue-600">Pending Requests</h3>
-                    <p class="text-2xl font-bold">3</p>
+                <div class="bg-blue-50 p-6 rounded-lg shadow-sm text-center">
+                    <h3 class="text-lg font-semibold text-blue-600">Pending Service Request</h3>
+                    <p id="pendingServiceRequestCount" class="text-3xl font-bold">0</p>
                 </div>
             </div>
 
             <!-- Recent Activity -->
-            <div class="bg-white p-6 rounded-lg shadow-sm">
-                <h3 class="text-xl font-semibold text-blue-600 mb-4">Recent Activity</h3>
-                <ul class="space-y-3">
-                    <li class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
-                        <span class="text-gray-600">Task "Update Records" marked as completed</span>
-                        <span class="text-sm text-gray-500">2 hours ago</span>
-                    </li>
-                    <li class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
-                        <span class="text-gray-600">New task assigned: "Prepare Monthly Report"</span>
-                        <span class="text-sm text-gray-500">5 hours ago</span>
-                    </li>
-                </ul>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left: Announcements -->
+                <div class="bg-white p-2 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-bold text-blue-600 mb-4">Announcements</h3>
+                    <ul id="announcementList" class="space-y-4 overflow-y-auto" style="max-height: 320px">
+                        <!-- Announcement generate in here -->
+                    </ul>
+                </div>
+
+                <!-- Right: Calendar -->
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <!-- Date & Time Header -->
+                    <h2 class="font-bold text-blue-700">Today</h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-blue-700 font-semibold text-lg" id="currentDate">Today</div>
+                        <div class="text-gray-700 text-lg font-semibold" id="currentTime">00:00 AM</div>
+                    </div>
+
+                    <!-- Calendar Navigation -->
+                    <div class="flex items-center justify-between mb-2">
+                        <button onclick="prevMonth()" class="text-blue-900 font-bold hover:text-blue-800">&lt; Prev</button>
+                        <div id="monthYear" class="text-lg font-bold text-center text-gray-800"></div>
+                        <button onclick="nextMonth()" class="text-blue-900 font-bold hover:text-blue-800">Next &gt;</button>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div class="grid grid-cols-7 text-center text-gray-500 font-medium mb-2">
+                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                    </div>
+                    <div id="calendar" class="grid grid-cols-7 gap-1 text-center"></div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    //For displaying quote
+    const motivationalQuotes = [
+        "Success is not the key to happiness. Happiness is the key to success.",
+        "Believe you can and you're halfway there.",
+        "The future depends on what you do today.",
+        "Don’t watch the clock; do what it does. Keep going.",
+        "Push yourself, because no one else is going to do it for you.",
+        "Great things never come from comfort zones.",
+        "Success doesn’t just find you. You have to go out and get it.",
+        "The harder you work for something, the greater you’ll feel when you achieve it.",
+        "Dream it. Wish it. Do it.",
+        "Don’t stop when you’re tired. Stop when you’re done.",
+        "Do something today that your future self will thank you for.",
+        "Little things make big days.",
+        "It’s going to be hard, but hard does not mean impossible.",
+        "Don’t wait for opportunity. Create it.",
+        "Sometimes we’re tested not to show our weaknesses, but to discover our strengths.",
+        "The key to success is to focus on goals, not obstacles.",
+        "Stay positive, work hard, make it happen.",
+        "You are capable of more than you know.",
+        "Your only limit is your mind.",
+        "Doubt kills more dreams than failure ever will."
+    ];
+
+    function displayRandomQuote() {
+        const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
+        const quoteText = document.getElementById("quoteText");
+        quoteText.textContent = motivationalQuotes[randomIndex];
+    }
+
+    //For fetching Pending counting
+    async function fetchReservationPendingCount() {
+        try {
+            const res = await fetch("/staff/facility/reservation/pending-count");
+            const data = await res.json();
+            document.getElementById("pendingCount").textContent = data.count;
+        } catch (err) {
+            console.error("Failed to fetch pending count:", err);
+        }
+    }
+
+    //For fetching Pending Service Request counting
+    async function fetchPendingServiceRequestCount() {
+        try {
+            const response = await fetch('/staff/servicerequest/pending-count');
+            const data = await response.json();
+
+            const countElement = document.getElementById("pendingServiceRequestCount");
+            countElement.textContent = data.count;
+        } catch (error) {
+            console.error("Failed to load pending service request count:", error);
+        }
+    }
+
+    //For generating the announcement list from our database
+    async function loadAnnouncements() {
+        const list = document.getElementById("announcementList");
+        list.innerHTML = `<li class="text-gray-500 italic">Loading...</li>`;
+
+        try {
+            const res = await fetch("/staff/announcement/all");
+            const data = await res.json();
+
+            if (data.length === 0) {
+                list.innerHTML = `<li class="text-gray-500 italic">No announcements found.</li>`;
+                return;
+            }
+
+            list.innerHTML = ""; // Clear previous
+
+            data.forEach(a => {
+                const date = new Date(a.datePosted);
+
+                // Get formatted parts
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = date.toLocaleDateString('en-US', options);
+
+                // Convert to 12-hour time, remove seconds
+                let hours = date.getHours();
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+
+                const formattedTime = `${hours}:${minutes} ${ampm}`;
+                const li = document.createElement("li");
+                li.className = "border-l-4 border-blue-900 pl-4";
+
+                li.innerHTML = `
+                    <h4 class="text-lg font-semibold text-gray-700">${a.title}</h4>
+                    <p class="text-gray-600">${a.description}</p>
+                    <div class="flex justify-between text-sm font-bold text-blue-900 mt-1">
+                        <span>Posted: ${formattedDate} at ${formattedTime}</span>
+                        <span>By Admin</span>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        } catch (err) {
+            list.innerHTML = `<li class="text-red-500 italic">Failed to load announcements.</li>`;
+            console.error(err);
+        }
+    }
+
+    // JavaScript for Calendar and Time
+    const calendar = document.getElementById("calendar");
+    const monthYear = document.getElementById("monthYear");
+    const currentDate = document.getElementById("currentDate");
+    const currentTime = document.getElementById("currentTime");
+
+    let today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+
+    function renderCalendar(month, year) {
+        const date = new Date(year, month);
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        calendar.innerHTML = "";
+        monthYear.textContent = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+        for (let i = 0; i < firstDay; i++) {
+            const empty = document.createElement("div");
+            calendar.appendChild(empty);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const day = document.createElement("div");
+            day.className = "py-2 rounded-lg font-semibold";
+
+            // Highlight today
+            if (
+                d === today.getDate() &&
+                month === today.getMonth() &&
+                year === today.getFullYear()
+            ) {
+                day.classList.add("bg-blue-600", "text-white");
+            } else {
+                day.classList.add("hover:bg-blue-100", "cursor-pointer");
+            }
+
+            day.textContent = d;
+            calendar.appendChild(day);
+        }
+    }
+
+    function updateTime() {
+        const now = new Date();
+        const hour = now.getHours();
+        const minute = now.getMinutes().toString().padStart(2, '0');
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const formattedHour = hour % 12 || 12;
+        currentTime.textContent = `${formattedHour}:${minute} ${ampm}`;
+    }
+
+    function updateDateLabel() {
+        const now = new Date();
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        currentDate.textContent = now.toLocaleDateString(undefined, options);
+    }
+
+    function prevMonth() {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        renderCalendar(currentMonth, currentYear);
+    }
+
+    function nextMonth() {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        renderCalendar(currentMonth, currentYear);
+    }
+
+    updateTime();
+    setInterval(updateTime, 60000); // update every minute
+
+    window.addEventListener("DOMContentLoaded", () => {
+        renderCalendar(currentMonth, currentYear);
+        updateDateLabel();
+        loadAnnouncements();
+        fetchReservationPendingCount();
+        fetchPendingServiceRequestCount();
+        displayRandomQuote();
+    });
+</script>

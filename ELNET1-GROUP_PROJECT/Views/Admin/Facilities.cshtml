@@ -1,0 +1,614 @@
+﻿@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Poll";
+}
+
+<!-- If you are wondering why the name of staff on css because the style is there and no need to create another file for css just to make a unique css file for the admin -->
+<link rel="stylesheet" href="~/css/facility-reservation-staff.css">
+<div class="flex overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-72 p-4 py-6">
+        <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
+        <nav class="flex-1 space-y-3">
+            <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-home w-6"></i>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-calendar-check w-6"></i>
+                <span class="ml-3">Reservations</span>
+            </a>
+            <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-users w-6"></i>
+                <span class="ml-3">Homeowners & Staff Accounts</span>
+            </a>
+            <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-history w-6"></i>
+                <span class="ml-3">Bill Payment History</span>
+            </a>
+            <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-tools w-6"></i>
+                <span class="ml-3">Services</span>
+            </a>
+            <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-bullhorn w-6"></i>
+                <span class="ml-3">Announcements</span>
+            </a>
+            <a asp-controller="admin" asp-action="poll" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-poll w-6"></i>
+                <span class="ml-3">Poll</span>
+            </a>
+            <a asp-controller="admin" asp-action="feedback" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Feedback" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-comment-alt w-6"></i>
+                <span class="ml-3">Feedback</span>
+            </a>
+            <a asp-controller="admin" asp-action="reports" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-chart-line w-6"></i>
+                <span class="ml-3">Reports</span>
+            </a>
+        </nav>
+    </aside>
+    <div class="flex-1 p-3">
+        <div class="flex items-center justify-between mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+            <h1 class="text-2xl font-bold text-blue-900">
+                <i class="fas fa-building text-lg"></i> Facility
+            </h1>
+        </div>
+
+        <div class="flex justify-between items-center mb-4 ">
+            <div class="flex space-x-3 w-3/4">
+                <select id="facilityStatusFilter" class="form-select p-2 border rounded-md w-1/2" onchange="fetchFacilitiesByStatus(this.value)">
+                    <option value="Active" selected>Active</option>
+                    <option value="Inactive">Inactive</option>
+                </select>
+                <input type="text" id="facilitySearch" oninput="searchFacilities()" class="form-control p-2 border rounded-md" placeholder="Search facility...">
+            </div>
+            <button class="btn btn-primary px-4 py-2" data-bs-toggle="modal" onclick="openAddFacilityModal()">Add Facility</button>
+        </div>
+
+        <!-- Facility Cards Container -->
+        <div id="facilityContainer" class="flex flex-wrap justify-start overflow-y-auto pr-2" style="max-height: 470px">
+            <!-- Cards will be injected here -->
+        </div>
+
+        <!-- View Facility Modal -->
+        <div class="modal fade" id="viewFacilityModal" tabindex="-1" aria-labelledby="viewFacilityModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content p-4">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewFacilityModalLabel">Facility Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img id="facilityViewImage" src="" class="w-full h-100 object-cover rounded mb-4">
+                        <h2 id="facilityViewName" class="text-xl font-bold"></h2>
+                        <p id="facilityViewDescription" class="text-gray-600"></p>
+                        <p id="facilityViewAvailableTime" class="text-blue-700"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Facility/Edit Modal -->
+        <div class="modal fade" id="addFacilityModal" tabindex="-1" aria-labelledby="addFacilityModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content p-4">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-bold text-blue-900" id="addFacilityModalLabel">Add New Facility</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body space-y-3">
+                        <div id="facilityError" class="text-red-600 text-center text-sm mt-2 hidden"></div>
+                        <div>
+                            <label class="block font-medium">Facility Name</label>
+                            <input type="text" id="facilityName" class="form-control" required>
+                            <small id="facilityNameError" class="text-danger hidden">Facility name is required.</small>
+                        </div>
+
+                        <div>
+                            <label class="block font-medium">Description</label>
+                            <textarea id="facilityDesc" class="form-control resize-none" rows="3" maxlength="255"></textarea>
+                            <div class="text-sm text-gray-500"><span id="descCount">0</span>/255</div>
+                            <small id="facilityDescError" class="text-danger hidden">Facility description is required.</small>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block font-medium">Start Time</label>
+                                <select id="startTime" class="form-select"></select>
+                            </div>
+                            <div>
+                                <label class="block font-medium">End Time</label>
+                                <select id="endTime" class="form-select"></select>
+                            </div>
+                            <small id="timeError" class="text-danger hidden col-span-2">End time must be after start time.</small>
+                        </div>
+
+                        <div>
+                            <label class="block font-medium">Upload Image (optional)</label>
+                            <input type="file" id="facilityImage" accept="image/*" class="form-control">
+                            <img id="imagePreview" src="#" class="w-full h-full object-cover mt-2 rounded hidden" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal" id="cancelBtn">Cancel</button>
+                        <button id="saveFacilityBtn" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Confirmation Modal -->
+        <div id="AddEditConfirmationModal" class="modal-overlay hidden">
+            <div class="modal-container z-60">
+                <div class="modal-header">
+                    <h3>Are you sure you want to proceed?</h3>
+                </div>
+                <div class="modal-body">
+                    <p>This action will modify the list of facility.</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelBtnModal" class="btn-cancel">Cancel</button>
+                    <button id="confirmBtnModal" class="btn-confirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Confirmation Modal -->
+        <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-sm modal-dialog-centered">
+                <div class="modal-content p-4 text-center">
+                    <h5 class="text-green-600 font-bold mb-2">Facility Saved!</h5>
+                    <button type="button" class="btn btn-success w-full" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activate Confirmation Modal -->
+        <div class="modal fade" id="ActivateconfirmationModal" tabindex="-1" aria-labelledby="ActivateconfirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ActivateconfirmationModalLabel">Are you sure you want to activate this facility?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        This facility will become active.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="confirmActivateBtnModal" class="btn btn-success">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--Inactive Confirmation Modal -->
+        <div class="modal fade" id="DeactivateconfirmationModal" tabindex="-1" aria-labelledby="DeactivateconfirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="DeactivateconfirmationModalLabel">Are you sure you want to make this facility inactive?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        This facility will become inactive.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="confirmDeactivateBtnModal" class="btn btn-danger">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/notification-admin.js"></script>
+    <script>
+        let currentEditingId = null;
+        let facilities = [];
+        let selectedFacilityId = null;
+        let selectedFacilityStatus = "Active";
+        const facilityModal = document.getElementById('addFacilityModal');
+        const facilityBootstrapModal = new bootstrap.Modal(facilityModal);
+
+        // Fetch facilities data
+        function fetchFacilitiesByStatus(status = selectedFacilityStatus) {
+            selectedFacilityStatus = status;
+            fetch(`/admin/getfacilitiesbystatus?status=${status}`)
+                .then(res => res.json())
+                .then(data => {
+                    facilities = data;
+                    displayFacilities(facilities);
+                });
+        }
+
+        //populate to display facility data card
+        function displayFacilities(facilitiesToDisplay) {
+            const container = document.getElementById("facilityContainer");
+            container.innerHTML = ""; // Clear the container
+
+            // Check if there are no facilities to display
+            if (facilitiesToDisplay.length === 0) {
+                container.innerHTML = `
+                            <div class="flex justify-center items-center w-full h-full text-gray-500 text-lg">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                 No ${selectedFacilityStatus} facilities available.
+                            </div>
+                        `;
+                return;
+            }
+
+            // Display the facilities if data is available
+            facilitiesToDisplay.forEach(facility => {
+                console.log(facility)
+                container.innerHTML += `
+                            <div class="border rounded-lg p-4 shadow hover:shadow-lg transition w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 m-2 relative group bg-white">
+                                <img src="${facility.image}" alt="${facility.facilityName}"
+                                     onerror="this.onerror=null; this.src='/images/facilityimage/default-facility.jpg';"
+                                     class="w-full h-40 object-cover rounded">
+                                <h2 class="text-lg font-semibold mt-2">${facility.facilityName}</h2>
+                                <p class="text-gray-600 text-sm">${facility.description}</p>
+                                <p class="text-blue-700 text-sm mt-1 font-medium">Time: ${facility.availableTime}</p>
+
+                                <!-- Hover buttons below description -->
+                                <div class="flex justify-center space-x-2 mt-3">
+                                    <button class="bg-blue-600 hover:bg-blue-700 text-white text-sm p-2 rounded-lg"
+                                            onclick="viewFacility(${facility.facilityId})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="bg-yellow-500 hover:bg-yellow-600 text-white text-sm p-2 rounded-lg"
+                                            onclick="editFacility(${facility.facilityId})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    ${facility.status === 'Active' ?
+                        `<button class="bg-red-600 hover:bg-red-700 text-white text-sm p-2 rounded-lg"
+                                                onclick="confirmDelete(${facility.facilityId})">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>` :
+                        `<button class="bg-green-600 hover:bg-green-700 text-white text-sm p-2 rounded-lg"
+                                                onclick="confirmActivate(${facility.facilityId})">
+                                            <i class="fas fa-check-circle"></i> Activate
+                                        </button>`
+                    }
+                                </div>
+                            </div>
+                        `;
+            });
+        }
+
+        // Search functionality
+        function searchFacilities() {
+            const searchTerm = document.getElementById('facilitySearch').value.toLowerCase();
+            const filteredFacilities = facilities.filter(facility => {
+                return facility.facilityName.toLowerCase().includes(searchTerm) ||
+                    facility.description.toLowerCase().includes(searchTerm);
+            });
+            displayFacilities(filteredFacilities);
+        }
+
+        // View Facility details
+        function viewFacility(facilityId) {
+            const facility = facilities.find(facility => facility.facilityId === facilityId);
+            document.getElementById('facilityViewName').textContent = facility.facilityName;
+            document.getElementById('facilityViewDescription').textContent = facility.description;
+            document.getElementById('facilityViewAvailableTime').textContent = `Time: ${facility.availableTime}`;
+            document.getElementById('facilityViewImage').src = facility.image;
+
+            // Open modal
+            const viewModal = new bootstrap.Modal(document.getElementById('viewFacilityModal'));
+            viewModal.show();
+        }
+
+        // Generate time options from 6:00 AM to 11:00 PM with 30 min gap
+        const startTimeSelect = document.getElementById("startTime");
+        const endTimeSelect = document.getElementById("endTime");
+        const validTimes = [];
+
+        for (let h = 6; h <= 23; h++) {
+            for (let m of [0, 30]) {
+                let suffix = h >= 12 ? "PM" : "AM";
+                let hour = h % 12 === 0 ? 12 : h % 12;
+                let time = `${("0" + hour).slice(-2)}:${m === 0 ? "00" : "30"} ${suffix}`;
+                validTimes.push(time);
+            }
+        }
+
+        // Populate start and end time dropdowns
+        startTimeSelect.innerHTML = "";
+        endTimeSelect.innerHTML = "";
+
+        validTimes.forEach(time => {
+            startTimeSelect.innerHTML += `<option value="${time}">${time}</option>`;
+            endTimeSelect.innerHTML += `<option value="${time}">${time}</option>`;
+        });
+
+        // Description character count
+        const descInput = document.getElementById("facilityDesc");
+        const descCount = document.getElementById("descCount");
+        descInput.addEventListener("input", () => {
+            descCount.textContent = descInput.value.length;
+        });
+
+        // Image preview
+        const imageInput = document.getElementById("facilityImage");
+        const imagePreview = document.getElementById("imagePreview");
+
+        imageInput.addEventListener("change", e => {
+            const file = e.target.files[0];
+            if (file) {
+                imagePreview.src = URL.createObjectURL(file);
+                imagePreview.classList.remove("hidden");
+            }
+        });
+
+        // Edit button logic
+        function editFacility(id) {
+            fetch(`/admin/getfacilitybyid?id=${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    currentEditingId = id;
+                    const [startTime, endTime] = data.availableTime.split(" - ");
+                    document.getElementById("facilityName").value = data.facilityName;
+                    document.getElementById("facilityDesc").value = data.description;
+                    document.getElementById("startTime").value = startTime.trim();
+                    document.getElementById("endTime").value = endTime.trim();
+
+                    const preview = document.getElementById("imagePreview");
+                    const imageUrl = `/images/facilityimage/${data.facilityName.replace(/\s+/g, '_')}.jpg`;
+
+                    // Set the preview image and fallback to default icon on error
+                    preview.src = imageUrl;
+                    preview.onerror = function () {
+                        this.onerror = null; // prevent infinite loop
+                        this.src = "/images/facilityimage/default-facility.jpg"; // fallback icon path
+                    };
+                    preview.classList.remove("hidden");
+
+                    // Clear previous file input
+                    document.getElementById("facilityImage").value = "";
+
+                    // Show modal with updated title and button text
+                    const modal = new bootstrap.Modal(document.getElementById("addFacilityModal"));
+                    document.getElementById("addFacilityModalLabel").textContent = "Edit Facility";
+                    document.getElementById("saveFacilityBtn").textContent = "Update Facility";
+                    modal.show();
+                });
+        }
+
+        // Open modal for "Add New Facility"
+        function openAddFacilityModal() {
+            currentEditingId = null;
+            document.getElementById("addFacilityModalLabel").textContent = "Add New Facility";
+            document.getElementById("saveFacilityBtn").textContent = "Save Facility";
+            document.getElementById("facilityName").value = "";
+            document.getElementById("facilityDesc").value = "";
+            document.getElementById("startTime").value = "";
+            document.getElementById("endTime").value = "";
+            document.getElementById("imagePreview").classList.add("hidden");
+
+            const modal = new bootstrap.Modal(document.getElementById("addFacilityModal"));
+            modal.show();
+        }
+
+        // Reset form when closing modal or canceling
+        document.getElementById("cancelBtn").addEventListener("click", resetForm);
+
+        // Reset form function
+        function resetForm() {
+            document.getElementById("facilityName").value = "";
+            document.getElementById("facilityDesc").value = "";
+            document.getElementById("startTime").value = "";
+            document.getElementById("endTime").value = "";
+            document.getElementById("facilityImage").value = "";
+            document.getElementById("imagePreview").classList.add("hidden");
+            document.getElementById("facilityNameError").classList.add("hidden");
+            document.getElementById("facilityError").classList.add("hidden");
+            document.getElementById("timeError").classList.add("hidden");
+        }
+
+        // On Save (edit or new), show confirmation modal
+        document.getElementById("saveFacilityBtn").addEventListener("click", () => {
+            const name = document.getElementById("facilityName").value.trim();
+            const desc = document.getElementById("facilityDesc").value.trim();
+            const start = document.getElementById("startTime").value;
+            const end = document.getElementById("endTime").value;
+            const startIndex = validTimes.indexOf(start);
+            const endIndex = validTimes.indexOf(end);
+
+            if (!name) {
+                document.getElementById("facilityNameError").classList.remove("hidden");
+                return;
+            } else {
+                document.getElementById("facilityNameError").classList.add("hidden");
+            }
+
+            if (!desc) {
+                document.getElementById("facilityDescError").classList.remove("hidden");
+                return;
+            } else {
+                document.getElementById("facilityDescError").classList.add("hidden");
+            }
+
+            if (startIndex >= endIndex) {
+                document.getElementById("timeError").classList.remove("hidden");
+                return;
+            } else {
+                document.getElementById("timeError").classList.add("hidden");
+            }
+            openConfirmationModal();
+        });
+
+        // Open confirmation modal
+        function openConfirmationModal() {
+            const modal = document.getElementById("AddEditConfirmationModal");
+            modal.classList.add("show");  // Show the modal
+        }
+
+        // Close confirmation modal
+        function closeConfirmationModal() {
+            const modal = document.getElementById("AddEditConfirmationModal");
+            modal.classList.remove("show");  // Hide the modal
+        }
+
+        // Handle the confirmation button in the modal
+        document.getElementById("confirmBtnModal").addEventListener("click", () => {
+            const name = document.getElementById("facilityName").value.trim();
+            const desc = document.getElementById("facilityDesc").value.trim();
+            const start = document.getElementById("startTime").value;
+            const end = document.getElementById("endTime").value;
+            const imageInput = document.getElementById("facilityImage");
+            const image = imageInput.files.length > 0 ? imageInput.files[0] : null;  // Check if file is selected
+            const imageName = name.replace(/\s+/g, '_');
+
+            const availableTime = `${start} - ${end}`;
+            const formData = new FormData();
+            formData.append("facilityName", name);
+            formData.append("description", desc);
+            formData.append("availableTime", availableTime);
+
+            if (image) {
+                formData.append("image", image, `${imageName}.jpg`);
+            }
+
+            let url = "/admin/addfacility";
+            let method = "POST";
+
+            if (currentEditingId) {
+                formData.append("facilityId", currentEditingId);
+                url = `/admin/updatefacility?id=${currentEditingId}`;
+            }
+
+            fetch(url, {
+                method: method,
+                body: formData
+            }).then(async (res) => {
+                const data = await res.json().catch(() => ({})); // Safely handle cases where no JSON is returned
+
+                if (res.ok) {
+                    currentEditingId = null;
+                    resetForm();
+
+                    // Close the form modal after success
+                    const addFacilityModal = bootstrap.Modal.getInstance(document.getElementById("addFacilityModal"));
+                    addFacilityModal.hide();
+
+                    // Show success modal
+                    const successModal = new bootstrap.Modal(document.getElementById("successModal"));
+                    successModal.show();
+                    showToast("Facility has been saved successfully.");
+                    fetchFacilitiesByStatus(); // Refresh display
+                } else {
+                    const errorMessageContainer = document.getElementById("facilityError");
+                    errorMessageContainer.textContent = data.message || "An unexpected error occurred.";
+                    errorMessageContainer.classList.remove("hidden");
+                    showToast("There was an issue saving the facility. Please try again later.", "red");
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                showToast("An error occurred while processing your request. Please try again later.", "red");
+            });
+
+            // Close the confirmation modal after action
+            closeConfirmationModal(); // Close confirmation modal
+        });
+
+        // Close confirmation modal on cancel
+        document.getElementById("cancelBtnModal").addEventListener("click", () => {
+            closeConfirmationModal(); // Close the modal without doing anything
+        });
+
+        // Function to show the Activate Confirmation Modal
+        function confirmActivate(facilityId) {
+            selectedFacilityId = facilityId;  // Store the selected facility ID
+
+            // Show the modal using Bootstrap's Modal API
+            const confirmationModal = new bootstrap.Modal(document.getElementById('ActivateconfirmationModal'));
+            confirmationModal.show();
+        }
+
+        // Handle the Confirm button click to activate the facility
+        document.getElementById("confirmActivateBtnModal").addEventListener("click", () => {
+            fetch(`/admin/activatefacility?id=${selectedFacilityId}`, {
+                method: 'POST'
+            })
+                .then(res => {
+                    if (res.ok) {
+                        // Close the modal after confirming activation
+                        const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('ActivateconfirmationModal'));
+                        confirmationModal.hide();  // Close the modal
+                        showToast("Facility has been activated successfuly.");
+                        fetchFacilitiesByStatus(); // Refresh the facilities display
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    showToast("There was an issue activating the facility.", "red");
+                });
+        });
+
+        // Confirm delete or to set it to Inactive action
+        function confirmDelete(facilityId) {
+            selectedFacilityId = facilityId;
+
+            // Show the Bootstrap modal
+            const confirmationModal = new bootstrap.Modal(document.getElementById('DeactivateconfirmationModal'));
+            confirmationModal.show();
+        }
+
+        // Handle the confirmation button in the modal
+        document.getElementById("confirmDeactivateBtnModal").addEventListener("click", () => {
+            // Proceed with making the facility inactive
+            fetch(`/admin/inactivefacility?id=${selectedFacilityId}`, {
+                method: 'POST',
+            }).then(res => {
+                if (res.ok) {
+                    // Close the modal after the action
+                    const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('DeactivateconfirmationModal'));
+                    confirmationModal.hide();
+
+                    // Optionally, refresh the list of facilities or show a success message
+                    showToast("Facility has been successfully deactivated.");
+                    fetchFacilitiesByStatus(); // Refresh the facility list
+                } else {
+                    showToast("There was an issue deactivating the facility.","red");
+                }
+            });
+        });
+
+        function showToast(message, color = 'green') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transform translate-y-20 opacity-0 transition-all z-50`;
+            toast.style.backgroundColor = color;
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }, 50);
+        }
+
+        // Initial load
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchFacilitiesByStatus(selectedFacilityStatus);
+        });
+    </script>
+}

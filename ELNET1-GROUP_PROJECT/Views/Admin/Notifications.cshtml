@@ -68,41 +68,55 @@
                 </div>
 
                 <!-- Tabs -->
-                <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200">
-                    <button data-type="Post Like"
+                <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 items-center justify-center">
+                    <button data-type="Post Creation"
                             class="px-4 py-2 rounded-t-lg flex items-center font-medium space-x-2 transition-colors notif-tab active-tab
                        bg-white border-b-4 border-blue-500 text-blue-600 hover:bg-blue-50">
-                        <i class="fas fa-thumbs-up text-blue-500 text-lg"></i>
+                        <i class="fas fa-pencil-alt text-blue-500 text-lg"></i>
+                        <span>Post Creation</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="creation-count"></span>
+                    </button>
+                    <button data-type="Post Like"
+                            class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                       hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                        <i class="fas fa-thumbs-up text-green-500 text-lg"></i>
                         <span>Post Likes</span>
                         <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="like-count"></span>
                     </button>
                     <button data-type="Post Reply"
                             class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                        hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
-                        <i class="fas fa-comment text-green-500 text-lg"></i>
+                        <i class="fas fa-comment text-blue-500 text-lg"></i>
                         <span>Post Reply</span>
                         <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="reply-count"></span>
                     </button>
                     <button data-type="Announcement"
                             class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                        hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
-                        <i class="fas fa-bullhorn text-blue-500 text-lg"></i>
+                        <i class="fas fa-bullhorn text-green-500 text-lg"></i>
                         <span>Announcement</span>
                         <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="announcement-count"></span>
                     </button>
                     <button data-type="Event"
                             class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                        hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
-                        <i class="fas fa-calendar-alt text-green-500 text-lg"></i>
+                        <i class="fas fa-calendar-alt text-blue-500 text-lg"></i>
                         <span>Event</span>
                         <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="event-count"></span>
                     </button>
                     <button data-type="Poll"
                             class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                        hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
-                        <i class="fas fa-poll text-blue-500 text-lg"></i>
+                        <i class="fas fa-poll text-green-500 text-lg"></i>
                         <span>Poll</span>
                         <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="poll-count"></span>
+                    </button>
+                    <button data-type="Facility"
+                            class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                       hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                        <i class="fas fa-user text-blue-500 text-lg"></i>
+                        <span>Facility</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="facility-count"></span>
                     </button>
                     <button data-type="Account"
                             class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
@@ -141,14 +155,16 @@
 
                 <!-- Scrollable Container -->
                 <div style="max-height: 400px; overflow-y: auto;" class="pr-2">
+
+                    <!-- Skeleton Loading -->
+                    <div class="animate-pulse space-y-4" id="loadingSkeleton">
+                        <div class="h-20 bg-gray-100 rounded-lg"></div>
+                        <div class="h-20 bg-gray-100 rounded-lg"></div>
+                        <div class="h-20 bg-gray-100 rounded-lg"></div>
+                    </div>
+
                     <!-- Notification List -->
-                    <div id="notificationList" class="space-y-2">
-                        <!-- Skeleton Loading -->
-                        <div class="animate-pulse space-y-4" id="loadingSkeleton">
-                            <div class="h-20 bg-gray-100 rounded-lg"></div>
-                            <div class="h-20 bg-gray-100 rounded-lg"></div>
-                            <div class="h-20 bg-gray-100 rounded-lg"></div>
-                        </div>
+                    <div id="notificationList" class="space-y-2">   
                     </div>
                 </div>
 
@@ -207,7 +223,7 @@
     const toggleSearchBtn = document.getElementById("toggleSearch");
     const searchIcon = document.getElementById("searchIcon");
     const closeIcon = document.getElementById("closeIcon");
-    let selectedType = "Post Like";
+    let selectedType = "Post Creation";
     let allNotifs = [];
 
     // Tab Click Handler
@@ -222,7 +238,7 @@
             tab.classList.remove("text-gray-600", "border-transparent");
 
             selectedType = tab.dataset.type;
-            renderNotifications();
+            loadNotifications();
         });
     });
 
@@ -256,13 +272,15 @@
     // Mark All as Read
     markAllBtn.addEventListener("click", async () => {
         try {
-            await fetch(`/api/notifications/admin/mark-all-read/${selectedType}/${currentUserId}`, { method: "PUT" });
+            // Call the backend API to mark all selected type notifications as read
+            await fetch(`/api/notifications/admin/mark-all-read/${currentUserId}/${selectedType}`, {
+                method: "PUT"
+            });
 
-            // Update all local notifications as read
-            allNotifs = allNotifs.map(n => ({
-                ...n,
-                isRead: n.type === selectedType ? true : n.isRead
-            }));
+            // Locally update only notifications that match the selected type
+            allNotifs = allNotifs.map(n =>
+                n.type === selectedType ? { ...n, isRead: true } : n
+            );
 
             renderNotifications();
             updateCountBadges();
@@ -314,13 +332,10 @@
 
                 card.onclick = () => handleNotificationClick(n);
                 list.appendChild(card);
-
-                if (!n.isRead){
-                    markAllBtn.classList.remove('hidden');
-                } else {
-                    markAllBtn.classList.add('hidden');
-                }
             });
+
+            const hasUnread = filtered.some(n => !n.isRead);
+            markAllBtn.classList.toggle('hidden', !hasUnread);
 
             // Attach modal content logic
             document.querySelectorAll('.viewNotifBtn').forEach(btn => {
@@ -404,7 +419,7 @@
     async function loadNotifications() {
         try {
             document.getElementById('loadingSkeleton').classList.remove('hidden');
-            const res = await fetch(`/api/notifications/admin/${currentUserId}`);
+            const res = await fetch(`/api/notifications/admin/${currentUserId}/${selectedType}`);
             allNotifs = await res.json();
             updateCountBadges();
             renderNotifications();
@@ -418,12 +433,14 @@
     // Helper Functions
     function getTypeIcon(type) {
         return {
-            'Post Like': '<i class="fas fa-thumbs-up text-blue-500"></i>',
-            'Post Reply': '<i class="fas fa-comment text-green-500"></i>',
+            'Post Creation': '<i class="fas fa-pencil-alt text-blue-500"></i>',
+            'Post Like': '<i class="fas fa-thumbs-up text-green-500"></i>',
+            'Post Reply': '<i class="fas fa-comment text-blue-500"></i>',
             'Announcement': '<i class="fas fa-bullhorn text-green-500"></i>',
-            'Event': '<i class="fas fa-calendar-alt text-green-500"></i>',
+            'Event': '<i class="fas fa-calendar-alt text-blue-500"></i>',
             'Poll': '<i class="fas fa-poll text-green-500"></i>',
-            'Account': '<i class="fas fa-user text-green-500"></i>'
+            'Facility': '<i class="fas fa-user text-blue-500"></i>',
+            'Account': '<i class="fas fa-user text-green-500"></i>',
         }[type] || '<i class="fas fa-bell text-gray-400"></i>'; 
     }
 
@@ -433,11 +450,13 @@
             const counts = await res.json();
 
             const countMap = {
+                'Post Creation': 0,
                 'Post Like': 0,
                 'Post Reply': 0,
                 'Announcement': 0,
                 'Event': 0,
                 'Poll': 0,
+                'Facility': 0,
                 'Account': 0
             };
 
@@ -447,11 +466,13 @@
 
             // Update UI
             const badgeMap = {
+                'Post Creation': document.getElementById('creation-count'),
                 'Post Like': document.getElementById('like-count'),
                 'Post Reply': document.getElementById('reply-count'),
                 'Announcement': document.getElementById('announcement-count'),
                 'Event': document.getElementById('event-count'),
                 'Poll': document.getElementById('poll-count'),
+                'Facility': document.getElementById('facility-count'),
                 'Account': document.getElementById('account-count')
             };
 
@@ -487,12 +508,14 @@
     function showNewNotificationToast(notif) {
         const toast = document.createElement('div');
         toast.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg border-l-4 ${
-            notif.type === 'Post Like' ? 'border-blue-500 bg-blue-50' :
-            notif.type === 'Post Reply' ? 'border-green-500 bg-green-50' :
-            notif.type === 'Announcement' ? 'border-blue-500 bg-blue-50' :
-            notif.type === 'Event' ? 'border-green-500 bg-green-50' :
-            notif.type === 'Poll' ? 'border-blue-500 bg-blue-50' :
-            notif.type === 'Account' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Post Creation' ? 'border-blue-500 bg-blue-50' :
+            notif.type === 'Post Like' ? 'border-blue-500 bg-green-50' :
+            notif.type === 'Post Reply' ? 'border-green-500 bg-blue-50' :
+            notif.type === 'Announcement' ? 'border-blue-500 bg-green-50' :
+            notif.type === 'Event' ? 'border-green-500 bg-blue-50' :
+            notif.type === 'Poll' ? 'border-blue-500 bg-green-50' :
+            notif.type === 'Facility' ? 'border-green-500 bg-blue-50' :
+            notif.type === 'Account' ? 'border-blue-500 bg-green-50' :
             'border-purple-500 bg-purple-50'
         } animate-slide-in`;
 

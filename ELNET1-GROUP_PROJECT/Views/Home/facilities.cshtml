@@ -46,7 +46,7 @@
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
-    <div class="bg-white rounded-tr-2xl rounded-br-2xl shadow-md w-56 py-6 h-screen">
+    <div class="bg-white rounded-tr-2xl rounded-br-2xl shadow-md w-56 py-6">
         <ul class="space-y-4">
             <!-- Home (Dynamic) -->
             <li>
@@ -184,29 +184,31 @@
             <div class="col-md-7 p-lg-5" style="margin-top: -60px;">
                 <div class="bg-white rounded-2xl shadow-lg p-6">
                     <h2 class="text-4xl font-extrabold text-center text-blue-900 mb-8">Community Facilities</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-                        @foreach (var f in Model)
-                        {
-                            <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden">
-                                <img src="@f.Image" alt="@f.Name" class="w-full h-52 object-cover rounded-t-2xl">
-                                <div class="p-5 text-center">
-                                    <h3 class="text-2xl font-semibold text-blue-800 mb-2">@f.Name</h3>
-                                    <p class="text-gray-600 mb-3">@f.Description</p>
-                                    <p class="text-sm text-blue-500 font-medium">Available: @f.Time</p>
+                    <div class="overflow-y-auto px-2" style="max-height: 585px">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+                            @foreach (var f in Model)
+                            {
+                                <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden">
+                                    <img src="@f.Image" alt="@f.Name" class="w-full h-52 object-cover rounded-t-2xl">
+                                    <div class="p-2 text-center">
+                                        <h3 class="text-2xl font-semibold text-blue-800 p-2">@f.Name</h3>
+                                        <p class="text-gray-600 p-2">@f.Description</p>
+                                        <p class="text-sm text-blue-500 font-medium">Available: @f.Time</p>
+                                    </div>
+                                    <div class="px-3 pb-3 flex justify-center">
+                                        <button class="w-full py-2 rounded-lg text-blue-600 border border-blue-500 hover:bg-blue-600 hover:text-white font-semibold transition"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#facilityModal"
+                                                data-facility="@f.Name"
+                                                data-image="@f.Image"
+                                                data-description="@f.Description"
+                                                data-time="@f.Time">
+                                            View Details
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="px-5 pb-5 flex justify-center">
-                                    <button class="w-full py-2 rounded-lg text-blue-600 border border-blue-500 hover:bg-blue-600 hover:text-white font-semibold transition"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#facilityModal"
-                                            data-facility="@f.Name"
-                                            data-image="@f.Image"
-                                            data-description="@f.Description"
-                                            data-time="@f.Time">
-                                        View Details
-                                    </button>
-                                </div>
-                            </div>
-                        }
+                            }
+                        </div>
                     </div>
                 </div>
             </div>

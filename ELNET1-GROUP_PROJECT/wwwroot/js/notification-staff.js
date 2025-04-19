@@ -36,15 +36,21 @@ async function loadNotifications() {
     }
 
     notifListContainer.innerHTML = "";
-    
+
     if (notifications.length > 0) {
         notifications.forEach(n => {
             const hasLink = n.link && n.link.trim() !== "";
+            const unreadClass = !n.isRead ? 'bg-blue-50 border-l-4 border-blue-500 shadow-sm' : '';
+
             const notifHtml = `
-                <div class="dropdown-item notif-entry ${!n.isRead ? 'bg-blue-100 font-semibold' : ''} 
-                    hover:bg-blue-50 transition-colors rounded-md p-2 mb-1"
+                <div class="dropdown-item notif-entry ${unreadClass} 
+                    hover:bg-blue-100 transition-colors rounded-md p-2 mb-1"
                     data-id="${n.notificationId}" data-link="${n.link || ''}" style="cursor: pointer;">
-                    <div class="text-sm text-gray-900"><strong>${n.title}</strong></div>
+                    
+                    <div class="flex justify-between items-center mb-1">
+                        <div class="text-sm text-gray-900 font-medium">${n.title}</div>
+                        ${!n.isRead ? '<span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>' : ''}
+                    </div>
                     <div class="text-sm text-gray-700">
                         ${n.message.length > 65 ? n.message.slice(0, 65) + '...' : n.message}
                     </div>

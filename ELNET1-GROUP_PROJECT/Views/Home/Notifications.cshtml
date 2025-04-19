@@ -122,7 +122,7 @@
         </div>
 
         <!-- Tabs -->
-        <div class="flex flex-wrap gap-1 mb-3 border-b border-gray-200">
+        <div class="flex flex-wrap gap-1 mb-3 border-b border-gray-200 items-center justify-center">
             <button data-type="Visitor"
                     class="px-4 py-2 rounded-t-lg flex items-center font-medium space-x-2 transition-colors notif-tab active-tab
                    bg-white border-b-4 border-blue-500 text-blue-600 hover:bg-blue-50">
@@ -144,12 +144,19 @@
                 <span>Feedback Message</span>
                 <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="feedback-count"></span>
             </button>
+            <button data-type="Facility"
+                    class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                   hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                <i class="fas fa-building text-green-500 text-lg"></i>
+                <span>Facility</span>
+                <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="facility-count"></span>
+            </button>
             <button data-type="Facility Reservation Schedule"
                     class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                    hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
                 <i class="fas fa-calendar-check text-green-500 text-lg"></i>
                 <span>Facility Schedule</span>
-                <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="facility-count"></span>
+                <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="facility-reservation-count"></span>
             </button>
             <button data-type="Service Schedule"
                     class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
@@ -223,14 +230,15 @@
 
         <!-- Scrollable Container -->
         <div style="max-height: 370px; overflow-y: auto;" class="pr-2">
+            <!-- Skeleton Loading -->
+            <div class="animate-pulse space-y-4 hidden" id="loadingSkeleton">
+                 <div class="h-20 bg-gray-100 rounded-lg"></div>
+                 <div class="h-20 bg-gray-100 rounded-lg"></div>
+                 <div class="h-20 bg-gray-100 rounded-lg"></div>
+             </div>
+
             <!-- Notification List -->
             <div id="notificationList" class="space-y-2">
-                <!-- Skeleton Loading -->
-                <div class="animate-pulse space-y-4" id="loadingSkeleton">
-                    <div class="h-20 bg-gray-100 rounded-lg"></div>
-                    <div class="h-20 bg-gray-100 rounded-lg"></div>
-                    <div class="h-20 bg-gray-100 rounded-lg"></div>
-                </div>
             </div>
         </div>
 
@@ -302,7 +310,7 @@
             tab.classList.remove("text-gray-600", "border-transparent");
 
             selectedType = tab.dataset.type;
-            renderNotifications();
+            loadNotifications();
         });
     });
 
@@ -336,13 +344,13 @@
     // Mark All as Read
     markAllBtn.addEventListener("click", async () => {
         try {
-            await fetch(`/api/notifications/mark-all-read/${selectedType}/${currentUserId}`, { method: "PUT" });
+            // Call the API with current user ID and selected type
+            await fetch(`/api/notifications/mark-all-read/${currentUserId}/${selectedType}`, { method: "PUT" });
 
-            // Update all local notifications as read
-            allNotifs = allNotifs.map(n => ({
-                ...n,
-                isRead: n.type === selectedType ? true : n.isRead
-            }));
+            // Locally mark all of the selected type as read
+            allNotifs = allNotifs.map(n =>
+                n.type === selectedType ? { ...n, isRead: true } : n
+            );
 
             renderNotifications();
             updateCountBadges();
@@ -394,13 +402,10 @@
 
             card.onclick = () => handleNotificationClick(n);
             list.appendChild(card);
-
-            if (!n.isRead){
-                markAllBtn.classList.remove('hidden');
-            } else {
-                markAllBtn.classList.add('hidden');
-            }
         });
+
+        const hasUnread = filtered.some(n => !n.isRead);
+        markAllBtn.classList.toggle('hidden', !hasUnread);
 
         // Attach modal content logic
         document.querySelectorAll('.viewNotifBtn').forEach(btn => {
@@ -484,7 +489,7 @@
     async function loadNotifications() {
         try {
             document.getElementById('loadingSkeleton').classList.remove('hidden');
-            const res = await fetch(`/api/notifications/${currentUserId}`);
+            const res = await fetch(`/api/notifications/${currentUserId}/${selectedType}`);
             allNotifs = await res.json();
             updateCountBadges();
             renderNotifications();
@@ -501,6 +506,7 @@
             'Visitor': '<i class="fas fa-user-check text-yellow-500"></i>',
             'Vehicle': '<i class="fas fa-car-side text-indigo-500"></i>',
             'Feedback Message': '<i class="fas fa-envelope text-blue-200"></i>',
+            'Facility': '<i class="fas fa-building text-blue-500"></i>',
             'Facility Reservation Schedule': '<i class="fas fa-calendar-check text-blue-500"></i>',
             'Service Schedule': '<i class="fas fa-cogs text-green-500"></i>',
             'Bill': '<i class="fas fa-file-invoice-dollar text-green-500"></i>',
@@ -520,6 +526,7 @@
                 'Visitor': 0,
                 'Vehicle': 0,
                 'Feedback Message': 0,
+                'Facility': 0,
                 'Facility Reservation Schedule': 0,
                 'Service Schedule': 0,
                 'Bill': 0,
@@ -538,7 +545,8 @@
                 'Visitor': document.getElementById('visitor-count'),
                 'Vehicle': document.getElementById('vehicle-count'),
                 'Feedback Message': document.getElementById('feedback-count'),
-                'Facility Reservation Schedule': document.getElementById('facility-count'),
+                'Facility': document.getElementById('facility-count'),
+                'Facility Reservation Schedule': document.getElementById('facility-reservation-count'),
                 'Service Schedule': document.getElementById('service-count'),
                 'Bill': document.getElementById('bill-count'),
                 'Announcement': document.getElementById('announcement-count'),
@@ -582,6 +590,7 @@
             notif.type === 'Visitor' ? 'border-green-500 bg-green-50' :
             notif.type === 'Vehicle' ? 'border-green-500 bg-green-50' :
             notif.type === 'Feedback Message' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Facility' ? 'border-green-500 bg-green-50' :
             notif.type === 'Facility Reservation Schedule' ? 'border-green-500 bg-green-50' :
             notif.type === 'Service Schedule' ? 'border-green-500 bg-green-50' :
             notif.type === 'Bill' ? 'border-green-500 bg-green-50' :

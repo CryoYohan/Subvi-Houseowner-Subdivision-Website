@@ -275,6 +275,7 @@ public class AdminController : Controller
                 f.Content,
                 f.DatePosted,
                 f.UserId,
+                u.Profile,
                 Firstname = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
                 Lastname = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
             })
@@ -289,6 +290,7 @@ public class AdminController : Controller
                 Content = r.Content,
                 Date = r.Date,
                 UserId = r.UserId,
+                Profile = u.Profile,
                 FullName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
                 Firstname = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
                 Lastname = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
@@ -326,21 +328,510 @@ public class AdminController : Controller
             return RedirectToAction("landing");
         }
 
-        // Fetch user from USER_ACCOUNT
-        var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
-        if (user == null) return Unauthorized();
-
-        // Capitalize first letter of first and last name
-        string Capitalize(string name) => string.IsNullOrEmpty(name) ? "" : char.ToUpper(name[0]) + name.Substring(1).ToLower();
-        var personName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
-
         // Get post title from FORUM table
         var forumPost = _context.Forum.FirstOrDefault(f => f.PostId == postId);
         if (forumPost == null) return NotFound();
 
         var title = forumPost.Title;
 
+        // Save the reply
+        var reply = new Replies
+        {
+            Content = content,
+            Date = DateTime.Now,
+            PostId = postId,
+            UserId = userId
+        };
+
+        _context.Replies.Add(reply);
+        await _context.SaveChangesAsync();
+
         return RedirectToAction("Comments", new { id = postId, title = GetTruncatedTitle(title) });
+    }
+
+    public IActionResult Facilities()
+    {
+        RefreshJwtCookies();
+        return View();
+    }
+
+    //For fetching Facility
+    public IActionResult GetFacilitiesByStatus(string status)
+    {
+        var facilities = _context.Facility
+            .Where(f => f.Status == status)
+            .Select(f => new {
+                f.FacilityId,
+                f.FacilityName,
+                f.Description,
+                f.Image,
+                f.AvailableTime,
+                f.Status
+            }).ToList();
+
+        return Ok(facilities);
+    }
+
+    public IActionResult GetFacilityById(int id)
+    {
+        var facility = _context.Facility
+            .Where(f => f.FacilityId == id)
+            .Select(f => new
+            {
+                f.FacilityId,
+                f.Image,
+                f.FacilityName,
+                f.Description,
+                f.AvailableTime
+            })
+            .FirstOrDefault();
+
+        if (facility == null)
+            return NotFound();
+
+        return Ok(facility);
+    }
+
+    public async Task<IActionResult> AddFacility([FromForm] FacilityModficationDto model)
+    {
+        if (string.IsNullOrWhiteSpace(model.FacilityName))
+            return BadRequest(new { message = "Facility name is required." });
+
+        // Check if a facility with the same name already exists
+        var existingFacility = await _context.Facility
+            .Where(f => f.FacilityName.ToLower() == model.FacilityName.ToLower())
+            .FirstOrDefaultAsync();
+
+        if (existingFacility != null)
+        {
+            return BadRequest(new { message = "Facility name already exists. Please choose a different name." });
+        }
+
+        string imageFileName = null;
+
+        if (model.Image != null && model.Image.Length > 0)
+        {
+            imageFileName = model.FacilityName.Replace(" ", "_") + ".jpg";
+            var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/facilityimage", imageFileName);
+
+            using (var stream = new FileStream(imagePath, FileMode.Create))
+            {
+                await model.Image.CopyToAsync(stream);
+            }
+        }
+
+        var newFacility = new Facility
+        {
+            FacilityName = model.FacilityName,
+            Description = model.Description,
+            AvailableTime = model.AvailableTime,
+            Image = imageFileName,
+            Status = "Active"
+        };
+
+        _context.Facility.Add(newFacility);
+        await _context.SaveChangesAsync();
+
+        // Fetch all users
+        var allUsers = await _context.User_Accounts.ToListAsync();
+
+        bool staffNotified = false;
+        bool adminNotified = false;
+
+        var notificationsToAdd = new List<Notification>(); // Collect notifications here
+
+        foreach (var user in allUsers)
+        {
+            if (user.Role == "Homeowner")
+            {
+                var homeownerNotification = new Notification
+                {
+                    Title = "Facility Created",
+                    Message = $"Good news! The facility {model.FacilityName} has just been added. Take a moment to explore what's new.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Homeowner",
+                    UserId = user.Id,
+                    Link = "/home/facilities"
+                };
+
+                notificationsToAdd.Add(homeownerNotification);
+
+                // Real-time notification to specific homeowner
+                await _hubContext.Clients.User(user.Id.ToString())
+                    .SendAsync("ReceiveNotification", homeownerNotification);
+            }
+            else if (user.Role == "Staff" && !staffNotified)
+            {
+                var staffNotification = new Notification
+                {
+                    Title = "Facility Created",
+                    Message = $"A new facility named {model.FacilityName} has been added. You may now review and manage reservations accordingly.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Staff",
+                    UserId = null,
+                    Link = "/staff/requests/reservation"
+                };
+
+                notificationsToAdd.Add(staffNotification);
+
+                await _hubContext.Clients.Group("staff")
+                    .SendAsync("ReceiveNotification", staffNotification);
+
+                staffNotified = true;
+            }
+            else if (user.Role == "Admin" && !adminNotified)
+            {
+                var adminNotification = new Notification
+                {
+                    Title = "Facility Created",
+                    Message = $"A new facility named {model.FacilityName} has been added. Please verify the details.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Admin",
+                    UserId = null,
+                    Link = "/admin/facilities"
+                };
+
+                notificationsToAdd.Add(adminNotification);
+
+                await _hubContext.Clients.Group("admin")
+                    .SendAsync("ReceiveNotification", adminNotification);
+
+                adminNotified = true;
+            }
+        }
+
+        // Add all notifications at once and save
+        await _context.Notifications.AddRangeAsync(notificationsToAdd);
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
+
+    public async Task<IActionResult> UpdateFacility(int id, [FromForm] FacilityModficationDto model)
+    {
+        var facility = await _context.Facility.FindAsync(id);
+        if (facility == null)
+            return NotFound();
+
+        var existingFacility = await _context.Facility
+            .Where(f => f.FacilityName.ToLower() == model.FacilityName.ToLower() && f.FacilityId != id)
+            .FirstOrDefaultAsync();
+
+        if (existingFacility != null)
+        {
+            return BadRequest(new { message = "Facility name already exists. Please choose a different name." });
+        }
+
+        var oldFacilityName = facility.FacilityName;
+        facility.FacilityName = model.FacilityName;
+        facility.Description = model.Description;
+        facility.AvailableTime = model.AvailableTime;
+
+        var imageFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/facilityimage");
+        var oldImageFileName = oldFacilityName.Replace(" ", "_") + ".jpg";
+        var newImageFileName = model.FacilityName.Replace(" ", "_") + ".jpg";
+        var oldImagePath = Path.Combine(imageFolderPath, oldImageFileName);
+        var newImagePath = Path.Combine(imageFolderPath, newImageFileName);
+
+        // Check if the facility name has changed and old image exists
+        if (oldFacilityName != model.FacilityName && System.IO.File.Exists(oldImagePath))
+        {
+            System.IO.File.Move(oldImagePath, newImagePath);  // Rename image
+            facility.Image = "/images/facilityimage/" + newImageFileName;
+        }
+
+        // If the model has a new image, process it
+        if (model.Image != null && model.Image.Length > 0)
+        {
+            if (System.IO.File.Exists(newImagePath))
+            {
+                System.IO.File.Delete(newImagePath); // Delete existing image if new image is provided
+            }
+
+            using (var stream = new FileStream(newImagePath, FileMode.Create))
+            {
+                await model.Image.CopyToAsync(stream);
+            }
+
+            facility.Image = "/images/facilityimage/" + newImageFileName;
+        }
+        else if (string.IsNullOrEmpty(facility.Image))
+        {
+            facility.Image = "/images/facilityimage/" + newImageFileName;
+        }
+        await _context.SaveChangesAsync();
+
+        // Fetch all users
+        var allUsers = await _context.User_Accounts.ToListAsync();
+
+        bool staffNotified = false;
+        bool adminNotified = false;
+
+        var notificationsToAdd = new List<Notification>(); // List to hold notifications
+
+        foreach (var user in allUsers)
+        {
+            if (user.Role == "Homeowner")
+            {
+                var homeownerNotification = new Notification
+                {
+                    Title = "Facility Updated",
+                    Message = $"A facility named {model.FacilityName} has been updated. You can check for changes.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Homeowner",
+                    UserId = user.Id,
+                    Link = "/home/facilities"
+                };
+
+                notificationsToAdd.Add(homeownerNotification);
+
+                // Real-time notification to specific homeowner
+                await _hubContext.Clients.User(user.Id.ToString())
+                    .SendAsync("ReceiveNotification", homeownerNotification);
+            }
+            else if (user.Role == "Staff" && !staffNotified)
+            {
+                var staffNotification = new Notification
+                {
+                    Title = "Facility Updated",
+                    Message = $"A facility named {model.FacilityName} has been updated. You can check for changes.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Staff",
+                    UserId = null,
+                    Link = "/staff/requests/reservation"
+                };
+
+                notificationsToAdd.Add(staffNotification);
+
+                // Real-time notification to staff group
+                await _hubContext.Clients.Group("staff")
+                    .SendAsync("ReceiveNotification", staffNotification);
+
+                staffNotified = true;
+            }
+            else if (user.Role == "Admin" && !adminNotified)
+            {
+                var adminNotification = new Notification
+                {
+                    Title = "Facility Updated",
+                    Message = $"A facility named {model.FacilityName} has been updated. You can check for changes.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Admin",
+                    UserId = null,
+                    Link = "/admin/facilities"
+                };
+
+                notificationsToAdd.Add(adminNotification);
+
+                // Real-time notification to admin group
+                await _hubContext.Clients.Group("admin")
+                    .SendAsync("ReceiveNotification", adminNotification);
+
+                adminNotified = true;
+            }
+        }
+
+        // Add all notifications to the database at once
+        await _context.Notifications.AddRangeAsync(notificationsToAdd);
+
+        // Save all changes at once
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
+
+    public class FacilityModficationDto
+    {
+        public string FacilityName { get; set; }
+        public string Description { get; set; }
+        public string AvailableTime { get; set; }
+        public IFormFile Image { get; set; }
+    }
+
+    public async Task<IActionResult> ActivateFacility(int id)
+    {
+        var facility = await _context.Facility.FindAsync(id);
+        if (facility == null)
+            return NotFound();
+
+        // Change status to Active
+        facility.Status = "Active";
+        await _context.SaveChangesAsync();
+
+        // Fetch all users
+        var allUsers = await _context.User_Accounts.ToListAsync();
+
+        // Get facility name
+        var facilityName = facility.FacilityName;
+
+        bool staffNotified = false;
+        bool adminNotified = false;
+
+        foreach (var user in allUsers)
+        {
+            if (user.Role == "Homeowner")
+            {
+                var homeownerNotification = new Notification
+                {
+                    Title = "Facility Activated",
+                    Message = $"The facility named {facilityName} is now available for reservations. You can now make your reservation.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Homeowner",
+                    UserId = user.Id,
+                    Link = "/home/facilities"
+                };
+
+                _context.Notifications.Add(homeownerNotification);
+
+                // Real-time notification to specific homeowner
+                await _hubContext.Clients.User(user.Id.ToString())
+                    .SendAsync("ReceiveNotification", homeownerNotification);
+            }
+            else if (user.Role == "Staff" && !staffNotified)
+            {
+                var staffNotification = new Notification
+                {
+                    Title = "Facility Activated",
+                    Message = $"The facility named {facilityName} has been activated. You can review it.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Staff",
+                    UserId = null,
+                    Link = "/staff/requests/reservation"
+                };
+
+                _context.Notifications.Add(staffNotification);
+
+                await _hubContext.Clients.Group("staff")
+                    .SendAsync("ReceiveNotification", staffNotification);
+
+                staffNotified = true;
+            }
+            else if (user.Role == "Admin" && !adminNotified)
+            {
+                var adminNotification = new Notification
+                {
+                    Title = "Facility Activated",
+                    Message = $"The facility named {facilityName} has been added back. Please review if it is good.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Admin",
+                    UserId = null,
+                    Link = "/admin/facilities"
+                };
+
+                _context.Notifications.Add(adminNotification);
+
+                await _hubContext.Clients.Group("admin")
+                    .SendAsync("ReceiveNotification", adminNotification);
+
+                adminNotified = true;
+            }
+        }
+
+        return Ok();
+    }
+
+    public async Task<IActionResult> InactiveFacility(int id)
+    {
+        var facility = await _context.Facility.FindAsync(id);
+        if (facility == null)
+            return NotFound();
+
+        // Mark the facility as inactive
+        facility.Status = "Inactive";
+        await _context.SaveChangesAsync();
+
+        var facilityName = facility.FacilityName;
+
+        // Fetch all users
+        var allUsers = await _context.User_Accounts.ToListAsync();
+
+        bool staffNotified = false;
+        bool adminNotified = false;
+
+        foreach (var user in allUsers)
+        {
+            if (user.Role == "Homeowner")
+            {
+                var homeownerNotification = new Notification
+                {
+                    Title = "Facility Inactivated",
+                    Message = $"The facility named {facilityName} has been removed. You can no longer make reservations at this time. We will notify you if it becomes available again. Thank you.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Homeowner",
+                    UserId = user.Id,
+                    Link = "/home/facilities"
+                };
+
+                _context.Notifications.Add(homeownerNotification);
+
+                // Real-time notification to specific homeowner
+                await _hubContext.Clients.User(user.Id.ToString())
+                    .SendAsync("ReceiveNotification", homeownerNotification);
+            }
+            else if (user.Role == "Staff" && !staffNotified)
+            {
+                var staffNotification = new Notification
+                {
+                    Title = "Facility Inactivated",
+                    Message = $"The facility named {facilityName} has been deactivated. Please check if there is some kind of error.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Staff",
+                    UserId = null,
+                    Link = "/staff/requests/reservation"
+                };
+
+                _context.Notifications.Add(staffNotification);
+
+                await _hubContext.Clients.Group("staff")
+                    .SendAsync("ReceiveNotification", staffNotification);
+
+                staffNotified = true;
+            }
+            else if (user.Role == "Admin" && !adminNotified)
+            {
+                var adminNotification = new Notification
+                {
+                    Title = "Facility Inactivated",
+                    Message = $"The facility named {facilityName} has been deactivated. Please check if there is some kind of mistake.",
+                    Type = "Facility",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Admin",
+                    UserId = null,
+                    Link = "/admin/facilities"
+                };
+
+                _context.Notifications.Add(adminNotification);
+
+                await _hubContext.Clients.Group("admin")
+                    .SendAsync("ReceiveNotification", adminNotification);
+
+                adminNotified = true;
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok();
     }
 
     [Route("event_schedules")]

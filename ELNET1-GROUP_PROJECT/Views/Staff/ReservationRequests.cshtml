@@ -3,13 +3,9 @@
     ViewData["Title"] = "Staff | Reservation Request";
 }
 
-@section Scripts {
-    <script src="~/js/notification-staff.js"></script>
-}
-
 <div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
     <!-- Sidebar -->
-    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 flex flex-col">
         <!-- Sidebar Header -->
         <div class="px-2 py-2 border-b border-gray-100">
             <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
@@ -85,66 +81,76 @@
     <!-- Main Content -->
     <div class="flex-1 p-2 overflow-y-auto fade-in">
         <div class="bg-white p-3 dark:bg-gray-900 rounded-lg shadow-md">
-            <div class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
-                <h1 class="text-2xl font-bold mb-2 text-blue-900"><i class="fas fa-bell text-lg"></i> Reservation</h1>
-                <button id="reservationBtn" class="px-4 py-2 bg-blue-900 text-white rounded-md shadow">Reservation</button>
-                <button id="facilityBtn" class="px-4 py-2 bg-gray-200 text-blue-900 rounded-md">Facility</button>
+            <div class="flex items-center justify-between mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+                <h1 class="text-2xl font-bold text-blue-900">
+                    <i class="fas fa-bell text-lg"></i> Reservation & Facilities
+                </h1>
+                <div class="flex space-x-2">
+                    <button id="reservationBtn" class="px-4 py-2 bg-blue-900 text-white rounded-md shadow">Reservation</button>
+                    <button id="facilityBtn" class="px-4 py-2 bg-gray-200 text-blue-900 rounded-md">Facility</button>
+                </div>
             </div>
 
             <!-- For Reservation Panel -->
             <div id="reservationPanel" class="block">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Filter by Status</label>
-                    <select id="statusFilter" class="mt-1 block w-1/2 p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            style="cursor: pointer; transition: background-color 0.2s, color 0.2s;">
-                        <option value="Pending" selected>Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Declined">Declined</option>
-                    </select>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-1xl font-medium text-blue-900">Reservation Requests</h2>
+                    <div>
+                        <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-1 text-right">Filter by Status</label>
+                        <select id="statusFilter" class="block w-48 p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                style="cursor: pointer; transition: background-color 0.2s, color 0.2s;">
+                            <option value="Pending" selected>Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Declined">Declined</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full border border-gray-200 rounded-lg">
-                        <thead class="bg-blue-600 text-white text-base">
-                            <tr>
-                                <th class="p-3 text-center">ID</th>
-                                <th class="p-3 text-center">Facility</th>
-                                <th class="p-3 text-center">Requested by</th>
-                                <th class="p-3 text-center">Date</th>
-                                <th class="p-3 text-center">Time</th>
-                                <th class="p-3 text-center">Status</th>
-                                <th class="p-3 text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reservationTable" class="divide-y divide-gray-200 dark:divide-gray-700">
-                            <!-- Rows dynamically generated with JS -->
-                        </tbody>
-                    </table>
+                    <div class="overflow-y-auto" style="max-height: 500px">
+                        <table class="min-w-full border border-gray-200 rounded-lg">
+                            <thead class="bg-blue-600 text-white text-base sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-3 text-center bg-blue-600">ID</th>
+                                    <th class="p-3 text-center bg-blue-600">Facility</th>
+                                    <th class="p-3 text-center bg-blue-600">Requested by</th>
+                                    <th class="p-3 text-center bg-blue-600">Date</th>
+                                    <th class="p-3 text-center bg-blue-600">Time</th>
+                                    <th class="p-3 text-center bg-blue-600">Status</th>
+                                    <th class="p-3 text-center bg-blue-600">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reservationTable" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- Rows dynamically generated with JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- Facility Panel -->
             <div id="facilityPanel" class="hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <div class="flex space-x-3">
-                        <select id="facilityStatusFilter" class="form-select p-2 border rounded-md w-[150px]" onchange="fetchFacilitiesByStatus(this.value)">
+                <h2 class="text-1xl font-semibold text-blue-900">Reservation Requests</h2>
+                <div class="flex justify-between items-center mb-4 ">
+                    <div class="flex space-x-3 w-3/4">
+                        <select id="facilityStatusFilter" class="form-select p-2 border rounded-md w-1/2" onchange="fetchFacilitiesByStatus(this.value)">
                             <option value="Active" selected>Active</option>
                             <option value="Inactive">Inactive</option>
                         </select>
-                        <input type="text" id="facilitySearch" class="form-control p-2 border rounded-md" placeholder="Search facility...">
+                        <input type="text" id="facilitySearch" oninput="searchFacilities()" class="form-control p-2 border rounded-md" placeholder="Search facility...">
                     </div>
-                    <button class="btn btn-primary px-4 py-2" data-bs-toggle="modal" data-bs-target="#addFacilityModal">Add Facility</button>
+                    <button class="btn btn-primary px-4 py-2" data-bs-toggle="modal" onclick="openAddFacilityModal()">Add Facility</button>
                 </div>
 
-                <!-- Facility Cards -->
-                <div id="facilityList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- JS-inserted cards -->
+                <!-- Facility Cards Container -->
+                <div id="facilityContainer" class="flex flex-wrap justify-start overflow-y-auto pr-2" style="max-height: 470px">
+                    <!-- Cards will be injected here -->
                 </div>
             </div>
         </div>
 
         <!-- Confirmation Modal -->
-        <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 flex">
+        <div id="reserveconfirmationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 flex">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-80 max-w-full transform transition-transform">
                 <h2 class="text-lg font-bold mb-4 text-center text-gray-900">Confirm Action</h2>
                 <p id="modalMessage" class="text-gray-700 mb-6 text-center"></p>
@@ -155,7 +161,29 @@
             </div>
         </div>
 
-        <!-- Add Facility Modal -->
+        <!-- For Facility Panel -->
+        <!-- View Facility Modal -->
+        <div class="modal fade" id="viewFacilityModal" tabindex="-1" aria-labelledby="viewFacilityModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content p-4">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewFacilityModalLabel">Facility Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img id="facilityViewImage" src="" class="w-full h-100 object-cover rounded mb-4">
+                        <h2 id="facilityViewName" class="text-xl font-bold"></h2>
+                        <p id="facilityViewDescription" class="text-gray-600"></p>
+                        <p id="facilityViewAvailableTime" class="text-blue-700"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Facility/Edit Modal -->
         <div class="modal fade" id="addFacilityModal" tabindex="-1" aria-labelledby="addFacilityModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content p-4">
@@ -164,6 +192,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body space-y-3">
+                        <div id="facilityError" class="text-red-600 text-center text-sm mt-2 hidden"></div>
                         <div>
                             <label class="block font-medium">Facility Name</label>
                             <input type="text" id="facilityName" class="form-control" required>
@@ -174,29 +203,94 @@
                             <label class="block font-medium">Description</label>
                             <textarea id="facilityDesc" class="form-control resize-none" rows="3" maxlength="255"></textarea>
                             <div class="text-sm text-gray-500"><span id="descCount">0</span>/255</div>
+                            <small id="facilityDescError" class="text-danger hidden">Facility description is required.</small>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label>Start Time</label>
+                                <label class="block font-medium">Start Time</label>
                                 <select id="startTime" class="form-select"></select>
                             </div>
                             <div>
-                                <label>End Time</label>
+                                <label class="block font-medium">End Time</label>
                                 <select id="endTime" class="form-select"></select>
                             </div>
                             <small id="timeError" class="text-danger hidden col-span-2">End time must be after start time.</small>
                         </div>
 
                         <div>
-                            <label>Upload Image (optional)</label>
+                            <label class="block font-medium">Upload Image (optional)</label>
                             <input type="file" id="facilityImage" accept="image/*" class="form-control">
-                            <img id="imagePreview" src="#" class="w-full h-40 object-cover mt-2 rounded hidden" />
+                            <img id="imagePreview" src="#" class="w-full h-full object-cover mt-2 rounded hidden" />
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-secondary" data-bs-dismiss="modal" id="cancelBtn">Cancel</button>
                         <button id="saveFacilityBtn" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Confirmation Modal -->
+        <div id="AddEditConfirmationModal" class="modal-overlay hidden">
+            <div class="modal-container z-60">
+                <div class="modal-header">
+                    <h3>Are you sure you want to proceed?</h3>
+                </div>
+                <div class="modal-body">
+                    <p>This action will modify the list of facility.</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelBtnModal" class="btn-cancel">Cancel</button>
+                    <button id="confirmBtnModal" class="btn-confirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Confirmation Modal -->
+        <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-sm modal-dialog-centered">
+                <div class="modal-content p-4 text-center">
+                    <h5 class="text-green-600 font-bold mb-2">Facility Saved!</h5>
+                    <button type="button" class="btn btn-success w-full" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activate Confirmation Modal -->
+        <div class="modal fade" id="ActivateconfirmationModal" tabindex="-1" aria-labelledby="ActivateconfirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ActivateconfirmationModalLabel">Are you sure you want to activate this facility?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        This facility will become active.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="confirmActivateBtnModal" class="btn btn-success">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--Inactive Confirmation Modal -->
+        <div class="modal fade" id="DeactivateconfirmationModal" tabindex="-1" aria-labelledby="DeactivateconfirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="DeactivateconfirmationModalLabel">Are you sure you want to make this facility inactive?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        This facility will become inactive.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="confirmDeactivateBtnModal" class="btn btn-danger">Confirm</button>
                     </div>
                 </div>
             </div>
@@ -204,273 +298,10 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const reservationTable = document.getElementById("reservationTable");
-      const statusFilter = document.getElementById("statusFilter");
-      const confirmationModal = document.getElementById("confirmationModal");
-      const confirmBtn = document.getElementById("confirmBtn");
-      const cancelBtn = document.getElementById("cancelBtn");
+<link rel="stylesheet" href="~/css/facility-reservation-staff.css">
 
-      let selectedReservationId = null;
-      let selectedAction = null;
-
-      // Fetch reservations from backend
-      async function fetchReservations(status = "Pending") {
-        try {
-          const response = await fetch(`/staff/Reservations?status=${status}`);
-          const data = await response.json();
-          renderReservations(data);
-        } catch (error) {
-          console.error("Error fetching reservations:", error);
-        }
-      }
-
-      // Render reservations in table
-      function renderReservations(reservations) {
-        reservationTable.innerHTML = "";
-
-        if (reservations.length === 0) {
-          reservationTable.innerHTML = `
-            <tr>
-              <td colspan="6" class="text-center p-4 text-gray-500">
-                No ${statusFilter.value.charAt(0).toUpperCase() + statusFilter.value.slice(1)} Requests
-              </td>
-            </tr>`;
-          return;
-        }
-
-        reservations.forEach((r) => {
-          const row = document.createElement("tr");
-          row.className = "hover:bg-gray-100 text-base transition";
-          row.innerHTML = `
-            <td class="p-3 text-center">${r.id}</td>
-            <td class="p-3 text-center">${r.facilityName}</td>
-            <td class="p-3 text-center">${r.requestedBy}</td>
-            <td class="p-3 text-center">${r.schedDate}</td>
-            <td class="p-3 text-center">${r.startTime} - ${r.endTime}</td>
-            <td class="p-3 text-center">
-              <span class="px-2 py-1 text-xs font-semibold rounded ${
-                r.status === "Pending"
-                  ? "bg-yellow-500 text-white"
-                  : r.status === "Approved"
-                  ? "bg-green-500 text-white"
-                  : "bg-red-500 text-white"
-              }">
-                ${r.status.toUpperCase()}
-              </span>
-            </td>
-            <td class="p-3 text-center space-x-2">
-              ${
-                r.status === "Pending"
-                  ? `
-                <button class="approveBtn px-4 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition" data-id="${r.id}">Approve</button>
-                <button class="declineBtn px-4 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition" data-id="${r.id}">Decline</button>
-                `
-                  : `<span class="text-gray-500 text-sm">No Actions</span>`
-              }
-            </td>
-          `;
-          reservationTable.appendChild(row);
-        });
-
-        attachEventListeners();
-      }
-
-      // Attach action listeners
-      function attachEventListeners() {
-        document.querySelectorAll(".approveBtn").forEach((btn) =>
-          btn.addEventListener("click", () => openModal(btn.dataset.id, "Approve"))
-        );
-
-        document.querySelectorAll(".declineBtn").forEach((btn) =>
-          btn.addEventListener("click", () => openModal(btn.dataset.id, "Declined"))
-        );
-      }
-
-      // Open confirmation modal
-        function openModal(reservationId, action) {
-            selectedReservationId = reservationId;
-            selectedAction = action;
-            const modalMessage = document.getElementById("modalMessage");
-            modalMessage.textContent = `Are you sure you want to ${action.toLowerCase()} this reservation?`;
-            confirmationModal.classList.remove("hidden");
-        }
-
-      // Handle modal buttons
-      cancelBtn.addEventListener("click", () => confirmationModal.classList.add("hidden"));
-
-      confirmBtn.addEventListener("click", async () => {
-        if (selectedReservationId && selectedAction) {
-          try {
-            await fetch(`/staff/reservations/${selectedReservationId}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status: selectedAction === "Approve" ? "Approved" : "Declined" }),
-            });
-            confirmationModal.classList.add("hidden");
-            fetchReservations(statusFilter.value);
-          } catch (error) {
-            console.error("Error updating reservation:", error);
-          }
-        }
-      });
-
-      // Filter reservations
-      statusFilter.addEventListener("change", () => fetchReservations(statusFilter.value));
-
-      // Initial fetch
-      fetchReservations();
-    });
-</script>
-
-<!-- Facility Card Template -->
-<script type="text/template" id="facilityCardTemplate">
-    <div class="relative group bg-white p-4 shadow-md rounded-lg transition hover:shadow-lg">
-        <img src="{IMAGE}" alt="{FACILITY_NAME}" class="w-full h-40 object-cover rounded">
-        <h3 class="text-xl font-bold mt-3 text-blue-900">{FACILITY_NAME}</h3>
-        <p class="text-sm text-gray-600">{DESCRIPTION}</p>
-        <div class="absolute top-2 right-2 hidden group-hover:flex space-x-2">
-            <button class="btn btn-outline-primary btn-sm">View</button>
-            <button class="btn btn-outline-success btn-sm">Edit</button>
-            <button class="btn btn-outline-danger btn-sm">Delete</button>
-        </div>
-    </div>
-</script>
-
-<script>
-    function fetchFacilitiesByStatus(status = 'Active') {
-        fetch(`/staff/by-status/${status}`)
-            .then(res => res.json())
-            .then(data => {
-                const container = document.getElementById("facilityList");
-                container.innerHTML = "";
-                data.forEach(facility => {
-                    container.innerHTML += `
-                        <div class="relative group border rounded-lg p-4 shadow hover:shadow-lg transition w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 m-2">
-                            <img src="/images/facilityimage/${facility.facilityName.replace(/\s+/g, '_')}.jpg" alt="${facility.facilityName}" class="w-full h-40 object-cover rounded">
-                            <h2 class="text-lg font-semibold mt-2">${facility.facilityName}</h2>
-                            <p class="text-gray-600 text-sm">${facility.description}</p>
-                            <p class="text-blue-700 text-sm mt-1 font-medium">Time: ${facility.availableTime}</p>
-                            <div class="absolute inset-0 bg-black bg-opacity-40 hidden group-hover:flex items-center justify-center space-x-2 rounded-lg transition">
-                                <button class="btn btn-primary btn-sm" onclick="viewFacility(${facility.facilityId})">View</button>
-                                <button class="btn btn-warning btn-sm" onclick="editFacility(${facility.facilityId})">Edit</button>
-                                <button class="btn btn-danger btn-sm" onclick="confirmDelete(${facility.facilityId})">Delete</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-    }
-
-
-    // Time options generation
-    const startTimeSelect = document.getElementById("startTime");
-    const endTimeSelect = document.getElementById("endTime");
-    const validTimes = [];
-    for (let h = 6; h <= 10; h++) {
-        for (let m of [0, 30]) {
-            if (h === 10 && m === 30) break;
-            let hour = h > 12 ? h - 12 : h;
-            let suffix = h >= 12 ? "PM" : "AM";
-            let time = `${("0" + hour).slice(-2)}:${m === 0 ? "00" : "30"} ${suffix}`;
-            validTimes.push(time);
-        }
-    }
-    validTimes.forEach(time => {
-        startTimeSelect.innerHTML += `<option value="${time}">${time}</option>`;
-        endTimeSelect.innerHTML += `<option value="${time}">${time}</option>`;
-    });
-
-    // Description char count
-    const descInput = document.getElementById("facilityDesc");
-    const descCount = document.getElementById("descCount");
-    descInput.addEventListener("input", () => {
-        descCount.textContent = descInput.value.length;
-    });
-
-    // Image preview
-    const imageInput = document.getElementById("facilityImage");
-    const imagePreview = document.getElementById("imagePreview");
-    imageInput.addEventListener("change", e => {
-        const file = e.target.files[0];
-        if (file) {
-            imagePreview.src = URL.createObjectURL(file);
-            imagePreview.classList.remove("hidden");
-        }
-    });
-
-    // Save logic with validations
-    document.getElementById("saveFacilityBtn").addEventListener("click", () => {
-        const name = document.getElementById("facilityName").value.trim();
-        const desc = descInput.value.trim();
-        const start = startTimeSelect.value;
-        const end = endTimeSelect.value;
-        const nameError = document.getElementById("facilityNameError");
-        const timeError = document.getElementById("timeError");
-
-        nameError.classList.add("hidden");
-        timeError.classList.add("hidden");
-
-        if (!name) {
-            nameError.classList.remove("hidden");
-            return;
-        }
-
-        const startIndex = validTimes.indexOf(start);
-        const endIndex = validTimes.indexOf(end);
-
-        if (startIndex >= endIndex) {
-            timeError.classList.remove("hidden");
-            return;
-        }
-
-        const availableTime = `${start.toUpperCase()} - ${end.toUpperCase()}`;
-        const imageName = name.replace(/\s+/g, '_');
-        const imageFile = imageInput.files[0];
-
-        const formData = new FormData();
-        formData.append("facilityName", name);
-        formData.append("description", desc);
-        formData.append("availableTime", availableTime);
-        if (imageFile) {
-            formData.append("image", imageFile, `${imageName}.jpg`);
-        }
-
-        // Send to API using fetch or post to backend controller
-        // e.g., fetch('/Facility/Add', { method: 'POST', body: formData });
-
-        alert(`Saved:\nName: ${name}\nDesc: ${desc}\nTime: ${availableTime}`);
-    });
-
-    // Initial load
-    document.addEventListener("DOMContentLoaded", () => {
-        fetchFacilitiesByStatus("Active");
-    });
-</script>
-
-<script>
-    // Toggle panels
-    const reservationBtn = document.getElementById("reservationBtn");
-    const facilityBtn = document.getElementById("facilityBtn");
-    const reservationPanel = document.getElementById("reservationPanel");
-    const facilityPanel = document.getElementById("facilityPanel");
-
-    reservationBtn.addEventListener("click", () => {
-        reservationBtn.classList.replace("bg-gray-200", "bg-blue-900");
-        reservationBtn.classList.replace("text-blue-900", "text-white");
-        facilityBtn.classList.replace("bg-blue-900", "bg-gray-200");
-        facilityBtn.classList.replace("text-white", "text-blue-900");
-        reservationPanel.classList.remove("hidden");
-        facilityPanel.classList.add("hidden");
-    });
-
-    facilityBtn.addEventListener("click", () => {
-        facilityBtn.classList.replace("bg-gray-200", "bg-blue-900");
-        facilityBtn.classList.replace("text-blue-900", "text-white");
-        reservationBtn.classList.replace("bg-blue-900", "bg-gray-200");
-        reservationBtn.classList.replace("text-white", "text-blue-900");
-        reservationPanel.classList.add("hidden");
-        facilityPanel.classList.remove("hidden");
-    });
-</script>
+@section Scripts{
+    <script src="~/js/notification-staff.js"></script>
+    <script src="~/js/reservationrequest-staff.js"></script>
+    <script src="~/js/facility-staff.js"></script>
+}
