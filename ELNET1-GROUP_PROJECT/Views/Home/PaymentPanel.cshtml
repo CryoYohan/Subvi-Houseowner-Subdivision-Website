@@ -110,7 +110,7 @@
 
     <!-- Main Content -->
     <div class="flex-1 p-2">
-        <div class="max-w-3xl mx-auto">
+        <div class="w-full mx-auto">
             <!-- Payment Header -->
             <div class="text-center mb-2">
                 <h1 class="text-3xl font-bold text-gray-800">Complete Your Payment</h1>
@@ -145,7 +145,7 @@
             </div>
 
             <!-- Section 1: Bill Details -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8 transition-all duration-300 transform" id="section1">
+            <div class="rounded-xl shadow-lg overflow-hidden mb-8 transition-all duration-300 transform"  style="background-color: white" id="section1">
                 <div class="p-8">
                     <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
                         <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3">1</span>
@@ -176,7 +176,7 @@
                     </div>
 
                     <div class="mt-8 flex justify-end">
-                        <button onclick="nextSection()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center">
+                        <button onclick="goToPaymentMethod()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 flex items-center">
                             Continue
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -187,7 +187,7 @@
             </div>
 
             <!-- Section 2: Payment Method -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8 hidden transition-all duration-300 transform" id="section2">
+            <div class="rounded-xl shadow-lg overflow-hidden hidden mb-8 transition-all duration-300 transform" id="section2" style="background-color: white">
                 <div class="p-8">
                     <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
                         <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3">2</span>
@@ -196,9 +196,9 @@
 
                     <div class="grid grid-cols-2 gap-4 mb-8">
                         <!-- GCash -->
-                        <label class="payment-method-option">
-                            <input type="radio" name="paymentMethod" value="gcash" class="sr-only" checked>
-                                <div class="border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full">
+                        <div class="payment-method-card border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full relative">
+                            <label class="block cursor-pointer w-full">
+                                <input type="radio" name="paymentMethod" value="GCash" class="sr-only">
                                 <div class="bg-blue-50 p-4 rounded-lg flex justify-center">
                                     <img src="/images/payment/gcash.png" alt="GCash" class="h-12">
                                 </div>
@@ -206,13 +206,14 @@
                                     <div class="font-medium text-gray-800">GCash</div>
                                     <div class="text-sm text-gray-500">Pay with mobile wallet</div>
                                 </div>
-                            </div>
-                        </label>
+                            </label>
+                            <input type="text" name="paymentNumber_GCash" class="payment-number-input hidden mt-3 border border-gray-300 rounded px-3 py-2 w-full" placeholder="Enter GCash number">
+                        </div>
 
                         <!-- Maya -->
-                        <label class="payment-method-option">
-                            <input type="radio" name="paymentMethod" value="paymaya" class="sr-only">
-                             <div class="border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full">
+                        <div class="payment-method-card border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full relative">
+                            <label class="block cursor-pointer w-full">
+                                <input type="radio" name="paymentMethod" value="Maya" class="sr-only">
                                 <div class="bg-purple-50 p-4 rounded-lg flex justify-center">
                                     <img src="/images/payment/maya.png" alt="Maya" class="h-12">
                                 </div>
@@ -220,13 +221,14 @@
                                     <div class="font-medium text-gray-800">Maya</div>
                                     <div class="text-sm text-gray-500">Pay with mobile wallet</div>
                                 </div>
-                            </div>
-                        </label>
+                            </label>
+                            <input type="text" name="paymentNumber_Maya" class="payment-number-input hidden mt-3 border border-gray-300 rounded px-3 py-2 w-full" placeholder="Enter Maya number">
+                        </div>
 
                         <!-- GrabPay -->
-                        <label class="payment-method-option">
-                            <input type="radio" name="paymentMethod" value="grab_pay" class="sr-only">
-                                <div class="border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full">
+                        <div class="payment-method-card border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full relative">
+                            <label class="block cursor-pointer w-full">
+                                <input type="radio" name="paymentMethod" value="GrabPay" class="sr-only">
                                 <div class="bg-green-50 p-4 rounded-lg flex justify-center">
                                     <img src="/images/payment/grabpay.png" alt="GrabPay" class="h-12">
                                 </div>
@@ -234,13 +236,14 @@
                                     <div class="font-medium text-gray-800">GrabPay</div>
                                     <div class="text-sm text-gray-500">Pay with Grab app</div>
                                 </div>
-                            </div>
-                        </label>
+                            </label>
+                            <input type="text" name="paymentNumber_GrabPay" class="payment-number-input hidden mt-3 border border-gray-300 rounded px-3 py-2 w-full" placeholder="Enter GrabPay number">
+                        </div>
 
                         <!-- Credit/Debit Card -->
-                        <label class="payment-method-option">
-                            <input type="radio" name="paymentMethod" value="card" class="sr-only">
-                                <div class="border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full">
+                        <div class="payment-method-card border border-gray-200 rounded-lg p-4 cursor-pointer transition-all hover:border-blue-300 h-full relative">
+                            <label class="block cursor-pointer w-full">
+                                <input type="radio" name="paymentMethod" value="Card" class="sr-only">
                                 <div class="bg-yellow-50 p-4 rounded-lg flex justify-center">
                                     <img src="/images/payment/cards.png" alt="Credit/Debit Card" class="h-12">
                                 </div>
@@ -248,12 +251,17 @@
                                     <div class="font-medium text-gray-800">Card</div>
                                     <div class="text-sm text-gray-500">Credit/Debit card</div>
                                 </div>
-                            </div>
-                        </label>
+                            </label>
+                            <input type="text" name="paymentNumber_Card" class="payment-number-input hidden mt-3 border border-gray-300 rounded px-3 py-2 w-full" placeholder="Enter Card number">
+                        </div>
                     </div>
 
+                    <!-- Hidden inputs for saving selected values -->
+                    <input type="hidden" id="selectedMethod" name="selectedMethod" />
+                    <input type="hidden" id="formPaymentNumber" name="formPaymentNumber" />
+
                     <div class="flex justify-between mt-8">
-                        <button onclick="prevSection()" class="px-6 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg transition duration-200 flex items-center">
+                        <button onclick="goBacktoSection1()" class="px-6 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg transition duration-200 flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
                             </svg>
@@ -270,72 +278,79 @@
             </div>
 
             <!-- Section 3: Confirmation -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden hidden transition-all duration-300 transform" id="section3">
+            <div class="rounded-xl shadow-lg overflow-hidden hidden transition-all duration-300 transform" style="background-color: white" id="section3">
                 <div class="p-8">
                     <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
                         <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3">3</span>
                         Confirm Your Payment
                     </h2>
 
-                    <div class="bg-gray-50 rounded-lg p-6 mb-8">
-                        <h3 class="text-lg font-medium text-gray-800 mb-4">Bill Summary</h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Reference Number</span>
-                                <span class="font-medium">@ViewBag.Bill.BillId</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Description</span>
-                                <span class="font-medium">@ViewBag.Bill.BillName</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Amount Due</span>
-                                <span class="font-medium">₱@ViewBag.Bill.BillAmount.ToString("N2")</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Service Fee</span>
-                                <span class="font-medium">₱200.00</span>
-                            </div>
-                            <div class="flex justify-between pt-3 border-t border-gray-200 mt-3">
-                                <span class="text-lg font-semibold">Total Amount</span>
-                                <span class="text-lg font-bold text-blue-600">₱@((ViewBag.Bill.BillAmount + 200).ToString("N2"))</span>
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <!-- Left: Bill Summary -->
+                        <div class="flex-1 bg-gray-50 rounded-lg p-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">Bill Summary</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Reference Number</span>
+                                    <span class="font-medium">@ViewBag.Bill.BillId</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Description</span>
+                                    <span class="font-medium">@ViewBag.Bill.BillName</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Amount Due</span>
+                                    <span class="font-medium">₱@ViewBag.Bill.BillAmount.ToString("N2")</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Service Fee</span>
+                                    <span class="font-medium">₱200.00</span>
+                                </div>
+                                <div class="flex justify-between pt-3 border-t border-gray-200 mt-3">
+                                    <span class="text-lg font-semibold">Total Amount</span>
+                                    <span class="text-lg font-bold text-blue-600">₱@((ViewBag.Bill.BillAmount + 200).ToString("N2"))</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="bg-gray-50 rounded-lg p-6 mb-8">
-                        <h3 class="text-lg font-medium text-gray-800 mb-4">Payment Method</h3>
-                        <div id="selectedPaymentMethod" class="flex items-center">
-                            <img id="paymentMethodImage" src="/images/payment/gcash.png" alt="GCash" class="h-10 mr-4">
+                        <!-- Right: Payment Method Info -->
+                        <div class="flex-1 bg-gray-50 rounded-lg p-6 flex flex-col justify-between">
                             <div>
-                                <div class="font-medium text-gray-800" id="paymentMethodName">GCash</div>
-                                <div class="text-sm text-gray-500" id="paymentMethodDescription">Pay with mobile wallet</div>
+                                <h3 class="text-lg font-medium text-gray-800 mb-4">Payment Method</h3>
+                                <div id="selectedPaymentMethod" class="flex items-center mb-6">
+                                    <img id="paymentMethodImage" src="" alt="" class="h-10 mr-4">
+                                    <div>
+                                        <div class="font-medium text-gray-800" id="paymentMethodName"></div>
+                                        <div class="text-sm text-gray-500" id="paymentMethodDescription"></div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start mb-4">
+                                    <input type="checkbox" id="terms" name="terms" required
+                                           class="mt-1 mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5">
+                                    <label for="terms" class="text-sm text-gray-600">
+                                        I agree to the <a href="#" class="text-blue-600 hover:underline">Terms and Conditions</a>
+                                        and authorize the payment of ₱@((ViewBag.Bill.BillAmount + 200).ToString("N2"))
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="flex justify-between mt-4">
+                                <button onclick="goToPaymentMethod()" class="px-6 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg transition duration-200 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                    Back
+                                </button>
+                                <button onclick="confirmAndPay()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                    </svg>
+                                    Confirm and Pay
+                                </button>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="flex items-start mb-8">
-                        <input type="checkbox" id="terms" name="terms" required
-                               class="mt-1 mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5">
-                        <label for="terms" class="text-sm text-gray-600">
-                            I agree to the <a href="#" class="text-blue-600 hover:underline">Terms and Conditions</a>
-                            and authorize the payment of ₱@((ViewBag.Bill.BillAmount + 200).ToString("N2"))
-                        </label>
-                    </div>
-
-                    <div class="flex justify-between">
-                        <button onclick="prevSection()" class="px-6 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg transition duration-200 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-                            </svg>
-                            Back
-                        </button>
-                        <button type="submit" form="paymentForm" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                            </svg>
-                            Confirm and Pay
-                        </button>
                     </div>
                 </div>
             </div>
@@ -358,83 +373,134 @@
 </div>
 
 <script>
-    let currentSection = 1;
+        let currentSection = 1;
     const totalSections = 3;
-    
+
     function updateProgress() {
-        // Update progress bar
-        document.getElementById('progressBar').style.width = `${(currentSection / totalSections) * 100}%`;
-        
-        // Update step indicators
+        const progress = document.getElementById('progressBar');
+        const targetWidth = (currentSection / totalSections) * 100;
+        progress.style.width = `${targetWidth}%`;
+
         for (let i = 1; i <= totalSections; i++) {
             const step = document.getElementById(`step${i}`);
-            if (i < currentSection) {
-                step.classList.remove('bg-gray-200', 'text-gray-600');
-                step.classList.add('bg-green-500', 'text-white');
-            } else if (i === currentSection) {
-                step.classList.remove('bg-gray-200', 'text-gray-600');
-                step.classList.add('bg-blue-600', 'text-white');
-            } else {
-                step.classList.remove('bg-blue-600', 'text-white', 'bg-green-500');
-                step.classList.add('bg-gray-200', 'text-gray-600');
-            }
-        }
-    }
-
-         function nextSection() {
-        if (currentSection < totalSections) {
-            // Animate current section out
-            document.getElementById(`section${currentSection}`).classList.add('hidden');
-            document.getElementById(`section${currentSection}`).classList.remove('animate-fadeIn');
-
-            currentSection++;
-
-            // Animate next section in
-            document.getElementById(`section${currentSection}`).classList.remove('hidden');
-            document.getElementById(`section${currentSection}`).classList.add('animate-fadeIn');
-
-            updateProgress();
-
-            // Update payment method display in confirmation section
-            if (currentSection === 3) {
-                const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked');
-                if (selectedMethod) {
-                    document.getElementById('formPaymentMethod').value = selectedMethod.value;
-
-                    // Update displayed payment method
-                    const card = selectedMethod.parentElement.querySelector('.payment-method-card');
-                    const img = card.querySelector('img').cloneNode(true);
-                    const name = card.querySelector('.font-medium').textContent;
-                    const desc = card.querySelector('.text-sm').textContent;
-                    const number = card.querySelector('.payment-number')?.textContent ?? '';  // Optional chaining in case there's no number
-
-                    // Replace payment method image
-                    const paymentImage = document.getElementById('paymentMethodImage');
-                    paymentImage.replaceWith(img);
-                    paymentImage.id = 'paymentMethodImage'; // Ensure new img has correct ID
-
-                    // Update other details
-                    document.getElementById('paymentMethodName').textContent = name;
-                    document.getElementById('paymentMethodDescription').textContent = desc;
-                    document.getElementById('paymentMethodNumber').textContent = number;
+            setTimeout(() => {
+                if (i < currentSection) {
+                    step.classList.remove('bg-gray-200', 'text-gray-600');
+                    step.classList.add('bg-green-500', 'text-white');
+                } else if (i === currentSection) {
+                    step.classList.remove('bg-gray-200', 'text-gray-600', 'bg-green-500');
+                    step.classList.add('bg-blue-600', 'text-white');
+                } else {
+                    step.classList.remove('bg-blue-600', 'text-white', 'bg-green-500');
+                    step.classList.add('bg-gray-200', 'text-gray-600');
                 }
-            }
+            }, 150 * i); // Delay step animation slightly
         }
     }
 
-    function prevSection() {
-        if (currentSection > 1) {
-            // Animate current section out
-            document.getElementById(`section${currentSection}`).classList.add('hidden');
-            document.getElementById(`section${currentSection}`).classList.remove('animate-fadeIn');
+    const methodCards = document.querySelectorAll('.payment-method-card');
 
-            currentSection--;
+    methodCards.forEach(card => {
+        const radio = card.querySelector('input[type="radio"]');
+        const input = card.querySelector('.payment-number-input');
 
-            // Animate previous section in
-            document.getElementById(`section${currentSection}`).classList.remove('hidden');
-            document.getElementById(`section${currentSection}`).classList.add('animate-fadeIn');
+        radio.addEventListener('change', () => {
+            methodCards.forEach(c => {
+                c.classList.remove('border-blue-500', 'bg-blue-50');
+                c.querySelector('.payment-number-input')?.classList.add('hidden');
+            });
 
-            updateProgress();
+            // Highlight selected
+            card.classList.add('border-blue-500', 'bg-blue-50');
+            if (input) input.classList.remove('hidden');
+        });
+    });
+
+    function goToPaymentMethod() {
+        currentSection = 2;
+        document.getElementById("section1").classList.add("hidden");
+        document.getElementById("section3").classList.add("hidden");
+        document.getElementById("section2").classList.remove("hidden");
+        updateProgress();
+    }
+
+    function goBacktoSection1() {
+        currentSection = 1;
+        document.getElementById("section2").classList.add("hidden");
+        document.getElementById("section1").classList.remove("hidden");
+        updateProgress();
+    }
+
+    function nextSection() {
+        const selectedRadio = document.querySelector('input[name="paymentMethod"]:checked');
+        if (!selectedRadio) {
+            alert("Please select a payment method.");
+            return;
+        }
+
+        const selectedCard = selectedRadio.closest('.payment-method-card');
+        if (!selectedCard) {
+            console.error("Selected radio button does not have a valid parent card.");
+            return;
+        }
+
+        const method = selectedRadio.value;
+        const input = selectedCard.querySelector('.payment-number-input');
+        const number = input ? input.value.trim() : '';
+
+        if (!number) {
+            alert("Please enter your " + method + " number.");
+            return;
+        }
+
+        const methodInput = document.getElementById("selectedMethod");
+        const numberInput = document.getElementById("formPaymentNumber");
+
+        if (!methodInput || !numberInput) {
+            console.error("Hidden input fields not found in the DOM.");
+            return;
+        }
+
+        methodInput.value = method;
+        numberInput.value = number;
+
+        // Proceed to next section
+        currentSection = 3;
+        document.getElementById("section2").classList.add("hidden");
+        document.getElementById("section3").classList.remove("hidden");
+
+        // Update Section 3 preview
+        document.getElementById("paymentMethodImage").src = `/images/payment/${method.toLowerCase()}.png`;
+        document.getElementById("paymentMethodName").textContent = method;
+        document.getElementById("paymentMethodDescription").textContent = number;
+
+        updateProgress();
+    }
+
+    function changePaymentMethod() {
+        // Go back to Section 2 with animation
+        document.getElementById(`section${currentSection}`).classList.add('hidden');
+        currentSection = 2;
+        document.getElementById(`section${currentSection}`).classList.remove('hidden');
+        document.getElementById(`section${currentSection}`).classList.add('animate-fadeIn');
+        updateProgress();
+
+        // Restore selected method and input value
+        const method = document.getElementById('formPaymentMethod').value;
+        const number = document.getElementById('formPaymentNumber').value;
+
+        const radio = [...document.querySelectorAll('input[name="paymentMethod"]')]
+                        .find(r => r.value === method);
+        if (radio) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change')); // Reapply styles
+
+            // Fill the input
+            const input = radio.parentElement.querySelector('.payment-input');
+            if (input) {
+                input.classList.remove('hidden');
+                input.value = number;
+            }
         }
     }
 
@@ -442,24 +508,55 @@
     document.addEventListener('DOMContentLoaded', () => {
         updateProgress();
 
+    function confirmAndPay() {
+        const method = document.getElementById('formPaymentMethod').value;
+        const number = document.getElementById('formPaymentNumber').value;
+
+        if (!method || !number) {
+            alert('Please complete payment details.');
+            return;
+        }
+
+        // Proceed to mock payment
+        alert(`Processing ${method} with number ${number}...`);
+
+        // Call backend for Square integration (TODO)
+    }
+
         // Add animation classes
         for (let i = 1; i <= totalSections; i++) {
             document.getElementById(`section${i}`).classList.add('transition-all', 'duration-300');
         }
 
         // Set up payment method selection
-        document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
-            radio.addEventListener('change', function () {
-                // Reset styles for all cards
-                document.querySelectorAll('.payment-method-card').forEach(card => {
-                    card.classList.remove('border-blue-400', 'bg-blue-50');
-                });
+        if (currentSection === 3) {
+            const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            if (selectedMethod) {
+                const card = selectedMethod.parentElement.querySelector('.payment-method-card');
 
-                // Apply styles to selected card
-                if (this.checked) {
-                    this.parentElement.querySelector('.payment-method-card').classList.add('border-blue-400', 'bg-blue-50');
-                }
-            });
-        });
+                // Extract elements
+                const methodImg = card.querySelector('img').cloneNode(true);
+                const methodName = card.querySelector('.font-medium')?.textContent ?? '';
+                const methodDesc = card.querySelector('.text-sm')?.textContent ?? '';
+                const inputNumber = card.querySelector('.payment-input')?.value ?? '';
+
+                // Update confirmation display
+                const displayContainer = document.getElementById('selectedPaymentMethod');
+
+                // Update image
+                const imageSlot = displayContainer.querySelector('#paymentMethodImage');
+                methodImg.id = 'paymentMethodImage'; // Keep same ID
+                imageSlot.replaceWith(methodImg);
+
+                // Update name, desc, and number
+                document.getElementById('paymentMethodName').textContent = methodName;
+                document.getElementById('paymentMethodDescription').textContent = methodDesc;
+                document.getElementById('paymentMethodNumber').textContent = inputNumber;
+
+                // Hidden input for backend if needed
+                document.getElementById('formPaymentMethod').value = selectedMethod.value;
+                document.getElementById('formPaymentNumber').value = inputNumber;
+            }
+        }
     });
     </script>

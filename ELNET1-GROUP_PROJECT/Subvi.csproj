@@ -27,6 +27,7 @@
     </PackageReference>
     <PackageReference Include="Paymongo.Sharp" Version="0.5.1" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
+    <PackageReference Include="Square" Version="41.1.0" />
     <PackageReference Include="Syncfusion.DocIO.Net.Core" Version="27.1.52" />
   </ItemGroup>
 

@@ -340,6 +340,7 @@
         })
         .catch(error => {
             console.error('Error loading vehicle options:', error);
+            showToast('There is something error occurred please try again later.', 'red');
         });
 
 
@@ -420,7 +421,7 @@
                         this.classList.add("active");
                     } catch (error) {
                         console.error("Tab switch error:", error);
-                        alert("Error switching tabs");
+                        showToast('There is something error occurred please try again later.', 'red');
                     }
                 });
 
@@ -448,7 +449,7 @@
 
             } catch (error) {
                 console.error("Report type change error:", error);
-                alert("Error changing report type");
+                showToast('There is something error occurred please try again later.', 'red');
             }
         });
 
@@ -485,9 +486,9 @@
                 });
             } catch (error) {
                 console.error("Report generation error:", error);
-                alert(`Report generation failed: ${error.message}`);
+                showToast(`Report generation failed: ${error.message}`,'red');
             } finally {
-                console.log(`Report generated in ${performance.now() - startTime}ms`);
+                showToast('Successfully generated report.');
             }
         });
     });
@@ -528,10 +529,27 @@
             const data = await response.json();
             callback(data);
         } catch (error) {
-            console.error("Data fetch error:", error);
+            console.error('An error occurred', error);
+            showToast('There is something error occurred please try again later.', 'red');
             throw error;
         }
     }
+
+    function showToast(message, color = 'green') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transform translate-y-20 opacity-0 transition-all z-50`;
+            toast.style.backgroundColor = color;
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }, 50);
+        }
 
     async function generateExcelReport(data, reportType) {
             return new Promise((resolve, reject) => {

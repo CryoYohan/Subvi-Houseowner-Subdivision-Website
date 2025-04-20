@@ -355,6 +355,7 @@
         })
         .catch(error => {
             console.error('Error loading vehicle options:', error);
+            showToast('There is something error occurred please try again later.', 'red');
         });
 
         const reportTypeSelect = document.getElementById("reportType");
@@ -431,7 +432,7 @@
                         this.classList.add("active");
                     } catch (error) {
                         console.error("Tab switch error:", error);
-                        alert("Error switching tabs");
+                        showToast('There is something error occurred please try again later.', 'red');
                     }
                 });
 
@@ -458,7 +459,7 @@
 
             } catch (error) {
                 console.error("Report type change error:", error);
-                alert("Error changing report type");
+                showToast('There is something error occurred please try again later.', 'red');
             }
         });
 
@@ -495,9 +496,9 @@
                 });
             } catch (error) {
                 console.error("Report generation error:", error);
-                alert(`Report generation failed: ${error.message}`);
+                showToast('There is something error occurred please try again later.', 'red');
             } finally {
-                console.log(`Report generated in ${performance.now() - startTime}ms`);
+                showToast("Successfully generated report");
             }
         });
     });
@@ -520,7 +521,6 @@
                 formData.append("endDate", document.getElementById("endDate").value);
             }
 
-            console.log("print",status)
             const response = await fetch('/Staff/GetReportData', {
                 method: "POST",
                 body: formData
@@ -534,6 +534,7 @@
             callback(data);
         } catch (error) {
             console.error("Data fetch error:", error);
+            showToast('There is something error occurred please try again later.', 'red');
             throw error;
         }
     }
@@ -1033,6 +1034,7 @@
             }, 100);
         } catch (error) {
             console.error("DOCX Generation Error:", error);
+            showToast('There is something error occurred please try again later.', 'red');
             throw error;
         }
     }
