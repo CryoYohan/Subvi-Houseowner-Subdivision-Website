@@ -147,6 +147,13 @@
                         <span>Poll</span>
                         <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="poll-count"></span>
                     </button>
+                    <button data-type="Payment"
+                            class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                       hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                        <i class="fas fa-credit-card text-lg"></i>
+                        <span>Payment</span>
+                        <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="payment-count"></span>
+                    </button>
                     <button data-type="Account"
                             class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                        hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
@@ -470,6 +477,7 @@
             'Announcement': '<i class="fas fa-bullhorn text-orange-500"></i>',
             'Event': '<i class="fas fa-calendar-alt text-pink-500"></i>',
             'Poll': '<i class="fas fa-poll text-yellow-500"></i>',
+            'Payment': '<i class="fas fa-credit-card text-blue-500"></i>',
             'Account': '<i class="fas fa-user text-green-500"></i>'
         }[type] || '<i class="fas fa-bell text-gray-400"></i>';
     }
@@ -488,6 +496,7 @@
                 'Announcement': 0,
                 'Event': 0,
                 'Poll': 0,
+                'Payment': 0,
                 'Account': 0
             };
 
@@ -505,6 +514,7 @@
                 'Announcement': document.getElementById('announcement-count'),
                 'Event': document.getElementById('event-count'),
                 'Poll': document.getElementById('poll-count'),
+                'Payment': document.getElementById('payment-count'),
                 'Account': document.getElementById('account-count')
             };
 
@@ -548,6 +558,7 @@
             notif.type === 'Announcement' ? 'border-green-500 bg-green-50' :
             notif.type === 'Event' ? 'border-green-500 bg-green-50' :
             notif.type === 'Poll' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Payment' ? 'border-green-500 bg-green-50' :
             notif.type === 'Account' ? 'border-green-500 bg-green-50' :
             'border-purple-500 bg-purple-50'
         } animate-slide-in`;

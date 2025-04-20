@@ -1,8 +1,8 @@
-﻿
-let deleteId = '';
+﻿let deleteId = '';
 let selectedStatus = '';
 let homeowners = [];
 let selectedHomeownerId = null;
+let vehicleToActivate = null;
 
 // Expose to global scope
 window.initCarPreview();
@@ -94,36 +94,39 @@ function renderVehicleTable(data, status) {
         tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4" style="background-color: white">No ${status} Data Found.</td></tr>`;
     } else {
         data.forEach(vehicle => {
-            // Function to format vehicle type
             function formatVehicleType(type) {
-                if (type.toLowerCase() === 'suv') {
-                    return type.toUpperCase();  // All uppercase if SUV
-                } else {
-                    return type.charAt(0).toUpperCase() + type.slice(1);  // Capitalize first letter otherwise
-                }
+                return type.toLowerCase() === 'suv' ? type.toUpperCase() : type.charAt(0).toUpperCase() + type.slice(1);
             }
 
-            // Creating table row
-            const row = document.createElement('tr');
+            let actions = `
+                <button onclick="editVehicle(${vehicle.vehicleId})" class="text-blue-600 text-base font-semibold">Edit</button>
+            `;
 
-            row.innerHTML = `
-                    <td class="p-2 text-center" style="background-color: white">${vehicle.plateNumber}</td>
-                    <td class="p-2 text-center" style="background-color: white">${formatVehicleType(vehicle.type)}</td>
-                    <td class="p-2 text-center" style="background-color: white">${vehicle.color}</td>
-                    <td class="p-2 text-center" style="background-color: white">${vehicle.carBrand}</td>
-                    <td class="p-2 text-center" style="background-color: white">
-                        <span class="status-badge
-                            ${vehicle.status === 'Active' ? 'bg-green-500 text-white' :
-                    vehicle.status === 'Inactive' ? 'bg-red-500 text-white' :
-                        'bg-gray-500 text-white'}">
-                            ${vehicle.status}
-                        </span>
-                    </td>
-                    <td class="p-2 text-center space-x-2" style="background-color: white">
-                        <button onclick="editVehicle(${vehicle.vehicleId})" class="text-blue-600 text-base font-semibold">Edit</button>
-                        <button onclick="confirmDelete(${vehicle.vehicleId})" class="text-red-500 text-base font-semibold">Delete</button>
-                    </td>
+            if (vehicle.status === 'Active') {
+                actions += `
+                    <button onclick="confirmDelete(${vehicle.vehicleId})" class="text-red-500 text-base font-semibold">Delete</button>
                 `;
+            } else if (vehicle.status === 'Inactive') {
+                actions += `
+                    <button onclick="openActivateConfirm(${vehicle.vehicleId})" class="text-green-600 text-base font-semibold">Activate</button>
+                `;
+            }
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="p-2 text-center" style="background-color: white">${vehicle.plateNumber}</td>
+                <td class="p-2 text-center" style="background-color: white">${formatVehicleType(vehicle.type)}</td>
+                <td class="p-2 text-center" style="background-color: white">${vehicle.color}</td>
+                <td class="p-2 text-center" style="background-color: white">${vehicle.carBrand}</td>
+                <td class="p-2 text-center" style="background-color: white">
+                    <span class="status-badge ${vehicle.status === 'Active' ? 'bg-green-500' : vehicle.status === 'Inactive' ? 'bg-red-500' : 'bg-gray-500'} text-white">
+                        ${vehicle.status}
+                    </span>
+                </td>
+                <td class="p-2 text-center space-x-2" style="background-color: white">
+                    ${actions}
+                </td>
+            `;
 
             tableBody.appendChild(row);
         });
@@ -283,14 +286,23 @@ function saveVehicle() {
             });
         },
         error: function (xhr, status, error) {
-            // Error message using SweetAlert2
-            Swal.fire({
-                icon: 'error',
-                title: 'Something Went Wrong!',
-                text: 'Operation Failed.',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#d33',
-            });
+            if (xhr.status === 409) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Duplicate Vehicle',
+                    text: xhr.responseText || 'A similar vehicle information already registered in the system.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#f59e0b'
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Something Went Wrong!',
+                    text: 'Operation Failed.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#d33',
+                });
+            }
         }
     });
 }
@@ -340,6 +352,56 @@ function closeModal() {
 
 function closeDeleteConfirm() {
     $('#deleteConfirm').addClass('hidden');
+}
+
+//Activate Vehicle Registration functionality
+function openActivateConfirm(vehicleId) {
+    vehicleToActivate = vehicleId;
+    document.getElementById('activateConfirm').classList.remove('hidden');
+}
+
+function closeActivateConfirm() {
+    vehicleToActivate = null;
+    document.getElementById('activateConfirm').classList.add('hidden');
+}
+
+async function activateVehicleConfirmed() {
+    if (!vehicleToActivate) return;
+
+    try {
+        const response = await fetch(`/staff/vehicle/activate/${vehicleToActivate}`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            closeActivateConfirm();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Activated',
+                text: 'Vehicle has been successfully reactivated!',
+                confirmButtonColor: '#3085d6'
+            }).then(() => {
+                location.reload();
+            });
+
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: 'Failed to activate vehicle.',
+                confirmButtonColor: '#d33'
+            });
+        }
+    } catch (err) {
+        console.error('Error:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An unexpected error occurred.',
+            confirmButtonColor: '#d33'
+        });
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {

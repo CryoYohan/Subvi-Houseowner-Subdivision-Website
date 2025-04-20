@@ -109,8 +109,8 @@
                 <button id="activeButton" onclick="fetchVisitors('Active')" class="filter-btn font-semibold active">
                     Active Visitors
                 </button>
-                <button id="archivedButton" onclick="fetchVisitors('Deleted')" class="filter-btn font-semibold">
-                    Archived
+                <button id="deleteButton" onclick="fetchVisitors('Deleted')" class="filter-btn font-semibold">
+                    Deleted
                 </button>
                 <button id="restrictedButton" onclick="fetchVisitors('Prohibited')" class="filter-btn font-semibold">
                     Restricted
@@ -243,11 +243,13 @@
 <script>
     let homeowners = [];
     let selectedHomeownerId = null;
+    let selectedstatus = '';
 
     function fetchVisitors(status) {
+        selectedstatus = status;
         // Remove the 'active' class from all buttons
         document.getElementById('activeButton').classList.remove('active');
-        document.getElementById('archivedButton').classList.remove('active');
+        document.getElementById('deleteButton').classList.remove('active');
         document.getElementById('restrictedButton').classList.remove('active');
 
         // Add 'active' class to the clicked button
@@ -255,7 +257,7 @@
             document.getElementById('activeButton').classList.add('active');
             fetchVisitorsData('Active')
         } else if (status === 'Deleted') {
-            document.getElementById('archivedButton').classList.add('active');
+            document.getElementById('deleteButton').classList.add('active');
             fetchVisitorsData('Deleted')
         } else if (status === 'Prohibited') {
             document.getElementById('restrictedButton').classList.add('active');
@@ -394,7 +396,7 @@
             document.getElementById('homeownerSearch').value = '';
             selectedHomeownerId = null;
             document.getElementById('selectedHomeownerName').textContent = null;
-            fetchVisitors('Active');
+            fetchVisitors(selectedstatus);
         } else {
             Swal.fire('Error', result.message, 'error');
         }
@@ -429,6 +431,62 @@
 
         empty.classList.add('hidden');
         data.forEach(visitor => {
+            let buttons = `
+                <button onclick="openEditModal(${visitor.visitorId})" class="text-blue-600 hover:text-blue-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                </button>
+            `;
+
+            if (visitor.status === "Active") {
+                buttons += `
+                    <button onclick="confirmDelete('${visitor.visitorId}','${visitor.visitorName}', '${visitor.fullName}')" class="text-red-600 hover:text-red-800 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                    <button onclick="confirmRestrict('${visitor.visitorId}','${visitor.visitorName}', '${visitor.fullName}')" class="text-yellow-600 hover:text-yellow-800 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728" />
+                        </svg>
+                    </button>
+                `;
+            } else if (visitor.status === "Deleted") {
+                buttons += `
+                    <button onclick="confirmActivate('${visitor.visitorId}','${visitor.visitorName}', '${visitor.fullName}')" class="text-green-600 hover:text-green-800 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 13l4 4L19 7" />
+                        </svg>
+                    </button>
+                    <button onclick="confirmRestrict('${visitor.visitorId}','${visitor.visitorName}', '${visitor.fullName}')" class="text-yellow-600 hover:text-yellow-800 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728" />
+                        </svg>
+                    </button>
+                `;
+            } else if (visitor.status === "Prohibited") {
+                buttons += `
+                    <button onclick="confirmActivate('${visitor.visitorId}','${visitor.visitorName}', '${visitor.fullName}')" class="text-green-600 hover:text-green-800 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 13l4 4L19 7" />
+                        </svg>
+                    </button>
+                    <button onclick="confirmDelete('${visitor.visitorId}','${visitor.visitorName}', '${visitor.fullName}')" class="text-red-600 hover:text-red-800 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                `;
+            }
+
             const row = `
                 <tr>
                     <td class="px-6 py-4 text-center font-medium text-gray-900">${visitor.visitorName}</td>
@@ -441,31 +499,17 @@
                         <span class="status-badge ${visitor.status}">${visitor.status}</span>
                     </td>
                     <td class="px-6 py-4 text-center space-x-2">
-                        <button
-                            onclick="openEditModal(${visitor.visitorId})"
-                            class="text-blue-600 hover:text-blue-800 transition-colors"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                            </svg>
-                        </button>
-                        <button
-                            onclick="confirmDelete('${visitor.visitorId}','${visitor.visitorName}', '${visitor.fullName}')"
-                            class="text-red-600 hover:text-red-800 transition-colors"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                        </button>
+                        ${buttons}
                     </td>
                 </tr>
             `;
+
             tableBody.innerHTML += row;
         });
     }
 
-    // Confirm Delete
-        function confirmDelete(visitorId, visitorname, homeownername) {
+    // Confirm Delete or soft deleting visitor
+    function confirmDelete(visitorId, visitorname, homeownername) {
         Swal.fire({
             title: 'Are you sure you want to delete?',
             text: `The visitor name ${visitorname} associated with homeowner ${homeownername}?`,
@@ -480,9 +524,57 @@
                 const data = await response.json();
                 if (data.success) {
                     Swal.fire('Deleted!', 'Visitor has been deleted Successfully.', 'success');
-                    fetchVisitors('Active');
+                    fetchVisitors(selectedstatus);
                 } else {
                     Swal.fire('Error!', 'Something went worng. Failed to delete the visitor.', 'error');
+                }
+            }
+        });
+    }
+
+    // Restrict visitor
+    function confirmRestrict(visitorId, visitorName, homeownerName) {
+        Swal.fire({
+            title: 'Restrict Visitor?',
+            text: `Are you sure you want to prohibit ${visitorName} with homeowner associated to ${homeownerName}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, restrict visitor'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const response = await fetch(`/staff/restrictvisitor/${visitorId}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire('Restricted!', `${visitorName} has been marked as Prohibited. The visitor are no longer allowed to enter.`, 'success');
+                    fetchVisitors(selectedstatus);
+                } else {
+                    Swal.fire('Error!', 'Failed to restrict visitor.', 'error');
+                }
+            }
+        });
+    }
+
+    // Activate visitor
+    function confirmActivate(visitorId, visitorName, homeownerName) {
+        Swal.fire({
+            title: 'Activate Visitor?',
+            text: `Are you sure you want to re-activate ${visitorName} with homeowner associated to ${homeownerName}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, activate visitor'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const response = await fetch(`/staff/activatevisitor/${visitorId}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire('Activated!', `${visitorName} is now Active. The visitor is now allowed to enter.`, 'success');
+                    fetchVisitors(selectedstatus);
+                } else {
+                    Swal.fire('Error!', 'Failed to activate visitor.', 'error');
                 }
             }
         });

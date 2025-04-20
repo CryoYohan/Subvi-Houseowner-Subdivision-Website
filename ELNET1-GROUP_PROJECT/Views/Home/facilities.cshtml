@@ -175,6 +175,55 @@
         .font-semibold {
             font-weight: 600;
         }
+        /* Calendar styling */
+        #calendarTable {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 2px;
+        }
+
+            #calendarTable td {
+                width: 40px;
+                height: 40px;
+                text-align: center;
+                padding: 4px;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+            }
+
+                #calendarTable td:hover:not(:empty) {
+                    background-color: #e3f2fd;
+                    transform: scale(1.1);
+                }
+
+            #calendarTable .selected {
+                background-color: #2196F3 !important;
+                color: white;
+                font-weight: bold;
+            }
+
+            #calendarTable th {
+                background-color: #f5f5f5;
+                padding: 8px;
+                font-size: 0.9em;
+            }
+
+            #calendarTable td.selected {
+                background-color: #2196F3 !important;
+                color: white !important;
+                border-radius: 50% !important;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+
+                #calendarTable td.selected::after {
+                    content: '✔';
+                    font-size: 0.8em;
+                    margin-left: 2px;
+                }
+
+            #calendarTable td:not(.selected) {
+                transition: all 0.2s ease;
+            }
     </style>
 
     @* MainContent *@  

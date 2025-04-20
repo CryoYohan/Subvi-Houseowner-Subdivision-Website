@@ -241,8 +241,6 @@ public class StaffController : Controller
     [HttpPost("addvisitor")]
     public async Task<IActionResult> AddVisitor(int? visitorId, int userId, string visitorName, string relationship)
     {
-        _logger.LogInformation("AddVisitor called with VisitorId: {VisitorId}, UserId: {UserId}, VisitorName: '{VisitorName}', Relationship: '{Relationship}'",
-        visitorId, userId, visitorName, relationship);
         if (string.IsNullOrWhiteSpace(visitorName))
         {
             return Json(new { success = false, message = "Visitor name is required!" });
@@ -256,7 +254,7 @@ public class StaffController : Controller
 
         if (visitorExists)
         {
-            return Json(new { success = false, message = "Visitor name already exists!" });
+            return Json(new { success = false, message = "Visitor name already registered!" });
         }
 
         var newVisitor = new Visitor_Pass
@@ -377,6 +375,7 @@ public class StaffController : Controller
         return Json(new { success = true });
     }
 
+    //Soft Delete Visitor
     [HttpPost("deletevisitor/{id}")]
     public async Task<IActionResult> DeleteVisitor(int id)
     {
@@ -417,6 +416,70 @@ public class StaffController : Controller
 
         // If visitor not found, return an error message
         return Json(new { success = false, message = "Visitor not found." });
+    }
+
+    //Setting the Visitor to Active
+    [HttpPost("activatevisitor/{visitorId}")]
+    public async Task<IActionResult> SetVisitorActive(int visitorId)
+    {
+        var visitor = await _context.Visitor_Pass.FindAsync(visitorId);
+        if (visitor == null) return NotFound();
+
+        visitor.Status = "Active";
+        _context.Visitor_Pass.Update(visitor);
+
+        // Get userId from visitor record
+        var userId = visitor.UserId;
+
+        // Create a notification for setting visitor to Active
+        var notification = new Notification
+        {
+            UserId = userId,
+            TargetRole = "Homeowner",
+            Type = "Visitor",
+            Title = "Visitor Status Updated to Active",
+            Message = $"The status of your visitor {visitor.VisitorName} has been now updated back to active as of {DateTime.Now:MM/dd/yyyy}.",
+            IsRead = false,
+            DateCreated = DateTime.Now
+        };
+
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
+
+        return Ok(new { success = true });
+    }
+
+    //Prohibit the Visitor to enter by setting status to Prohibited
+    [HttpPost("restrictvisitor/{visitorId}")]
+    public async Task<IActionResult> SetVisitorRestricted(int visitorId)
+    {
+        var visitor = await _context.Visitor_Pass.FindAsync(visitorId);
+        if (visitor == null) return NotFound();
+
+        visitor.Status = "Prohibited";
+        _context.Visitor_Pass.Update(visitor);
+
+        // Get userId from visitor record
+        var userId = visitor.UserId;
+
+        // Create a notification for restricting visitor
+        var notification = new Notification
+        {
+            UserId = userId,
+            TargetRole = "Homeowner",
+            Type = "Visitor",
+            Title = "Visitor Status Updated",
+            Message = $"Your visitor {visitor.VisitorName} has been prohibited from entering the premises effective {DateTime.Now:MM/dd/yyyy}. If you have any concern you can contact us anytime.",
+            IsRead = false,
+            DateCreated = DateTime.Now
+        };
+
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
+
+        return Ok(new { success = true });
     }
 
     [Route("vehicle/registration")]
@@ -486,29 +549,36 @@ public class StaffController : Controller
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
+        bool conflictExists = _context.Vehicle_Registration.Any(v =>
+            v.PlateNumber == vehicle.PlateNumber &&
+            v.Type == vehicle.Type &&
+            v.Color == vehicle.Color &&
+            v.CarBrand == vehicle.CarBrand
+        );
+
+        if (conflictExists)
+        {
+            return Conflict("The car type submitted already registered.");
+        }
+
         _context.Vehicle_Registration.Add(vehicle);
         _context.SaveChanges();
 
-        // Create a new notification
         var notification = new Notification
         {
             UserId = vehicle.UserId,
             TargetRole = "Homeowner",
             Type = "Vehicle",
             Title = "Vehicle Registered",
-            Message = $"A new vehicle has been registered as of today {DateTime.Now.ToString("MM/dd/yyyy")}.",
+            Message = $"A new vehicle has been registered as of today {DateTime.Now:MM/dd/yyyy}.",
             IsRead = false,
             DateCreated = DateTime.Now
         };
 
-        // Add the notification to the context
         _context.Notifications.Add(notification);
-
-        // Save changes asynchronously
         await _context.SaveChangesAsync();
-
-        // Send real-time notification to the user
         await _hubContext.Clients.User(vehicle.UserId.ToString()).SendAsync("ReceiveNotification", notification);
+
         return Ok(vehicle);
     }
 
@@ -519,6 +589,19 @@ public class StaffController : Controller
 
         var vehicle = _context.Vehicle_Registration.FirstOrDefault(v => v.VehicleId == id);
         if (vehicle == null) return NotFound();
+
+        bool conflictExists = _context.Vehicle_Registration.Any(v =>
+            v.VehicleId != id && // not the same record
+            v.PlateNumber == updated.PlateNumber &&
+            v.Type == updated.Type &&
+            v.Color == updated.Color &&
+            v.CarBrand == updated.CarBrand
+        );
+
+        if (conflictExists)
+        {
+            return Conflict("A vehicle with the same information already registered to someone else.");
+        }
 
         // Fetch current userId from the existing vehicle record
         int currentUserId = vehicle.UserId;
@@ -640,6 +723,38 @@ public class StaffController : Controller
         await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
 
         return Ok(new { success = true, message = "Vehicle marked as inactive successfully." });
+    }
+
+    //Activate vehicle registered
+    [HttpPost("vehicle/activate/{id}")]
+    public async Task<IActionResult> ActivateVehicle(int id)
+    {
+        var vehicle = await _context.Vehicle_Registration.FindAsync(id);
+        if (vehicle == null)
+            return NotFound();
+
+        vehicle.Status = "Active";
+
+        // Get the user id linked to this vehicle
+        var userId = vehicle.UserId;
+
+        var notification = new Notification
+        {
+            UserId = userId,
+            TargetRole = "Homeowner",
+            Type = "Vehicle",
+            Title = "Vehicle Activated",
+            Message = $"Your vehicle with plate number {vehicle.PlateNumber} has been activated as of {DateTime.Now:MM/dd/yyyy}.",
+            IsRead = false,
+            DateCreated = DateTime.Now
+        };
+
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
+
+        return Ok();
     }
 
     // Helper method to mask plate number
@@ -2507,7 +2622,7 @@ public class StaffController : Controller
             .AsEnumerable() // Forces client-side processing
             .Select(r => new
             {
-                // Convert JSType.Date to DateTime and format as YYYY-MM
+                // Convert JSType.Date to DateTime and format as MM/dd/yyyy
                 Month = DateTime.Parse(r.SchedDate.ToString()).ToString("MM/dd/yyyy")
             })
             .GroupBy(r => r.Month)
@@ -2644,6 +2759,12 @@ public class StaffController : Controller
                 {
                     reservationsQuery = reservationsQuery.Where(x => x.res.Status == status);
                 }
+                else
+                {
+                    reservationsQuery = reservationsQuery.Where(x =>
+                        x.res.Status == "Approved" ||
+                        x.res.Status == "Declined");
+                }
 
                 var reservations = reservationsQuery
                     .Select(x => new
@@ -2680,6 +2801,14 @@ public class StaffController : Controller
                 {
                     serviceQuery = serviceQuery.Where(x => x.request.Status == status);
                 }
+                else
+                {
+                    serviceQuery = serviceQuery.Where(x =>
+                        x.request.Status == "Scheduled" ||
+                        x.request.Status == "Completed" ||
+                        x.request.Status == "Cancelled" ||
+                        x.request.Status == "Rejected");
+                }
 
                 var services = serviceQuery
                     .AsEnumerable()
@@ -2693,7 +2822,7 @@ public class StaffController : Controller
                         obj["Status"] = x.request.Status;
 
                         if (DateTime.TryParse(x.request.DateSubmitted, out var submittedDate))
-                            obj["DateSubmitted"] = submittedDate.ToString("MM/dd/yyyy hh:mm tt");
+                            obj["DateSubmitted"] = submittedDate.ToString("MM/dd/yyyy hh:mm tt").ToUpper();
 
                         if (x.request.Status == "Rejected" && !string.IsNullOrEmpty(x.request.RejectedReason))
                             obj["RejectedReason"] = x.request.RejectedReason;
@@ -2701,7 +2830,7 @@ public class StaffController : Controller
                         if ((x.request.Status == "Scheduled" || x.request.Status == "Completed" || x.request.Status == "Cancelled")
                             && x.request.ScheduleDate.HasValue)
                         {
-                            obj["ScheduleDate"] = x.request.ScheduleDate.Value.ToString("MM/dd/yyyy hh:mm tt");
+                            obj["ScheduleDate"] = x.request.ScheduleDate.Value.ToString("MM/dd/yyyy hh:mm tt").ToUpper();
                         }
 
                         obj["RequestedBy"] =
@@ -2726,7 +2855,7 @@ public class StaffController : Controller
                                    {
                                        pass.VisitorId,
                                        pass.VisitorName,
-                                       pass.DateTime,
+                                       DateTime = pass.DateTime.ToString("MM/dd/yyyy hh:mm tt").ToUpper(),
                                        pass.Status,
                                        pass.Relationship,
                                        HomeownerName = Capitalize(user.Firstname) + " " + Capitalize(user.Lastname)

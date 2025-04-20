@@ -172,6 +172,13 @@
                 <span>Billing</span>
                 <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="bill-count"></span>
             </button>
+            <button data-type="Payment"
+                    class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
+                   hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
+                <i class="fas fa-credit-card text-green-500 text-lg"></i>
+                <span>Payment</span>
+                <span class="count-badge bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs" id="payment-count"></span>
+            </button>
             <button data-type="Announcement"
                     class="px-4 py-2 rounded-t-lg flex font-medium items-center space-x-2 transition-colors notif-tab
                    hover:bg-blue-50 text-gray-600 border-b-4 border-transparent">
@@ -510,6 +517,7 @@
             'Facility Reservation Schedule': '<i class="fas fa-calendar-check text-blue-500"></i>',
             'Service Schedule': '<i class="fas fa-cogs text-green-500"></i>',
             'Bill': '<i class="fas fa-file-invoice-dollar text-green-500"></i>',
+            'Payment': '<i class="fas fa-credit-card text-green-500"></i>',
             'Announcement': '<i class="fas fa-bullhorn text-orange-500"></i>', 
             'Event': '<i class="fas fa-calendar-alt text-purple-500"></i>',  
             'Poll': '<i class="fas fa-poll text-teal-500"></i>', 
@@ -530,6 +538,7 @@
                 'Facility Reservation Schedule': 0,
                 'Service Schedule': 0,
                 'Bill': 0,
+                'Payment': 0,
                 'Announcement': 0,
                 'Event': 0,
                 'Poll': 0,
@@ -549,6 +558,7 @@
                 'Facility Reservation Schedule': document.getElementById('facility-reservation-count'),
                 'Service Schedule': document.getElementById('service-count'),
                 'Bill': document.getElementById('bill-count'),
+                'Payment': document.getElementById('payment-count'),
                 'Announcement': document.getElementById('announcement-count'),
                 'Event': document.getElementById('event-count'),
                 'Poll': document.getElementById('poll-count'),
@@ -594,6 +604,7 @@
             notif.type === 'Facility Reservation Schedule' ? 'border-green-500 bg-green-50' :
             notif.type === 'Service Schedule' ? 'border-green-500 bg-green-50' :
             notif.type === 'Bill' ? 'border-green-500 bg-green-50' :
+            notif.type === 'Payment' ? 'border-green-500 bg-green-50' :
             notif.type === 'Announcement' ? 'border-green-500 bg-green-50' :
             notif.type === 'Event' ? 'border-green-500 bg-green-50' :
             notif.type === 'Poll' ? 'border-green-500 bg-green-50' :

@@ -236,41 +236,83 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Calendar functionality
-    let currentMonth = new Date().getMonth(); // Current month (0 - 11)
+    let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
 
     function generateCalendar() {
         const currentMonthYear = document.getElementById('currentMonthYear');
         currentMonthYear.textContent = `${new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' })} ${currentYear}`;
 
-        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const firstDay = new Date(currentYear, currentMonth, 1);
         const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
         const calendarTable = document.getElementById('calendarTable').getElementsByTagName('tbody')[0];
 
         calendarTable.innerHTML = ''; // Clear existing dates
 
-        let row = document.createElement('tr');
-        let day = 1;
+        // Get the starting day (0 = Monday, 6 = Sunday)
+        let startDay = (firstDay.getDay() + 6) % 7; // Adjust to make Monday first
+        let date = 1;
 
-        for (let i = 0; i < 6; i++) { // 6 rows max
-            while (day <= lastDate && (i > 0 || day > firstDay)) {
+        for (let i = 0; i < 6; i++) {
+            const row = document.createElement('tr');
+
+            // Create cells for each day of the week
+            for (let j = 0; j < 7; j++) {
                 const cell = document.createElement('td');
-                cell.textContent = day;
-                cell.style.cursor = 'pointer';
-                cell.addEventListener('click', function () {
-                    // Highlight selected date
-                    const allCells = calendarTable.getElementsByTagName('td');
-                    Array.from(allCells).forEach(cell => cell.classList.remove('selected'));
-                    cell.classList.add('selected');
-                });
+
+                if (i === 0 && j < startDay) {
+                    // Empty cells before the first day
+                    cell.textContent = '';
+                } else if (date > lastDate) {
+                    // Empty cells after the last day
+                    cell.textContent = '';
+                } else {
+                    // Add date number
+                    cell.textContent = date;
+                    cell.style.cursor = 'pointer';
+                    cell.addEventListener('click', function () {
+                        // Remove previous selection
+                        const allCells = calendarTable.querySelectorAll('td');
+                        allCells.forEach(cell => cell.classList.remove('selected'));
+
+                        // Add selection to clicked cell
+                        if (this.textContent !== '') { // Prevent selecting empty cells
+                            this.classList.add('selected');
+                        }
+                    });
+                    date++;
+                }
+
                 row.appendChild(cell);
-                day++;
             }
+
             calendarTable.appendChild(row);
-            row = document.createElement('tr');
+
+            // Stop creating rows if all dates are shown
+            if (date > lastDate) break;
+        }
+
+        // Highlight today's date
+        const today = new Date();
+        if (today.getMonth() === currentMonth && today.getFullYear() === currentYear) {
+            const cells = calendarTable.getElementsByTagName('td');
+            Array.from(cells).forEach(cell => {
+                cell.classList.remove('selected');
+                if (cell.textContent === today.getDate().toString()) {
+                    cell.classList.add('today');
+                }
+            });
         }
     }
 
+    document.getElementById('reservationModal').addEventListener('hidden.bs.modal', function () {
+        // Reset to current month/year
+        currentMonth = new Date().getMonth();
+        currentYear = new Date().getFullYear();
+        generateCalendar();
+    });
+
+    // Rest of your existing calendar navigation code...
     document.getElementById('prevMonth').addEventListener('click', function () {
         currentMonth--;
         if (currentMonth < 0) {

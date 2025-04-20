@@ -18,7 +18,7 @@
 
 <div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
     <!-- Sidebar -->
-    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 flex flex-col">
         <!-- Sidebar Header -->
         <div class="px-3 py-2 border-b border-gray-100">
             <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
@@ -99,7 +99,7 @@
                 <!-- ANALYTICS -->
                 <div class="tab-pane fade show active" id="analyticsPanel">
                     <h4 class="fw-bold text-primary mb-4">Analytics Dashboard</h4>
-                    <div class="row g-4">
+                    <div class="row g-2" style="max-height: 440px; overflow-y: auto;">
 
                         <!-- Line Chart for Reservations Over Time -->
                         <div class="col-md-6">
@@ -124,9 +124,9 @@
                         <!-- Pie Chart for Feedback Ratings -->
                         <div class="col-md-6">
                             <div class="card shadow-sm border-0 rounded-4">
-                                <div class="card-body">
+                                <div class="card-body" style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
                                     <h6 class="text-muted">Feedback Rating Distribution</h6>
-                                    <canvas id="feedbackChart" height="100"></canvas>
+                                    <canvas id="feedbackChart" style="flex-grow: 1;"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -134,9 +134,9 @@
                         <!-- Doughnut Chart for Vehicle Type -->
                         <div class="col-md-6">
                             <div class="card shadow-sm border-0 rounded-4">
-                                <div class="card-body">
+                                <div class="card-body" style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
                                     <h6 class="text-muted">Vehicle Types Registered</h6>
-                                    <canvas id="vehicleChart" height="100"></canvas>
+                                    <canvas id="vehicleChart" style="flex-grow: 1;"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -145,7 +145,7 @@
                 </div>
 
                 <!-- REPORT GENERATION -->
-                <div class="tab-pane fade show active" id="generatePanel">
+                <div class="tab-pane fade" id="generatePanel">
                     <h4 class="mb-3">Generate Reports</h4>
 
                     <!-- Report Filter Form -->
@@ -287,26 +287,26 @@
             }
         });
 
-           // Feedback Ratings Chart (Pie chart)
+        // Feedback Ratings Chart (Pie chart)
         var feedbackData = @Html.Raw(Json.Serialize(ViewBag.FeedbackRatings));
         var feedbackCtx = document.getElementById('feedbackChart').getContext('2d');
-            var feedbackChart = new Chart(feedbackCtx, {
-                type: 'pie',
-                data: {
-                    labels: feedbackData.map(f => f.rating), // Feedback ratings (e.g., 1, 2, 3, etc.)
-                    datasets: [{
-                        label: 'Feedback Ratings Breakdown',
-                        data: feedbackData.map(f => f.count), // Count of each rating
-                        backgroundColor: ['#ff5733', '#ffbd33', '#75ff33', '#33aaff', '#5733ff'], // Segment colors
-                        borderColor: ['#ff5733', '#ffbd33', '#75ff33', '#33aaff', '#5733ff'], // Border colors
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true
-                }
-            });
 
+        var feedbackChart = new Chart(feedbackCtx, {
+            type: 'pie',
+            data: {
+                labels: feedbackData.map(f => `${f.rating} Star`), // Change number to "X Star"
+                datasets: [{
+                    label: 'Feedback Ratings Breakdown',
+                    data: feedbackData.map(f => f.count), // Count of each rating
+                    backgroundColor: ['#ff5733', '#ffbd33', '#75ff33', '#33aaff', '#5733ff'], // Segment colors
+                    borderColor: ['#ff5733', '#ffbd33', '#75ff33', '#33aaff', '#5733ff'], // Border colors
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
             // Vehicle Types Chart (Doughnut chart)
             var vehicleData = @Html.Raw(Json.Serialize(ViewBag.VehicleTypes));
             var vehicleCtx = document.getElementById('vehicleChart').getContext('2d');
@@ -365,6 +365,7 @@
         const startDateInput = document.getElementById("startDate");
         const endDateInput = document.getElementById("endDate");
         const dateError = document.getElementById("dateError");
+        const generateBtn = document.querySelector('button[type="submit"]');
 
         function formatDateToLocalYYYYMMDD(date) {
             const year = date.getFullYear();
@@ -390,10 +391,14 @@
             const start = new Date(startDateInput.value);
             const end = new Date(endDateInput.value);
 
-            if (start > end) {
+            const isInvalid = start > end || !startDateInput.value || !endDateInput.value;
+
+            if (isInvalid) {
                 dateError.classList.remove("d-none");
+                generateBtn.disabled = true;
             } else {
                 dateError.classList.add("d-none");
+                generateBtn.disabled = false;
             }
         }
 
@@ -403,7 +408,7 @@
                 RESERVATIONS: ["All", "Approved", "Declined"],
                 SERVICE_REQUEST: ["All", "Scheduled", "Completed", "Cancelled", "Rejected"],
                 VEHICLE_REGISTRATION: ["All", "Active", "Inactive"],
-                VISITOR_PASSES: ["All", "Active", "Deleted"]
+                VISITOR_PASSES: ["All", "Active", "Deleted", "Prohibited"]
             };
 
             const statuses = statusOptions[reportType] || [];
@@ -533,170 +538,20 @@
         }
     }
 
-    async function generateExcelReport(data, reportType) {
-        return new Promise((resolve, reject) => {
-            try {
-                const headerMap = {
-                    VEHICLE_REGISTRATION: {
-                        vehicleId: "Vehicle ID",
-                        plateNumber: "Plate Number",
-                        type: "Type",
-                        carBrand: "Vehicle Brand",
-                        status: "Status",
-                        ownerName: "Owner Name"
-                    },
-                    RESERVATIONS: {
-                        reservationId: "Reservation ID",
-                        facilityName: "Facility Name",
-                        dateReserved: "Date Reserved",
-                        startTime: "Start Time",
-                        endTime: "End Time",
-                        status: "Status",
-                        reservedBy: "Reserved By"
-                    },
-                    SERVICE_REQUEST: (status) => {
-                        const mapping = {
-                            serviceRequestId: "Request ID",
-                            reqType: "Request Type",
-                            description: "Description",
-                            status: "Status",
-                            dateSubmitted: "Date Submitted",
-                            requestedBy: "Requested By"
-                        };
+     async function generateExcelReport(data, reportType) {
+            return new Promise((resolve, reject) => {
+                try {
+                    let hasRejected = false;
+                    let hasScheduledOrCompletedOrCancelled = false;
 
-                        if (status === "Rejected") {
-                            mapping.rejectedReason = "Rejected Reason";
-                        }
-
+                    data.forEach(row => {
+                        const status = row.status || row.Status;
+                        if (status === "Rejected") hasRejected = true;
                         if (["Scheduled", "Completed", "Cancelled"].includes(status)) {
-                            mapping.scheduleDate = "Schedule Date";
+                            hasScheduledOrCompletedOrCancelled = true;
                         }
-
-                        return mapping;
-                    },
-                    VISITOR_PASSES: {
-                        visitorId: "Visitor ID",
-                        visitorName: "Visitor Name",
-                        dateTime: "Visit Date & Time",
-                        status: "Status",
-                        relationship: "Relationship",
-                        homeownerName: "Homeowner Name"
-                    }
-                };
-
-                const headers = Object.keys(data?.[0] || {});
-                const mappedHeaders = headers.map(h => headerMap[reportType]?.[h] || h);
-
-                const formattedData = data.map(row => {
-                    const formattedRow = {};
-                    headers.forEach((key, idx) => {
-                        const newKey = mappedHeaders[idx];
-                        formattedRow[newKey] = row[key];
                     });
-                    return formattedRow;
-                });
 
-                const worksheet = XLSX.utils.json_to_sheet(formattedData, { origin: "A4" });
-
-                const maxColWidths = mappedHeaders.map(header => {
-                    const maxContent = Math.max(
-                        header.length,
-                        ...formattedData.map(row => (row[header]?.toString()?.length || 0))
-                    );
-                    return { wch: maxContent + 2 };
-                });
-                worksheet['!cols'] = maxColWidths;
-
-                const totalColumns = mappedHeaders.length;
-                const mergeRange1 = { s: { r: 0, c: 0 }, e: { r: 0, c: totalColumns - 1 } };
-                const mergeRange2 = { s: { r: 1, c: 0 }, e: { r: 1, c: totalColumns - 1 } };
-
-                worksheet['!merges'] = [mergeRange1, mergeRange2];
-
-                // Add header title and tagline
-                XLSX.utils.sheet_add_aoa(worksheet, [
-                    [`${toTitleExcelCase(reportType.replaceAll("_", " "))} Report`],
-                    ['Home Subdivision where everyone meets their happy place'],
-                    [], // empty row
-                ], { origin: "A1" });
-
-                // Style: header row (bold and colored)
-                const range = XLSX.utils.decode_range(worksheet['!ref']);
-                for (let C = range.s.c; C <= range.e.c; ++C) {
-                    const cell = worksheet[XLSX.utils.encode_cell({ r: 3, c: C })];
-                    if (cell) {
-                        cell.s = {
-                            font: { bold: true, color: { rgb: "FFFFFF" } },
-                            fill: { fgColor: { rgb: "293593" } }
-                        };
-                    }
-                }
-
-                // Optional: apply styling to title and tagline
-                const titleCell = worksheet["A1"];
-                if (titleCell) {
-                    titleCell.s = {
-                        font: { bold: true, sz: 16 },
-                        alignment: { horizontal: "center" }
-                    };
-                }
-
-                const taglineCell = worksheet["A2"];
-                if (taglineCell) {
-                    taglineCell.s = {
-                        font: { italic: true, sz: 12 },
-                        alignment: { horizontal: "center" }
-                    };
-                }
-
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-
-                XLSX.writeFile(workbook, `${reportType.replace(/\s+/g, "_").toLowerCase()}_report.xlsx`);
-                resolve();
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    // Helper function
-    function toTitleExcelCase(str) {
-        return str
-            .toLowerCase()
-            .replace(/_/g, ' ')
-            .replace(/\b\w/g, c => c.toUpperCase());
-    }
-
-    async function generatePdfReport(data, reportType) {
-        return new Promise((resolve, reject) => {
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                const title = `${toTitleCase(reportType.replaceAll("_", " "))} Report`;
-
-                // PDF metadata
-                doc.setProperties({
-                    title,
-                    subject: 'Generated by Subvi System',
-                    author: 'Subvi Reporting Service'
-                });
-
-                // Logo + Header
-                const img = new Image();
-                img.src = '/images/subvi-logo.png';
-
-                img.onload = () => {
-                    doc.addImage(img, 'PNG', 14, 10, 20, 20); // logo
-                    doc.setFontSize(18);
-                    doc.setTextColor(40, 53, 147);
-                    doc.text(title, 38, 20);
-
-                    doc.setFontSize(10);
-                    doc.setTextColor(100);
-                    doc.text("Home Subdivision where everyone meets their happy place", 38, 26);
-
-                    // --- Header Mapping Logic ---
                     const headerMap = {
                         VEHICLE_REGISTRATION: {
                             vehicleId: "Vehicle ID",
@@ -715,25 +570,14 @@
                             status: "Status",
                             reservedBy: "Reserved By"
                         },
-                        SERVICE_REQUEST: (status) => {
-                            const mapping = {
-                                serviceRequestId: "Request ID",
-                                reqType: "Request Type",
-                                description: "Description",
-                                status: "Status",
-                                dateSubmitted: "Date Submitted",
-                                requestedBy: "Requested By"
-                            };
-
-                            if (status === "Rejected") {
-                                mapping.rejectedReason = "Rejected Reason";
-                            }
-
-                            if (["Scheduled", "Completed", "Cancelled"].includes(status)) {
-                                mapping.scheduleDate = "Schedule Date";
-                            }
-
-                            return mapping;
+                        SERVICE_REQUEST: {
+                            ServiceRequestId: "Request ID",
+                            ReqType: "Request Type",
+                            Description: "Description",
+                            Status: "Status",
+                            DateSubmitted: "Date Submitted",
+                            RequestedBy: "Requested By"
+                            // 'rejectedReason' and 'scheduleDate' will be added conditionally below
                         },
                         VISITOR_PASSES: {
                             visitorId: "Visitor ID",
@@ -745,70 +589,263 @@
                         }
                     };
 
-                    // Format data
-                    if (data?.length > 0) {
-                        const headersRaw = Object.keys(data[0]);
-                        const mappedHeaders = headersRaw.map(
-                            h => headerMap[reportType]?.[h] || h
-                        );
+                    // Extend SERVICE_REQUEST headers based on data
+                    if (reportType === "SERVICE_REQUEST") {
+                        if (hasRejected) {
+                            headerMap.SERVICE_REQUEST.RejectedReason = "Rejected Reason";
+                        }
+                        if (hasScheduledOrCompletedOrCancelled) {
+                            headerMap.SERVICE_REQUEST.ScheduleDate = "Schedule Date";
+                        }
+                    }
 
-                        const headers = [mappedHeaders];
-                        const rows = data.map(record => Object.values(record));
+                    const baseHeaders = Object.keys(headerMap[reportType]);
+                    const mappedHeaders = baseHeaders.map(h => headerMap[reportType][h]);
 
-                        doc.autoTable({
-                            head: headers,
-                            body: rows,
-                            startY: 35,
-                            theme: 'grid',
-                            styles: { cellPadding: 2, fontSize: 10 },
-                            headerStyles: { fillColor: [40, 53, 147], textColor: 255 }
+                    // Format data rows with fallback "-"
+                    const formattedData = data.map(row => {
+                        const formattedRow = {};
+                        baseHeaders.forEach((key, idx) => {
+                            let value = row[key] ?? row[toPascalCase(key)];
+                            formattedRow[mappedHeaders[idx]] = value != null ? value : "-";
                         });
-                    } else {
-                        doc.setTextColor(255, 0, 0);
-                        doc.text("No records found", 14, 40);
+                        return formattedRow;
+                    });
+
+                    // Sheet setup
+                    const worksheet = XLSX.utils.json_to_sheet(formattedData, { origin: "A4" });
+
+                    const maxColWidths = mappedHeaders.map(header => {
+                        const maxContent = Math.max(
+                            header.length,
+                            ...formattedData.map(row => (row[header]?.toString()?.length || 0))
+                        );
+                        return { wch: maxContent + 2 };
+                    });
+                    worksheet['!cols'] = maxColWidths;
+
+                    const totalColumns = mappedHeaders.length;
+                    const mergeRange1 = { s: { r: 0, c: 0 }, e: { r: 0, c: totalColumns - 1 } };
+                    const mergeRange2 = { s: { r: 1, c: 0 }, e: { r: 1, c: totalColumns - 1 } };
+
+                    worksheet['!merges'] = [mergeRange1, mergeRange2];
+
+                    // Header rows
+                    XLSX.utils.sheet_add_aoa(worksheet, [
+                        [`${toTitleExcelCase(reportType.replaceAll("_", " "))} Report`],
+                        ['Home Subdivision where everyone meets their happy place'],
+                        [], // empty row
+                    ], { origin: "A1" });
+
+                    // Style: header row (bold and colored)
+                    const range = XLSX.utils.decode_range(worksheet['!ref']);
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const cell = worksheet[XLSX.utils.encode_cell({ r: 3, c: C })];
+                        if (cell) {
+                            cell.s = {
+                                font: { bold: true, color: { rgb: "FFFFFF" } },
+                                fill: { fgColor: { rgb: "293593" } }
+                            };
+                        }
                     }
 
-                    // Footer
-                    const pageCount = doc.getNumberOfPages();
-                    for (let i = 1; i <= pageCount; i++) {
-                        doc.setPage(i);
-                        doc.setFontSize(10);
-                        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
+                    // Title and tagline styles
+                    const titleCell = worksheet["A1"];
+                    if (titleCell) {
+                        titleCell.s = {
+                            font: { bold: true, sz: 16 },
+                            alignment: { horizontal: "center" }
+                        };
                     }
 
-                    const reportTitle = toTitleCase(reportType.replaceAll("_", " "));
-                    doc.save(`${reportTitle.replaceAll(" ", "_")}_report.pdf`);
+                    const taglineCell = worksheet["A2"];
+                    if (taglineCell) {
+                        taglineCell.s = {
+                            font: { italic: true, sz: 12 },
+                            alignment: { horizontal: "center" }
+                        };
+                    }
+
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+
+                    XLSX.writeFile(workbook, `${reportType.replace(/\s+/g, "_").toLowerCase()}_report.xlsx`);
                     resolve();
-                };
-            } catch (error) {
-                reject(error);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+
+            function toPascalCase(str) {
+                return str.replace(/(^\w|_\w)/g, s => s.replace('_', '').toUpperCase());
             }
-        });
-    }
+
+            function toTitleExcelCase(str) {
+                return str.replace(/\w\S*/g, txt =>
+                    txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+                );
+            }
+        }
+
+    async function generatePdfReport(data, reportType) {
+         return new Promise((resolve, reject) => {
+             try {
+                 const { jsPDF } = window.jspdf;
+                 const doc = new jsPDF();
+                 const title = `${toTitleCase(reportType.replaceAll("_", " "))} Report`;
+
+                 // PDF metadata
+                 doc.setProperties({
+                     title,
+                     subject: 'Generated by Subvi System',
+                     author: 'Subvi Reporting Service'
+                 });
+
+                 // Logo + Header
+                 const img = new Image();
+                 img.src = '/images/subvi-logo.png';
+
+                 img.onload = () => {
+                     doc.addImage(img, 'PNG', 14, 10, 20, 20);
+                     doc.setFontSize(18);
+                     doc.setTextColor(40, 53, 147);
+                     doc.text(title, 38, 20);
+
+                     doc.setFontSize(10);
+                     doc.setTextColor(100);
+                     doc.text("Home Subdivision where everyone meets their happy place", 38, 26);
+
+                     // Early return if no data
+                     if (!data || data.length === 0) {
+                         doc.setFontSize(14);
+                         doc.setTextColor(200, 0, 0);
+                         const msg = "No records found for this report.";
+                         const pageWidth = doc.internal.pageSize.getWidth();
+                         const textWidth = doc.getTextWidth(msg);
+                         doc.text(msg, (pageWidth - textWidth) / 2, 50);
+
+                         doc.save(`${title.replaceAll(" ", "_")}_report.pdf`);
+                         return resolve();
+                     }
+
+                     // Header Mapping
+                     const headerMap = {
+                         VEHICLE_REGISTRATION: {
+                             vehicleId: "Vehicle ID",
+                             plateNumber: "Plate Number",
+                             type: "Type",
+                             carBrand: "Vehicle Brand",
+                             status: "Status",
+                             ownerName: "Owner Name"
+                         },
+                         RESERVATIONS: {
+                             reservationId: "Reservation ID",
+                             facilityName: "Facility Name",
+                             dateReserved: "Date Reserved",
+                             startTime: "Start Time",
+                             endTime: "End Time",
+                             status: "Status",
+                             reservedBy: "Reserved By"
+                         },
+                         SERVICE_REQUEST: () => ({
+                             ServiceRequestId: "Request ID",
+                             ReqType: "Request Type",
+                             Description: "Description",
+                             Status: "Status",
+                             DateSubmitted: "Date Submitted",
+                             RequestedBy: "Requested By"
+                         }),
+                         VISITOR_PASSES: {
+                             visitorId: "Visitor ID",
+                             visitorName: "Visitor Name",
+                             dateTime: "Visit Date & Time",
+                             status: "Status",
+                             relationship: "Relationship",
+                             homeownerName: "Homeowner Name"
+                         }
+                     };
+
+                     // --- Format data and headers ---
+                     let finalData = data;
+                     let mappedHeaders;
+
+                     if (reportType === "SERVICE_REQUEST") {
+                         const isRejectedExist = data.some(d => d.RejectedReason);
+                         const isScheduledExist = data.some(d => d.ScheduleDate);
+                         const showCombined = isRejectedExist && isScheduledExist;
+
+                         finalData = data.map(d => {
+                             const clone = { ...d };
+
+                             if (showCombined) {
+                                 clone.RejectedOrSchedule = `${d.RejectedReason || ''}${d.RejectedReason && d.ScheduleDate ? ' / ' : ''}${d.ScheduleDate || ''}`;
+                                 delete clone.RejectedReason;
+                                 delete clone.ScheduleDate;
+                             }
+
+                             return clone;
+                         });
+
+                         mappedHeaders = Object.keys(finalData[0]).map(key => {
+                             if (key === "RejectedOrSchedule") return "Rejected Reason / Schedule Date";
+                             return headerMap[reportType]()[key] || key;
+                         });
+                     } else {
+                         const headersRaw = Object.keys(data[0]);
+                         mappedHeaders = headersRaw.map(h => headerMap[reportType]?.[h] || h);
+                     }
+
+                     const headers = [mappedHeaders];
+                     const rows = finalData.map(record => Object.values(record));
+
+                     // Generate table
+                     doc.autoTable({
+                         head: headers,
+                         body: rows,
+                         startY: 35,
+                         theme: 'grid',
+                         styles: { cellPadding: 2, fontSize: 10, halign: 'center' },
+                         headStyles: { fillColor: [40, 53, 147], textColor: 255, halign: 'center' }
+                     });
+
+                     // Footer
+                     const pageCount = doc.getNumberOfPages();
+                     for (let i = 1; i <= pageCount; i++) {
+                         doc.setPage(i);
+                         doc.setFontSize(10);
+                         doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
+                     }
+
+                     const reportTitle = toTitleCase(reportType.replaceAll("_", " "));
+                     doc.save(`${reportTitle.replaceAll(" ", "_")}_report.pdf`);
+                     resolve();
+                 };
+             } catch (error) {
+                 reject(error);
+             }
+         });
+     }
 
     async function generateDocxReport(data, reportType) {
         try {
-            const { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, AlignmentType, ImageRun } = docx;
+            const { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, AlignmentType, ImageRun, WidthType } = docx;
 
             const children = [];
 
-            // Load the Subvi logo as base64
+            // Load logo as base64
             const imageUrl = "/images/subvi-logo.png";
             const response = await fetch(imageUrl);
             const imageBlob = await response.blob();
             const arrayBuffer = await imageBlob.arrayBuffer();
 
-            // Add logo image (resized)
+            // Logo and header
             children.push(
                 new Paragraph({
                     alignment: AlignmentType.CENTER,
                     children: [
                         new ImageRun({
                             data: arrayBuffer,
-                            transformation: {
-                                width: 180,
-                                height: 70
-                            }
+                            transformation: { width: 180, height: 70 }
                         })
                     ]
                 }),
@@ -838,7 +875,7 @@
                 })
             );
 
-            // Define header mappings
+            // Header mappings
             const headerMappings = {
                 VEHICLE_REGISTRATION: {
                     vehicleId: "Vehicle ID",
@@ -857,26 +894,14 @@
                     status: "Status",
                     reservedBy: "Reserved By"
                 },
-                SERVICE_REQUEST: (status) => {
-                    const mapping = {
-                        serviceRequestId: "Request ID",
-                        reqType: "Request Type",
-                        description: "Description",
-                        status: "Status",
-                        dateSubmitted: "Date Submitted",
-                        requestedBy: "Requested By"
-                    };
-
-                    if (status === "Rejected") {
-                        mapping.rejectedReason = "Rejected Reason";
-                    }
-
-                    if (["Scheduled", "Completed", "Cancelled"].includes(status)) {
-                        mapping.scheduleDate = "Schedule Date";
-                    }
-
-                    return mapping;
-                },
+                SERVICE_REQUEST: () => ({
+                    ServiceRequestId: "Request ID",
+                    Reqtype: "Request Type",
+                    Description: "Description",
+                    Status: "Status",
+                    Datesubmitted: "Date Submitted",
+                    Requestedby: "Requested By",
+                }),
                 VISITOR_PASSES: {
                     visitorId: "Visitor ID",
                     visitorName: "Visitor Name",
@@ -887,35 +912,78 @@
                 }
             };
 
-            const headerMap = headerMappings[reportType] || {};
+            // Dynamically update the header map for SERVICE_REQUEST
+            const showRejectedReason = data.some(record => record.Status === "Rejected");
+            const showScheduleDate = data.some(record =>
+                ["Scheduled", "Completed", "Cancelled"].includes(record.Status)
+            );
 
-            if (data?.length > 0) {
-                const keys = Object.keys(data[0]);
+                // Build headerMap dynamically
+                let headerMap;
 
+                if (reportType === "SERVICE_REQUEST") {
+                    headerMap = {
+                        serviceRequestId: "Request ID",
+                        reqType: "Request Type",
+                        description: "Description",
+                        status: "Status",
+                        dateSubmitted: "Date Submitted",
+                        requestedBy: "Requested By"
+                    };
+
+                    if (showRejectedReason) {
+                        headerMap.rejectedReason = "Rejected Reason";
+                    }
+
+                    if (showScheduleDate) {
+                        headerMap.scheduleDate = "Schedule Date";
+                    }
+                } else {
+                    // Use static map for other types
+                    headerMap = headerMappings[reportType];
+                }
+
+                const finalData = data.map(record => {
+                    const rowData = {};
+
+                    Object.keys(headerMap).forEach(key => {
+                        rowData[key] = record[key] || record[toPascalCase(key)] || "-";
+                    });
+
+                    return rowData;
+                });
+            if (finalData?.length > 0) {
+                const keys = Object.keys(finalData[0]);
                 const headerRow = new TableRow({
                     children: keys.map(key =>
                         new TableCell({
-                            children: [
-                                new Paragraph({
-                                    children: [
-                                        new TextRun({
-                                            text: headerMap[key] || key,
-                                            bold: true
-                                        })
-                                    ]
-                                })
-                            ]
+                            children: [new Paragraph({
+                                alignment: AlignmentType.CENTER,
+                                children: [
+                                    new TextRun({
+                                        text: headerMap[key] || toTitleCase(key),
+                                        bold: true
+                                    })
+                                ]
+                            })],
+                            width: { size: 100 / keys.length, type: WidthType.PERCENTAGE }
                         })
                     )
                 });
 
-                const dataRows = data.map(record =>
+                const dataRows = finalData.map(record =>
                     new TableRow({
                         children: keys.map(key =>
                             new TableCell({
-                                children: [
-                                    new Paragraph(record[key]?.toString() || "-")
-                                ]
+                                children: [new Paragraph({
+                                    alignment: AlignmentType.CENTER,
+                                    children: [
+                                        new TextRun({
+                                            text: record[key]?.toString() || "-"
+                                        })
+                                    ]
+                                })],
+                                width: { size: 100 / keys.length, type: WidthType.PERCENTAGE }
                             })
                         )
                     })
@@ -923,16 +991,21 @@
 
                 const table = new Table({
                     rows: [headerRow, ...dataRows],
-                    width: { size: 100, type: "pct" }
+                    width: { size: 100, type: WidthType.PERCENTAGE }
                 });
 
                 children.push(table);
             } else {
                 children.push(
                     new Paragraph({
-                        text: "No records found",
-                        color: "FF0000",
-                        italics: true
+                        alignment: AlignmentType.CENTER,
+                        children: [
+                            new TextRun({
+                                text: "No records found",
+                                color: "FF0000",
+                                italics: true
+                            })
+                        ]
                     })
                 );
             }
@@ -962,6 +1035,10 @@
             console.error("DOCX Generation Error:", error);
             throw error;
         }
+    }
+
+    function toPascalCase(str) {
+        return str.replace(/(^\w|_\w)/g, s => s.replace('_', '').toUpperCase());
     }
 
     function toTitleCase(str) {

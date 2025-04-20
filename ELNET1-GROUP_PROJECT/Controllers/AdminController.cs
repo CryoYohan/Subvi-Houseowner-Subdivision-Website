@@ -950,6 +950,8 @@ public class AdminController : Controller
                 string originalPassword = model.Password;
                 model.Password = BCrypt.Net.BCrypt.HashPassword(originalPassword);
 
+                model.DateRegistered = DateTime.Now;
+
                 // Add new user to the database
                 _context.User_Accounts.Add(model);
                 _context.SaveChanges();
@@ -2061,8 +2063,8 @@ public class AdminController : Controller
             .AsEnumerable() // Forces client-side processing
             .Select(r => new
             {
-                // Convert JSType.Date to DateTime and format as YYYY-MM
-                Month = DateTime.Parse(r.SchedDate.ToString()).ToString("yyyy-MM")
+                // Convert JSType.Date to DateTime and format as MM/dd/yyyy
+                Month = DateTime.Parse(r.SchedDate.ToString()).ToString("MM/dd/yyyy")
             })
             .GroupBy(r => r.Month)
             .OrderBy(g => g.Key)
@@ -2078,7 +2080,7 @@ public class AdminController : Controller
             .AsEnumerable() // Forces client-side evaluation
             .Select(p => new
             {
-                Month = DateTime.ParseExact(p.DatePaid, "yyyy-MM-dd", CultureInfo.InvariantCulture).ToString("yyyy-MM"),
+                Month = DateTime.ParseExact(p.DatePaid, "yyyy-MM-dd", CultureInfo.InvariantCulture).ToString("MM/dd/yyyy"),
                 AmountPaid = p.AmountPaid
             })
             .GroupBy(p => p.Month)
@@ -2092,7 +2094,7 @@ public class AdminController : Controller
 
         // Feedback Ratings Breakdown
         var feedbackRatings = _context.Feedback
-            .Where(f => f.FeedbackType == "Complement") 
+            .Where(f => f.FeedbackType == "Compliment") 
             .GroupBy(f => f.Rating) 
             .Select(g => new { Rating = g.Key, Count = g.Count() }) 
             .ToList();
@@ -2129,7 +2131,7 @@ public class AdminController : Controller
     }
 
     [HttpPost]
-    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string carbrand)
+    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string carbrand, string role)
     {
         var result = new List<object>();
 
@@ -2195,6 +2197,12 @@ public class AdminController : Controller
                 {
                     reservationsQuery = reservationsQuery.Where(x => x.res.Status == status);
                 }
+                else
+                {
+                    reservationsQuery = reservationsQuery.Where(x =>
+                        x.res.Status == "Approved" ||
+                        x.res.Status == "Declined");
+                }
 
                 var reservations = reservationsQuery
                     .Select(x => new
@@ -2231,6 +2239,14 @@ public class AdminController : Controller
                 {
                     serviceQuery = serviceQuery.Where(x => x.request.Status == status);
                 }
+                else
+                {
+                    serviceQuery = serviceQuery.Where(x =>
+                        x.request.Status == "Scheduled" ||
+                        x.request.Status == "Completed" ||
+                        x.request.Status == "Cancelled" ||
+                        x.request.Status == "Rejected");
+                }
 
                 var services = serviceQuery
                     .AsEnumerable()
@@ -2244,7 +2260,7 @@ public class AdminController : Controller
                         obj["Status"] = x.request.Status;
 
                         if (DateTime.TryParse(x.request.DateSubmitted, out var submittedDate))
-                            obj["DateSubmitted"] = submittedDate.ToString("MM/dd/yyyy hh:mm tt");
+                            obj["DateSubmitted"] = submittedDate.ToString("MM/dd/yyyy hh:mm tt").ToUpper();
 
                         if (x.request.Status == "Rejected" && !string.IsNullOrEmpty(x.request.RejectedReason))
                             obj["RejectedReason"] = x.request.RejectedReason;
@@ -2252,7 +2268,7 @@ public class AdminController : Controller
                         if ((x.request.Status == "Scheduled" || x.request.Status == "Completed" || x.request.Status == "Cancelled")
                             && x.request.ScheduleDate.HasValue)
                         {
-                            obj["ScheduleDate"] = x.request.ScheduleDate.Value.ToString("MM/dd/yyyy hh:mm tt");
+                            obj["ScheduleDate"] = x.request.ScheduleDate.Value.ToString("MM/dd/yyyy hh:mm tt").ToUpper();
                         }
 
                         obj["RequestedBy"] =
@@ -2277,7 +2293,7 @@ public class AdminController : Controller
                                    {
                                        pass.VisitorId,
                                        pass.VisitorName,
-                                       pass.DateTime,
+                                       DateTime = pass.DateTime.ToString("MM/dd/yyyy hh:mm tt").ToUpper(),
                                        pass.Status,
                                        pass.Relationship,
                                        HomeownerName = Capitalize(user.Firstname) + " " + Capitalize(user.Lastname)
@@ -2290,6 +2306,49 @@ public class AdminController : Controller
 
                 var passes = visitorQuery.ToList<object>();
                 result = passes;
+                break;
+
+            case "USER_ACCOUNT":
+                var userQuery = _context.User_Accounts.AsQueryable();
+
+                if (!string.IsNullOrEmpty(startDate) && !string.IsNullOrEmpty(endDate))
+                {
+                    DateTime.TryParse(startDate, out startV);
+                    DateTime.TryParse(endDate, out endV);
+                    userQuery = userQuery.Where(u => u.DateRegistered >= startV && u.DateRegistered <= endV);
+                }
+
+                if (!string.IsNullOrEmpty(status) && status != "All")
+                {
+                    userQuery = userQuery.Where(u => u.Status == status.ToUpper());
+                }
+
+                if (!string.IsNullOrEmpty(role) && role != "All")
+                {
+                    userQuery = userQuery.Where(u => u.Role == role);
+                }
+
+                // Arranged By Role
+                userQuery = userQuery
+                    .OrderBy(u =>
+                        u.Role == "Homeowner" ? 0 :
+                        u.Role == "Staff" ? 1 :
+                        u.Role == "Admin" ? 2 : 3
+                    )
+                    .ThenBy(u => u.Id);
+
+                result = userQuery.Select(u => new
+                {
+                    u.Id,
+                    FullName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1).ToLower() + " " +
+                               char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1).ToLower(),
+                    u.Email,
+                    u.PhoneNumber,
+                    u.Address,
+                    u.Status,
+                    u.Role,
+                    DateRegistered = u.DateRegistered.ToString("MM/dd/yyyy hh:mm tt").ToUpper()
+                }).ToList<object>();
                 break;
         }
 
