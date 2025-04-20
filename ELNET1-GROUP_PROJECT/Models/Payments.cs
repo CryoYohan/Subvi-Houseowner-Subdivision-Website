@@ -3,7 +3,7 @@
 namespace ELNET1_GROUP_PROJECT.Models
 {
     [Table("PAYMENT")]
-    public class Payment
+    public class Payments
     {
         [Column("PAYMENT_ID")]
         public int PaymentId { get; set; }

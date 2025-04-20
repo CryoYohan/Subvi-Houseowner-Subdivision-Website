@@ -33,7 +33,7 @@ namespace ELNET1_GROUP_PROJECT.Data
             modelBuilder.Entity<Bill>()
                 .HasKey(s => s.BillId);
 
-            modelBuilder.Entity<Payment>()
+            modelBuilder.Entity<Payments>()
                 .HasKey(s => s.PaymentId);
 
             modelBuilder.Entity<Forum>()
@@ -47,7 +47,7 @@ namespace ELNET1_GROUP_PROJECT.Data
         }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Announcement> Announcement { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Bill> Bill { get; set; }
-        public DbSet<ELNET1_GROUP_PROJECT.Models.Payment> Payment { get; set; }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.Payments> Payment { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Event_Calendar> Event_Calendar { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Forum> Forum { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Replies> Replies { get; set; }

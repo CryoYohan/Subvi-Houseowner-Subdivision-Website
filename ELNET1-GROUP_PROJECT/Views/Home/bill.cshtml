@@ -47,7 +47,7 @@
 
 <div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
     @* Sidebar *@
-    <div class="bg-white rounded-tr-2xlrounded-br-2xl shadow-md w-56 py-6 h-screen">
+    <div class="bg-white rounded-tr-2xlrounded-br-2xl shadow-md w-56 py-6">
         <ul class="space-y-4">
             <li>
                 <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
@@ -117,58 +117,60 @@
                     <div class="card p-4 shadow">
                         <h2 class="text-primary text-2xl font-bold"><i class="fas fa-file-invoice-dollar"></i> Bills and Payments</h2>
 
-                        <div class="card p-4 shadow mt-4" style="max-height: 600px; overflow-y: auto;">
-                            <h4 class="text-warning fw-bold p-2">Outstanding Bills</h4>
+                        <div class="card p-4 shadow mt-4">
+                            <h4 class="text-yellow-600 font-bold text-lg p-2">Outstanding Bills</h4>
 
                             @if (ViewBag.OutstandingBills != null && ViewBag.OutstandingBills.Count > 0)
                             {
-                                @foreach (var bill in ViewBag.OutstandingBills)
-                                {
-                                    <div class="card mb-3 p-3 border-warning">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <span class="badge bg-warning text-dark">OUTSTANDING</span>
-                                                <h5 class="fw-bold mt-2">@bill.BillName</h5>
-                                                <p class="mb-1 text-muted">Due: @bill.DueDate</p>
-                                                <h3 class="text-warning fw-bold">P @bill.RemainingAmount.ToString("0.00")</h3>
+                                <div style="max-height: 200px; overflow-y: auto;">
+                                    @foreach (var bill in ViewBag.OutstandingBills)
+                                    {
+                                        <div class="card mb-3 p-3 border-warning">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <span class="badge bg-warning text-dark">OUTSTANDING</span>
+                                                    <h5 class="fw-bold mt-2">@bill.BillName</h5>
+                                                    <p class="mb-1 text-muted">Due: @(DateTime.TryParse(bill.DueDate, out DateTime dueDate) ? dueDate.ToString("MM/dd/yyyy") : "Invalid Date")</p>
+                                                    <h3 class="text-yellow-600 font-bold text-lg">P @bill.RemainingAmount.ToString("0.00")</h3>
+                                                </div>
+                                                <a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BillId })" class="btn btn-primary">Pay Now</a>
                                             </div>
-                                            <a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BillId })" class="btn btn-primary">Pay Now</a>
                                         </div>
-                                    </div>
-                                }
+                                    }
+                                </div>
                             }
                             else
                             {
                                 <p class="text-center text-muted">No outstanding bills at the moment.</p>
                             }
 
-
                             <hr class="my-4">
 
-                            <h4 class="text-danger fw-bold p-2">Overdue Bills</h4>
+                            <h4 class="text-red-600 font-bold text-lg p-2">Overdue Bills</h4>
 
                             @if (ViewBag.OverdueBills != null && ViewBag.OverdueBills.Count > 0)
                             {
-                                @foreach (var bill in ViewBag.OverdueBills)
-                                {
-                                    <div class="card mb-3 p-3 border-danger">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <span class="badge bg-danger">OVERDUE</span>
-                                                <h5 class="fw-bold mt-2">@bill.BillName</h5>
-                                                <p class="mb-1 text-muted">Due: @bill.DueDate</p>
-                                                <h3 class="text-danger fw-bold">P @bill.BillAmount.ToString("0.00")</h3>
+                                <div style="max-height: 200px; overflow-y: auto;">
+                                    @foreach (var bill in ViewBag.OverdueBills)
+                                    {
+                                        <div class="card mb-3 p-3 border-danger">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <span class="badge bg-danger">OVERDUE</span>
+                                                    <h5 class="fw-bold mt-2">@bill.BillName</h5>
+                                                    <p class="mb-1 text-muted">Due: @(DateTime.TryParse(bill.DueDate, out DateTime dueDate) ? dueDate.ToString("MM/dd/yyyy") : "Invalid Date")</p>
+                                                    <h3 class="text-red-600 font-bold text-lg">P @bill.BillAmount.ToString("0.00")</h3>
+                                                </div>
+                                                <a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BillId })" class="btn btn-primary">Pay Now</a>
                                             </div>
-                                            <a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BillId })" class="btn btn-primary">Pay Now</a>
                                         </div>
-                                    </div>
-                                }
+                                    }
+                                </div>
                             }
                             else
                             {
                                 <p class="text-center text-muted">No overdue bills at the moment.</p>
                             }
-
                         </div>
                     </div>
                 </div>
@@ -195,9 +197,9 @@
 										<tr>
 											<td>@payment.PaymentId</td>
 											<td>@payment.BillName</td>
-											<td>@payment.DatePaid</td>
+                                            <td>@(DateOnly.TryParse(payment.DatePaid, out DateOnly datePaid) ? datePaid.ToString("MM/dd/yyyy") : "Invalid Date")</td>
 											<td><span class="badge bg-info">@payment.PaymentMethod</span></td>
-											<td class="text-success fw-bold">P @payment.AmountPaid.ToString("0.00")</td>
+                                            <td class="text-green-600 font-bold text-lg">P @payment.AmountPaid.ToString("0.00")</td>
 										</tr>
 									}
 								</tbody>
@@ -220,14 +222,14 @@
 										<div>
 											<span class="badge bg-info text-dark">UPCOMING</span>
 											<h5 class="fw-bold mt-2">@bill.BillName</h5>
-											<p class="mb-1 text-muted">Due: @bill.DueDate</p>
+                                            <p class="mb-1 text-muted">Due: @(DateTime.TryParse(bill.DueDate, out DateTime dueDate) ? dueDate.ToString("MM/dd/yyyy") : "Invalid Date")</p>
 											@if (bill.RemainingAmount != bill.BillAmount)
 											{
 												<h3 class="text-info fw-bold">Remaining Balance: P @bill.RemainingAmount.ToString("0.00")</h3>
 											}
 											else
 											{
-												<h3 class="text-info fw-bold">P @bill.RemainingAmount.ToString("0.00")</h3>
+                                                <h3 class="text-green-600 font-bold text-lg">P @bill.RemainingAmount.ToString("0.00")</h3>
 											}
 										</div>
 										<a href="@Url.Action("PaymentPanel", "Home", new { billId = bill.BillId })" class="btn btn-primary">Pay Early</a>

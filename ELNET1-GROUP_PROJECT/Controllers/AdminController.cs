@@ -1494,7 +1494,7 @@ public class AdminController : Controller
         var payments = await _context.Payment
             .Where(p => p.BillId == billId)
             .OrderByDescending(p => p.PaymentId)
-            .Select(p => new Payment
+            .Select(p => new Payments
             {
                 PaymentId = p.PaymentId,
                 AmountPaid = p.AmountPaid,

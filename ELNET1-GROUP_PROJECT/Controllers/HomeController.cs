@@ -13,6 +13,15 @@ using System.Net.Http;
 using Microsoft.AspNetCore.SignalR;
 using ELNET1_GROUP_PROJECT.SignalR;
 using Azure.Core;
+using Square;
+using Square.Apis;
+using Square.Exceptions;
+using Square.Models;
+using System;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace ELNET1_GROUP_PROJECT.Controllers
 {
@@ -22,16 +31,14 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly MyAppDBContext _context;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IConfiguration _configuration;
         private readonly PayMongoServices _payMongoServices;
         private readonly IHubContext<NotificationHub> _hubContext;
 
-        public HomeController(MyAppDBContext context, ILogger<HomeController> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration, PayMongoServices payMongoServices, IHubContext<NotificationHub> hubContext)
+        public HomeController(MyAppDBContext context, ILogger<HomeController> logger, IHttpClientFactory httpClientFactory, PayMongoServices payMongoServices, IHubContext<NotificationHub> hubContext)
         {
             _context = context;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
-            _configuration = configuration;
             ViewData["Layout"] = "_HomeLayout";
             _payMongoServices = payMongoServices;
             _hubContext = hubContext;
@@ -336,7 +343,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         }
 
 
-        public IActionResult Bill()
+        public async Task<IActionResult> Bill()
         {
             RefreshJwtCookies();
             var Iduser = HttpContext.Request.Cookies["Id"];
@@ -354,53 +361,161 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 return View();
             }
 
+            var notificationsToInsert = new List<Notification>();
+            var homeownerNotifications = new List<Notification>();
+            var staffNotifications = new List<Notification>();
+            var adminNotifications = new List<Notification>();
+
+            var today = DateTime.Today;
+            var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+
             foreach (var bill in bills)
             {
-                if (bill.Status != "Paid")
+                if (bill.Status == "Paid") continue;
+
+                if (!DateTime.TryParse(bill.DueDate, out var dueDate))
                 {
-                    if (!DateTime.TryParse(bill.DueDate, out var dueDate))
-                    {
-                        // Handle invalid date format
-                        bill.Status = "Invalid Date";
-                        continue;
-                    }
+                    bill.Status = "Invalid Date";
+                    continue;
+                }
 
-                    var today = DateTime.Today;
-                    var totalPaid = payments.Where(p => p.BillId == bill.BillId).Sum(p => p.AmountPaid);
-                    var remainingAmount = bill.BillAmount - totalPaid;
+                var totalPaid = payments.Where(p => p.BillId == bill.BillId).Sum(p => p.AmountPaid);
+                var remainingAmount = bill.BillAmount - totalPaid;
 
-                    if (remainingAmount <= 0)
+                string newStatus = bill.Status;
+                string title = "", message = "";
+
+                if (remainingAmount <= 0)
+                {
+                    newStatus = "Paid";
+                    title = "Bill Fully Paid";
+                    message = $"Thank you! Your payment for {bill.BillName} is now fully settled as of {DateTime.Now:MMMM dd, yyyy}.";
+                }
+                else if (dueDate < today)
+                {
+                    newStatus = "Overdue";
+                    title = "Bill Overdue";
+                    message = $"Reminder: Your bill {bill.BillName} is overdue.";
+                    if (remainingAmount > 0)
                     {
-                        bill.Status = "Paid";
+                        message += $" Please settle the remaining balance of <strong>₱{remainingAmount:N2}</strong> as soon as possible.";
                     }
-                    else if (dueDate < today)
+                }
+                else if (dueDate == today)
+                {
+                    newStatus = "Due Now";
+                    title = "Bill Due Today";
+                    message = $"Heads up! Your bill {bill.BillName} is due today.";
+                    if (remainingAmount > 0)
                     {
-                        bill.Status = "Overdue";
+                        message += $" Please settle the remaining balance of <strong>₱{remainingAmount:N2}</strong> as soon as possible.";
                     }
-                    else if (dueDate == today)
+                }
+                else
+                {
+                    newStatus = "Upcoming";
+                    title = "Upcoming Bill";
+                    message = $"Your bill {bill.BillName} is due on {dueDate:MMMM dd}. Remaining balance: ₱{remainingAmount:N2}.";
+                }
+
+                // Format full name for Admin/Staff
+                var fullName = user != null
+                    ? $"{char.ToUpper(user.Firstname[0]) + user.Firstname.Substring(1).ToLower()} {char.ToUpper(user.Lastname[0]) + user.Lastname.Substring(1).ToLower()}"
+                    : $"User #{userId}";
+
+                // Format deadline date
+                var deadlineDate = newStatus == "Due Now" ? today.ToString("MMMM dd, yyyy") : dueDate.ToString("MMMM dd, yyyy");
+
+                // Common message for Admin/Staff
+                string formattedMessage = $"The <strong>{bill.BillName}</strong> Bill of <strong>{fullName}</strong> is now <strong>{newStatus}</strong> that is set to deadline on <strong>{deadlineDate}</strong>.";
+
+                if (bill.Status != newStatus)
+                {
+                    bill.Status = newStatus;
+                    _context.SaveChanges(); // Save bill status change
+
+                    var now = DateTime.UtcNow;
+
+                    // Homeowner
+                    homeownerNotifications.Add(new Notification
                     {
-                        bill.Status = "Due Now";
-                    }
-                    else
+                        UserId = userId,
+                        Message = message,
+                        Title = title,
+                        DateCreated = now,
+                        IsRead = false,
+                        TargetRole = "Homeowner",
+                        Link = "/home/bill",
+                        Type = "Payment"
+                    });
+
+                    // Staff
+                    staffNotifications.Add(new Notification
                     {
-                        bill.Status = "Upcoming";
-                    }
+                        UserId = userId,
+                        Message = formattedMessage,
+                        Type = "Payment",
+                        Title = title,
+                        DateCreated = now,
+                        IsRead = false,
+                        TargetRole = "Staff",
+                        Link = "/staff/bills_and_payments"
+                    });
+
+                    // Admin
+                    adminNotifications.Add(new Notification
+                    {
+                        UserId = userId,
+                        Message = formattedMessage,
+                        Type = "Payment",
+                        Title = title,
+                        DateCreated = now,
+                        IsRead = false,
+                        TargetRole = "Admin",
+                        Link = "/admin/paymenthistory"
+                    });
                 }
             }
 
+            // Bulk insert notifications
+            _context.Notifications.AddRange(homeownerNotifications);
+            _context.Notifications.AddRange(staffNotifications);
+            _context.Notifications.AddRange(adminNotifications);
             _context.SaveChanges();
 
+            // SignalR notify each group
+            foreach (var note in homeownerNotifications)
+            {
+                await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", note);
+            }
+
+            foreach (var note in staffNotifications)
+            {
+                await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", note);
+            }
+
+            foreach (var note in adminNotifications)
+            {
+                await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", note);
+            }
+
             var outstandingBills = bills
-                .Where(b => b.Status == "Overdue" || b.Status == "Due Now")
-                .Select(b => new
-                {
-                    b.BillId,
-                    b.BillName,
-                    b.DueDate,
-                    RemainingAmount = b.BillAmount - payments.Where(p => p.BillId == b.BillId).Sum(p => p.AmountPaid)
-                })
+     .Where(b => b.Status == "Overdue" || b.Status == "Due Now")
+     .Select(b => new
+     {
+         b.BillId,
+         b.BillName,
+         b.DueDate,
+         RemainingAmount = b.BillAmount - payments.Where(p => p.BillId == b.BillId).Sum(p => p.AmountPaid)
+     })
+     .OrderBy(b => b.BillId)
+     .ToList();
+
+            var overdueBills = bills
+                .Where(b => b.Status == "Overdue")
+                .OrderBy(b => b.BillId)
                 .ToList();
-            var overdueBills = bills.Where(b => b.Status == "Overdue").ToList();
+
             var upcomingBills = bills
                 .Where(b => b.Status == "Upcoming")
                 .Select(b => new
@@ -411,6 +526,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     b.BillAmount,
                     RemainingAmount = b.BillAmount - payments.Where(p => p.BillId == b.BillId).Sum(p => p.AmountPaid)
                 })
+                .OrderBy(b => b.BillId)
                 .ToList();
 
             var paymentHistory = (from p in payments
@@ -423,7 +539,8 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                                       p.PaymentMethod,
                                       p.AmountPaid
                                   })
-                      .ToList();
+                                 .OrderByDescending(p => p.DatePaid)
+                                 .ToList();
 
             ViewBag.OutstandingBills = outstandingBills;
             ViewBag.PaymentHistory = paymentHistory;
@@ -433,7 +550,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             return View(bills);
         }
 
-        public IActionResult PaymentPanel(int billId)
+        public async Task<IActionResult> PaymentPanel(int billId)
         {
             RefreshJwtCookies();
             var Iduser = HttpContext.Request.Cookies["Id"];
@@ -445,38 +562,179 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             var bill = _context.Bill.FirstOrDefault(b => b.BillId == billId && b.UserId == userId);
             if (bill == null)
             {
-                return RedirectToAction("Bill"); // Redirect to a general bill page if not found
+                return RedirectToAction("Bill");
             }
 
-            var payments = _context.Payment.Where(p => p.UserId == userId && p.BillId == bill.BillId).ToList();
+            var payments = _context.Payment
+                .Where(p => p.UserId == userId && p.BillId == bill.BillId)
+                .ToList();
 
             var totalPaid = payments.Sum(p => p.AmountPaid);
             var remainingAmount = bill.BillAmount - totalPaid;
 
+            string newStatus = bill.Status;
+            string notifTitle = "";
+            string notifMessage = "";
+            bool sendNotif = false;
+
+            // Determine new status
             if (remainingAmount <= 0)
             {
-                bill.Status = "Paid";
+                newStatus = "Paid";
+                notifTitle = "Bill Fully Paid";
+                notifMessage = $"Thank you! Your payment for <strong>{bill.BillName}</strong> is now fully settled as of {DateTime.Now:MMMM dd, yyyy}.";
             }
             else if (DateTime.Parse(bill.DueDate) < DateTime.Today)
             {
-                bill.Status = "Overdue";
+                newStatus = "Overdue";
+                notifTitle = "Bill Overdue";
+                notifMessage = $"Reminder: Your bill <strong>{bill.BillName}</strong> is overdue.";
+                notifMessage += $" Please settle the remaining balance of <strong>₱{remainingAmount:N2}</strong> as soon as possible.";
             }
             else if (DateTime.Parse(bill.DueDate) == DateTime.Today)
             {
-                bill.Status = "Due Now";
+                newStatus = "Due Now";
+                notifTitle = "Bill Due Today";
+                notifMessage = $"Heads up! Your bill <strong>{bill.BillName}</strong> is due today.";
+                notifMessage += $" Remaining balance: <strong>₱{remainingAmount:N2}</strong>.";
             }
             else
             {
-                bill.Status = "Upcoming";
+                newStatus = "Upcoming";
+                notifTitle = "Upcoming Bill";
+                notifMessage = $"Your bill <strong>{bill.BillName}</strong> is due on {DateTime.Parse(bill.DueDate):MMMM dd}.";
+                notifMessage += $" Remaining balance: <strong>₱{remainingAmount:N2}</strong>.";
             }
 
-            _context.SaveChanges();
+            // Only proceed if status is actually changing
+            if (bill.Status != newStatus)
+            {
+                bill.Status = newStatus;
+                _context.SaveChanges();
+                sendNotif = true;
+            }
 
-            ViewBag.Bill = bill;  
+            if (sendNotif)
+            {
+                var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+                var fullName = user != null
+                    ? $"{char.ToUpper(user.Firstname[0]) + user.Firstname[1..].ToLower()} {char.ToUpper(user.Lastname[0]) + user.Lastname[1..].ToLower()}"
+                    : $"User #{userId}";
 
+                var roles = new[] { "Admin", "Staff", "Homeowner" };
+                foreach (var role in roles)
+                {
+                    string link = role switch
+                    {
+                        "Admin" => "/admin/paymenthistory",
+                        "Staff" => "/staff/bills_and_payments",
+                        "Homeowner" => "/home/bill",
+                        _ => "/"
+                    };
+
+                    string message = notifMessage;
+
+                    if (role == "Admin" || role == "Staff")
+                    {
+                        string deadlineDate = newStatus == "Due Now"
+                            ? DateTime.Now.ToString("MMMM dd, yyyy")
+                            : DateTime.Parse(bill.DueDate).ToString("MMMM dd, yyyy");
+
+                        message = $"The <strong>{bill.BillName}</strong> Bill of <strong>{fullName}</strong> is now <strong>{newStatus}</strong> that is set to deadline on <strong>{deadlineDate}</strong>.";
+                    }
+
+                    var notif = new Notification
+                    {
+                        UserId = userId,
+                        Message = message,
+                        Type = "Payment",
+                        Title = notifTitle,
+                        DateCreated = DateTime.UtcNow,
+                        IsRead = false,
+                        TargetRole = role,
+                        Link = link
+                    };
+
+                    _context.Notifications.Add(notif);
+                    _context.SaveChanges();
+
+                    // Send real-time
+                    if (role == "Homeowner")
+                    {
+                        await _hubContext.Clients.User(userId.ToString())
+                            .SendAsync("ReceiveNotification", new
+                            {
+                                Title = notifTitle,
+                                Message = notifMessage,
+                                DateCreated = notif.DateCreated
+                            });
+                    }
+                    else
+                    {
+                        await _hubContext.Clients.Group(role.ToLower())
+                            .SendAsync("ReceiveNotification", new
+                            {
+                                Title = notifTitle,
+                                Message = message,
+                                DateCreated = notif.DateCreated
+                            });
+                    }
+                }
+            }
+
+            ViewBag.Bill = bill;
             return View();
         }
 
+        /*
+        [HttpPost]
+        public async Task<IActionResult> ProcessSquarePayment([FromBody] SquarePaymentRequest request)
+        {
+            // Create a Square client with sandbox environment
+            var client = new SquareClient.Builder()
+                .Environment(Square.Environment.Sandbox)
+                .AccessToken("EAAAl-M5lrKVpmG1yueFTWHNEUSBoWQLmANRsW8KGNeSrOSVE8JqITIJRQN4dele") // Replace with your actual token
+                .Build();
+
+            var paymentsApi = client.PaymentsApi;
+
+            // Amount in centavos (smallest unit of PHP)
+            var amountMoney = new Money(amount: (long)(request.Amount * 100), currency: "PHP");
+
+            // Create payment request
+            var createPaymentRequest = new CreatePaymentRequest(
+                sourceId: request.Token, // Payment source token (e.g. from Square Web Payments SDK)
+                idempotencyKey: Guid.NewGuid().ToString(), // Unique key for safety
+                amountMoney: amountMoney
+            );
+
+            try
+            {
+                var response = await paymentsApi.CreatePaymentAsync(createPaymentRequest);
+                return Json(new
+                {
+                    success = true,
+                    payment = response.Payment
+                });
+            }
+            catch (ApiException ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message,
+                    details = ex.Errors
+                });
+            }
+        }
+
+        public class SquarePaymentRequest
+        {
+            public string Token { get; set; }
+            public decimal Amount { get; set; }
+        }
+       
+        // This for payment in paymongo
         [HttpPost]
         public async Task<IActionResult> ConfirmPayment(int billId, decimal amountPaid, string paymentMethod)
         {
@@ -520,58 +778,174 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 return RedirectToAction("Bill", new { id = billId });
             }
         }
+        */
 
         [HttpPost]
-        public async Task<IActionResult> PaymentCallback(int billId, decimal amountPaid, int userId)
+        public async Task<IActionResult> PaymentInsertData([FromBody] PaymentDto payment)
         {
             RefreshJwtCookies();
+
             try
             {
-                // Get the total payments made for this bill by this user
-                var totalPaid = _context.Payment
-                    .Where(p => p.BillId == billId && p.UserId == userId)
-                    .Sum(p => p.AmountPaid);
-
-                // Get Bill Amount
-                var bill = await _context.Bill.FirstOrDefaultAsync(b => b.BillId == billId);
-
-                if (bill == null)
+                var Iduser = HttpContext.Request.Cookies["Id"];
+                if (!int.TryParse(Iduser, out int userId))
                 {
-                    TempData["ErrorMessage"] = "Bill not found.";
-                    return RedirectToAction("Bill", new { id = billId });
+                    return Json(new { success = false, message = "Invalid user session." });
                 }
 
-                // Insert the new payment
-                var newPayment = new Payment
+                var bill = await _context.Bill.FirstOrDefaultAsync(b => b.BillId == payment.BillId);
+                if (bill == null)
                 {
-                    BillId = billId,
+                    return Json(new { success = false, message = "Bill not found." });
+                }
+
+                if (bill.Status == "Paid")
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "This bill has already been paid. Redirecting...",
+                        redirect = Url.Action("Bill", "Home")
+                    });
+                }
+
+                var totalPaid = _context.Payment
+                    .Where(p => p.BillId == payment.BillId && p.UserId == userId)
+                    .Sum(p => p.AmountPaid);
+
+                var datePaid = DateTime.Now;
+                var formattedDatePaid = datePaid.ToString("yyyy-MM-dd");
+
+                var newPayment = new Payments
+                {
+                    BillId = payment.BillId,
                     UserId = userId,
-                    AmountPaid = amountPaid,
-                    DatePaid = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                    AmountPaid = payment.AmountPaid,
+                    PaymentMethod = payment.PaymentMethod,
+                    PaymentStatus = true,
+                    DatePaid = formattedDatePaid
                 };
 
                 _context.Payment.Add(newPayment);
                 await _context.SaveChangesAsync();
 
-                // Calculate new total paid
-                totalPaid += amountPaid;
+                totalPaid += payment.AmountPaid;
 
-                // Check if the bill is fully paid
                 if (totalPaid >= bill.BillAmount)
                 {
                     bill.Status = "Paid";
                     await _context.SaveChangesAsync();
                 }
 
-                TempData["SuccessMessage"] = "Payment successful.";
-                return RedirectToAction("Bill", new { id = billId });
+                // Create user full name for notifications
+                var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Id == userId);
+                var fullName = user != null
+                    ? $"{char.ToUpper(user.Firstname[0]) + user.Firstname[1..].ToLower()} {char.ToUpper(user.Lastname[0]) + user.Lastname[1..].ToLower()}"
+                    : $"User #{userId}";
+
+                var formattedDatePaidMessage = datePaid.ToString("MM/dd/yyyy");
+                string formattedAmount = payment.AmountPaid.ToString("C");
+                string billName = bill.BillName ?? $"Bill #{payment.BillId}";
+
+                string receiptMessage = $"""
+                    💳 *Payment Receipt*
+                    Bill Name: {billName}
+                    Date Paid: {formattedDatePaidMessage}
+                    Amount Paid: {formattedAmount}
+                    Payment Method: {payment.PaymentMethod}
+
+                    Thank you for your payment.
+                    """;
+
+                string staffMessage = $"""
+                    📥 *New Payment Received*
+                    From: {fullName}
+                    Bill Name: {billName}
+                    Amount Paid: {formattedAmount}
+                    Date Paid: {formattedDatePaidMessage}
+                    Method: {payment.PaymentMethod}
+                    """;
+
+                // Now insert notification only after successful payment and bill update
+                var notifications = new List<Notification>
+        {
+            new Notification
+            {
+                UserId = userId,
+                Title = $"{billName} Bill",
+                Message = receiptMessage,
+                Type = "Payment",
+                TargetRole = "Homeowner",
+                DateCreated = DateTime.UtcNow,
+                IsRead = false,
+                Link = "/home/bill"
+            },
+            new Notification
+            {
+                UserId = null,
+                Title = $"{billName} Bill",
+                Message = staffMessage,
+                Type = "Payment",
+                TargetRole = "Staff",
+                DateCreated = DateTime.UtcNow,
+                IsRead = false,
+                Link = "/staff/bills_and_payments"
+            },
+            new Notification
+            {
+                UserId = null,
+                Title = $"{billName} Bill",
+                Message = staffMessage,
+                Type = "Payment",
+                TargetRole = "Admin",
+                DateCreated = DateTime.UtcNow,
+                IsRead = false,
+                Link = "/admin/paymenthistory"
+            }
+        };
+
+                _context.Notifications.AddRange(notifications);
+                await _context.SaveChangesAsync(); // Make sure this is successful before proceeding
+
+                try
+                {
+                    foreach (var notif in notifications)
+                    {
+                        if (notif.TargetRole == "Homeowner")
+                        {
+                            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notif);
+                        }
+                        else
+                        {
+                            await _hubContext.Clients.Group(notif.TargetRole.ToLower()).SendAsync("ReceiveNotification", notif);
+                        }
+                    }
+                }
+                catch (Exception notifyEx)
+                {
+                    _logger.LogWarning(notifyEx, "Failed to send some notifications.");
+                    // Notifications already saved; just log the SignalR failure
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Payment successful.",
+                    redirect = Url.Action("Bill", "Home")
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing payment callback");
-                TempData["ErrorMessage"] = "Error processing payment.";
-                return RedirectToAction("Bill", new { id = billId });
+                _logger.LogError(ex, "Error inserting payment");
+                return Json(new { success = false, message = "Error processing payment." });
             }
+        }
+
+        public class PaymentDto
+        {
+            public int BillId { get; set; }
+            public decimal AmountPaid { get; set; }
+            public string PaymentMethod { get; set; }
         }
 
         /*
