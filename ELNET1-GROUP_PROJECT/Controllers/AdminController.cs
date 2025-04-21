@@ -2226,7 +2226,7 @@ public class AdminController : Controller
             .ToList();
 
         ViewBag.ReservationMonths = reservationTrends.Select(r => r.Month).ToList();
-        ViewBag.ReservationCounts = reservationTrends.Select(r => r.Count).ToList()
+        ViewBag.ReservationCounts = reservationTrends.Select(r => r.Count).ToList();
 
         // Payments per Month
         var paymentTrends = _context.Payment
