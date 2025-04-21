@@ -1612,18 +1612,48 @@ public class AdminController : Controller
             };
 
             _context.Announcement.Add(newAnnouncement);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            // === Notification Logic ===
+            // Email Notification Logic 
+            //For all user who are active
+            var users = _context.User_Accounts
+                .Where(u => u.Status == "ACTIVE")
+                .ToList();
+            
+            /*
+            // For testing target specific id
+            var users = _context.User_Accounts
+                .Where(u => new[] { 17, 18 }.Contains(u.Id))
+                .ToList();
+            */
+
+            int emailSuccess = 0;
+            int emailFail = 0;
+
+            foreach (var user in users)
+            {
+                string Capitalize(string s) => string.IsNullOrWhiteSpace(s) ? "" : char.ToUpper(s[0]) + s.Substring(1).ToLower();
+                var fullName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
+
+                if (!string.IsNullOrEmpty(user.Email))
+                {
+                    var success = SendEmailAnnouncement(user.Email, fullName, title, description);
+                    if (success) emailSuccess++;
+                    else emailFail++;
+                }
+                else
+                {
+                    emailFail++;
+                }
+            }
+
+            // In-App Notification Logic
             var notifTitle = "New Announcement Posted";
             var notifMessage = $"A new announcement titled {title} was posted. Please check.";
             var link = "/home/dashboard";
 
             // Homeowner notifications
-            var homeowners = _context.User_Accounts
-                .Where(u => u.Role == "Homeowner")
-                .Select(u => new { u.Id })
-                .ToList();
+            var homeowners = users.Where(u => u.Role == "Homeowner").ToList();
 
             foreach (var h in homeowners)
             {
@@ -1648,7 +1678,7 @@ public class AdminController : Controller
                 });
             }
 
-            // Staff notification
+            // Staff notification (broadcast)
             var staffNotif = new Notification
             {
                 Title = notifTitle,
@@ -1669,7 +1699,7 @@ public class AdminController : Controller
                 DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
             });
 
-            // Admin notification
+            // Admin notification (broadcast)
             var adminNotif = new Notification
             {
                 Title = notifTitle,
@@ -1690,8 +1720,25 @@ public class AdminController : Controller
                 DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
             });
 
-            _context.SaveChanges();
-            TempData["SuccessMessage"] = "Announcement added successfully!";
+            await _context.SaveChangesAsync();
+
+            // TempData message based on email result
+            if (users.Count == 0)
+            {
+                TempData["SuccessMessage"] = "Announcement added successfully, but no users were notified.";
+            }
+            else if (emailSuccess == 0)
+            {
+                TempData["SuccessMessage"] = "Announcement added, but all email notifications failed.";
+            }
+            else if (emailFail > 0)
+            {
+                TempData["SuccessMessage"] = $"Announcement added and email sent to {emailSuccess}, but {emailFail} failed.";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = $"Announcement added and email sent successfully to all users ({emailSuccess}).";
+            }
         }
         catch (Exception ex)
         {
@@ -1699,6 +1746,112 @@ public class AdminController : Controller
         }
 
         return RedirectToAction("Announcements");
+    }
+
+    private bool SendEmailAnnouncement(string recipientEmail, string fullname, string title, string description)
+    {
+        try
+        {
+            var smtpClient = new SmtpClient("smtp.gmail.com")
+            {
+                Port = 587,
+                Credentials = new NetworkCredential("subvihousesubdivision@gmail.com", "tavxjmokgbjiuaco"),
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false
+            };
+
+            var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "subvi-logo.png");
+            var websiteUrl = "https://subvi.com";
+
+            var emailBody = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }}
+                    .container {{ max-width: 600px; margin: 0 auto; background-color: #f7fafc; }}
+                    .header {{ background: linear-gradient(135deg, #4299e1, #3182ce); padding: 2rem; text-align: center; }}
+                    .content {{ padding: 2rem; background-color: white; }}
+                    .announcement-box {{ background: #ebf8ff; border-left: 4px solid #4299e1; padding: 1.5rem; border-radius: 6px; }}
+                    .footer {{ padding: 1.5rem; text-align: center; color: #718096; font-size: 0.9rem; }}
+                    .button {{ background: #4299e1; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <img src='cid:company-logo' alt='Subvi Logo' style='height: 60px; margin-bottom: 1rem;'>
+                        <h1 style='color: white; margin: 0;'>New Announcement</h1>
+                    </div>
+
+                    <div class='content'>
+                        <h2 style='color: #2d3748;'>Hello {fullname},</h2>
+                        <p style='color: #4a5568; line-height: 1.6;'>We have a new announcement for you. Please see the details below:</p>
+
+                        <div class='announcement-box'>
+                            <h3 style='margin-top: 0; color: #2b6cb0;'>{title}</h3>
+                            <p style='color: #2d3748;'>{description}</p>
+                        </div>
+
+                        <div style='text-align: center; margin-top: 2rem;'>
+                            <a href='{websiteUrl}/home/dashboard' class='button'
+                               style='background: linear-gradient(135deg, #4299e1, #3182ce);
+                                      transition: transform 0.2s ease;
+                                      box-shadow: 0 4px 6px rgba(66, 153, 225, 0.2);'>
+                                View More Announcements
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class='footer'>
+                        <p style='margin: 0.5rem 0;'>Best regards,<br><strong>Subvi Management Team</strong></p>
+                        <p style='margin: 1rem 0; font-size: 0.8rem;'>This is an automated message - please do not reply directly to this email</p>
+                        <div style='margin-top: 1rem;'>
+                            <a href='{websiteUrl}' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Our Website</a>
+                            <a href='{websiteUrl}/contacts' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Contact Support</a>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>";
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress("subvihousesubdivision@gmail.com", "Subvi House Subdivision"),
+                Subject = $"📢 New Announcement: {title}",
+                Body = emailBody,
+                IsBodyHtml = true,
+            };
+
+            mailMessage.To.Add(recipientEmail);
+
+            // Embed the logo
+            var logo = new LinkedResource(logoPath)
+            {
+                ContentId = "company-logo",
+                ContentType = new ContentType("image/png")
+            };
+
+            var htmlView = AlternateView.CreateAlternateViewFromString(emailBody, null, "text/html");
+            htmlView.LinkedResources.Add(logo);
+            mailMessage.AlternateViews.Add(htmlView);
+
+            smtpClient.Send(mailMessage);
+            return true;
+        }
+        catch (SmtpException smtpEx)
+        {
+            Console.WriteLine($"SMTP Error: {smtpEx.StatusCode}");
+            Console.WriteLine($"Details: {smtpEx.Message}");
+            Console.WriteLine($"Inner Exception: {smtpEx.InnerException?.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send announcement email: {ex.Message}");
+        }
+
+        return false;
     }
 
     [HttpPost]
@@ -2060,10 +2213,10 @@ public class AdminController : Controller
 
         // Reservation Trends (Last 4 months)
         var reservationTrends = _context.Reservations
-            .AsEnumerable() // Forces client-side processing
+            .AsEnumerable()
+            .Where(r => r.Status == "Approved")
             .Select(r => new
             {
-                // Convert JSType.Date to DateTime and format as MM/dd/yyyy
                 Month = DateTime.Parse(r.SchedDate.ToString()).ToString("MM/dd/yyyy")
             })
             .GroupBy(r => r.Month)
@@ -2073,7 +2226,7 @@ public class AdminController : Controller
             .ToList();
 
         ViewBag.ReservationMonths = reservationTrends.Select(r => r.Month).ToList();
-        ViewBag.ReservationCounts = reservationTrends.Select(r => r.Count).ToList();
+        ViewBag.ReservationCounts = reservationTrends.Select(r => r.Count).ToList()
 
         // Payments per Month
         var paymentTrends = _context.Payment
@@ -2121,17 +2274,17 @@ public class AdminController : Controller
             .OrderBy(t => t)
             .ToList();
 
-        var carbrands = _context.Vehicle_Registration
-            .Select(v => v.CarBrand)
+        var vehiclebrands = _context.Vehicle_Registration
+            .Select(v => v.VehicleBrand)
             .Distinct()
             .OrderBy(c => c)
             .ToList();
 
-        return Json(new { types, carbrands });
+        return Json(new { types, vehiclebrands });
     }
 
     [HttpPost]
-    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string carbrand, string role)
+    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string vehiclebrand, string role)
     {
         var result = new List<object>();
 
@@ -2150,9 +2303,9 @@ public class AdminController : Controller
                     vehicleQuery = vehicleQuery.Where(v => v.vehicle.Type == vehicleType);
                 }
 
-                if (!string.IsNullOrEmpty(carbrand) && carbrand != "All")
+                if (!string.IsNullOrEmpty(vehiclebrand) && vehiclebrand != "All")
                 {
-                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.CarBrand == carbrand);
+                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.VehicleBrand == vehiclebrand);
                 }
 
                 if (!string.IsNullOrEmpty(status) && status != "All")
@@ -2164,7 +2317,7 @@ public class AdminController : Controller
                 {
                     v.vehicle.VehicleId,
                     v.vehicle.PlateNumber,
-                    v.vehicle.CarBrand,
+                    v.vehicle.VehicleBrand,
                     v.vehicle.Type,
                     v.vehicle.Color,
                     v.vehicle.Status,

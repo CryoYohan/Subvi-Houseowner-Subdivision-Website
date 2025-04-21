@@ -115,7 +115,7 @@
             const debouncedUpdate = debounce(updateCarModel, 300);
     
             // Add event listeners to all relevant inputs
-            ['type', 'color', 'plateNumber', 'carBrand'].forEach(fieldId => {
+            ['type', 'color', 'plateNumber', 'vehicleBrand'].forEach(fieldId => {
                 document.getElementById(fieldId).addEventListener('input', debouncedUpdate);
             });
         }
@@ -466,8 +466,8 @@
                                 <input type="color" id="color" value="#ffffff">
                             </div>
                             <div class="input-group">
-                                <label>Car Brand Name</label>
-                                <input type="text" id="carBrand" placeholder="Enter the Car Brand Name">
+                                <label>Vehicle Brand Name</label>
+                                <input type="text" id="vehicleBrand" placeholder="Enter the Vehicle Brand Name">
                             </div>
                             <div class="input-group">
                                 <label>Plate Number</label>

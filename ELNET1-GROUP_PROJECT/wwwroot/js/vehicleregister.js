@@ -50,8 +50,8 @@ function filterTable() {
         let type = row.cells[1].innerText.toLowerCase();
         let status = row.cells[4].innerText.toLowerCase(); // Column 5 is the status
         let color = row.cells[2].innerText.toLowerCase();
-        let carBrand = row.cells[3].innerText.toLowerCase();
-        let isSearchMatch = plateNumber.includes(input) || type.includes(input) || status.includes(input) || color.includes(input) || carBrand.includes(input);
+        let vehicleBrand = row.cells[3].innerText.toLowerCase();
+        let isSearchMatch = plateNumber.includes(input) || type.includes(input) || status.includes(input) || color.includes(input) || vehicleBrand.includes(input);
 
         if (isSearchMatch) {
             row.style.display = '';
@@ -117,7 +117,7 @@ function renderVehicleTable(data, status) {
                 <td class="p-2 text-center" style="background-color: white">${vehicle.plateNumber}</td>
                 <td class="p-2 text-center" style="background-color: white">${formatVehicleType(vehicle.type)}</td>
                 <td class="p-2 text-center" style="background-color: white">${vehicle.color}</td>
-                <td class="p-2 text-center" style="background-color: white">${vehicle.carBrand}</td>
+                <td class="p-2 text-center" style="background-color: white">${vehicle.vehicleBrand}</td>
                 <td class="p-2 text-center" style="background-color: white">
                     <span class="status-badge ${vehicle.status === 'Active' ? 'bg-green-500' : vehicle.status === 'Inactive' ? 'bg-red-500' : 'bg-gray-500'} text-white">
                         ${vehicle.status}
@@ -211,7 +211,7 @@ function editVehicle(id) {
         $('#plateNumber').val(data.plateNumber);
         $('#type').val(data.type.toLowerCase());
         $('#color').val(data.color);
-        $('#carBrand').val(data.carBrand);
+        $('#vehicleBrand').val(data.vehicleBrand);
 
         if (carPreviewInitialized) {
             cleanupCarPreview();
@@ -249,7 +249,7 @@ function saveVehicle() {
         plateNumber: $('#plateNumber').val(),
         type: $('#type').val(),
         color: $('#color').val(),
-        carBrand: $('#carBrand').val(),
+        vehicleBrand: $('#vehicleBrand').val(),
         userId: userId
     };
 
@@ -258,7 +258,7 @@ function saveVehicle() {
         plateNumber: $('#plateNumber').val(),
         type: $('#type').val(),
         color: $('#color').val(),
-        carBrand: $('#carBrand').val(),
+        vehicleBrand: $('#vehicleBrand').val(),
         userId: userId
     };
 

@@ -50,7 +50,7 @@ async function loadNotifications() {
                         ${isUnread ? '<span class="badge bg-primary rounded-circle p-1 ms-2" style="width: 10px; height: 10px;"></span>' : ''}
                     </div>
                     
-                    <div><small class="text-secondary">${n.message}</small></div>
+                    <div><small class="text-secondary">${n.message.length > 65 ? n.message.slice(0, 65) + '...' : n.message}</small></div>
                     
                     <div class="d-flex justify-content-between align-items-center mt-1">
                         <small class="text-muted">${new Date(n.dateCreated).toLocaleString()}</small>

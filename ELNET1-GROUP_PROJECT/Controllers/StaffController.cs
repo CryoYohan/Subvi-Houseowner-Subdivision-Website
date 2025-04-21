@@ -528,7 +528,7 @@ public class StaffController : Controller
                            v.Type,
                            v.Status,
                            v.Color,
-                           v.CarBrand,
+                           v.VehicleBrand,
                            v.UserId,
                            FirstName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
                            LastName = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
@@ -553,7 +553,7 @@ public class StaffController : Controller
             v.PlateNumber == vehicle.PlateNumber &&
             v.Type == vehicle.Type &&
             v.Color == vehicle.Color &&
-            v.CarBrand == vehicle.CarBrand
+            v.VehicleBrand == vehicle.VehicleBrand
         );
 
         if (conflictExists)
@@ -595,7 +595,7 @@ public class StaffController : Controller
             v.PlateNumber == updated.PlateNumber &&
             v.Type == updated.Type &&
             v.Color == updated.Color &&
-            v.CarBrand == updated.CarBrand
+            v.VehicleBrand == updated.VehicleBrand
         );
 
         if (conflictExists)
@@ -611,7 +611,7 @@ public class StaffController : Controller
         vehicle.Type = updated.Type;
         vehicle.Status = updated.Status;
         vehicle.Color = updated.Color;
-        vehicle.CarBrand = updated.CarBrand;
+        vehicle.VehicleBrand = updated.VehicleBrand;
         vehicle.UserId = updated.UserId; // Set new userId
 
         _context.SaveChanges();
@@ -2619,10 +2619,10 @@ public class StaffController : Controller
 
         // Reservation Trends (Last 4 months)
         var reservationTrends = _context.Reservations
-            .AsEnumerable() // Forces client-side processing
+            .AsEnumerable() 
+            .Where(r => r.Status == "Approved") 
             .Select(r => new
             {
-                // Convert JSType.Date to DateTime and format as MM/dd/yyyy
                 Month = DateTime.Parse(r.SchedDate.ToString()).ToString("MM/dd/yyyy")
             })
             .GroupBy(r => r.Month)
@@ -2681,19 +2681,19 @@ public class StaffController : Controller
             .OrderBy(t => t)
             .ToList();
 
-        var carbrands = _context.Vehicle_Registration
-            .Select(v => v.CarBrand)
+        var vehiclebrands = _context.Vehicle_Registration
+            .Select(v => v.VehicleBrand)
             .Distinct()
             .OrderBy(c => c)
             .ToList();
 
-        return Json(new { types, carbrands });
+        return Json(new { types, vehiclebrands });
     }
 
 
     //For fetching data for report
     [HttpPost("GetReportData")]
-    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string carbrand)
+    public IActionResult GetReportData(string reportType, string status, string startDate, string endDate, string vehicleType, string vehiclebrand)
     {
         var result = new List<object>();
 
@@ -2712,9 +2712,9 @@ public class StaffController : Controller
                     vehicleQuery = vehicleQuery.Where(v => v.vehicle.Type == vehicleType);
                 }
 
-                if (!string.IsNullOrEmpty(carbrand) && carbrand != "All")
+                if (!string.IsNullOrEmpty(vehiclebrand) && vehiclebrand != "All")
                 {
-                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.CarBrand == carbrand);
+                    vehicleQuery = vehicleQuery.Where(v => v.vehicle.VehicleBrand == vehiclebrand);
                 }
 
                 if (!string.IsNullOrEmpty(status) && status != "All")
@@ -2726,7 +2726,7 @@ public class StaffController : Controller
                 {
                     v.vehicle.VehicleId,
                     v.vehicle.PlateNumber,
-                    v.vehicle.CarBrand,
+                    v.vehicle.VehicleBrand,
                     v.vehicle.Type,
                     v.vehicle.Color,
                     v.vehicle.Status,

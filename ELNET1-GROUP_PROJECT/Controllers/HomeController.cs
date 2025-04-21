@@ -22,6 +22,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using DocumentFormat.OpenXml.Spreadsheet;
+using System.Net.Mime;
+using System.Net.Mail;
+using System.Net;
+using Paymongo.Sharp.Core.Enums;
+using static ELNET1_GROUP_PROJECT.Controllers.HomeController;
 
 namespace ELNET1_GROUP_PROJECT.Controllers
 {
@@ -848,23 +853,23 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 string billName = bill.BillName ?? $"Bill #{payment.BillId}";
 
                 string receiptMessage = $"""
-                    💳 *Payment Receipt*
-                    Bill Name: {billName}
-                    Date Paid: {formattedDatePaidMessage}
-                    Amount Paid: {formattedAmount}
-                    Payment Method: {payment.PaymentMethod}
+    💳 *Payment Receipt*
+    Bill Name: {billName}
+    Date Paid: {formattedDatePaidMessage}
+    Amount Paid: {formattedAmount}
+    Payment Method: {payment.PaymentMethod}
 
-                    Thank you for your payment.
-                    """;
+    Thank you for your payment.
+    """;
 
                 string staffMessage = $"""
-                    📥 *New Payment Received*
-                    From: {fullName}
-                    Bill Name: {billName}
-                    Amount Paid: {formattedAmount}
-                    Date Paid: {formattedDatePaidMessage}
-                    Method: {payment.PaymentMethod}
-                    """;
+    📥 *New Payment Received*
+    From: {fullName}
+    Bill Name: {billName}
+    Amount Paid: {formattedAmount}
+    Date Paid: {formattedDatePaidMessage}
+    Method: {payment.PaymentMethod}
+    """;
 
                 // Now insert notification only after successful payment and bill update
                 var notifications = new List<Notification>
@@ -909,36 +914,201 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
                 try
                 {
+                    // Send SignalR notifications
+                    int successCount = 0;
+                    int failureCount = 0;
+
                     foreach (var notif in notifications)
                     {
                         if (notif.TargetRole == "Homeowner")
                         {
-                            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notif);
+                            try
+                            {
+                                await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notif);
+                                successCount++;
+                            }
+                            catch
+                            {
+                                failureCount++;
+                            }
                         }
                         else
                         {
-                            await _hubContext.Clients.Group(notif.TargetRole.ToLower()).SendAsync("ReceiveNotification", notif);
+                            try
+                            {
+                                await _hubContext.Clients.Group(notif.TargetRole.ToLower()).SendAsync("ReceiveNotification", notif);
+                                successCount++;
+                            }
+                            catch
+                            {
+                                failureCount++;
+                            }
                         }
+                    }
+
+                    // Email Notification Logic
+                    List<string> failedEmails = new List<string>();
+                    try
+                    {
+                        // Send the payment receipt email to the homeowner who made the payment
+                        bool emailSuccess = await SendEmailPaymentReceipt(
+                            user.Email, // Send email to the homeowner who made the payment
+                            fullName,
+                            billName,
+                            formattedAmount,
+                            payment.PaymentMethod,
+                            formattedDatePaidMessage
+                        );
+
+                        // Provide feedback about notifications and emails
+                        string emailFeedback = emailSuccess
+                            ? "Payment receipt email sent successfully."
+                            : "Unable to send payment receipt email.";
+
+                        // Provide UI feedback based on success/failure counts
+                        return Json(new
+                        {
+                            success = true,
+                            message = "Payment successful. " + emailFeedback,
+                            redirect = Url.Action("Bill", "Home")
+                        });
+                    }
+                    catch (Exception notifyEx)
+                    {
+                        _logger.LogWarning(notifyEx, "Failed to send some notifications.");
+                        return Json(new
+                        {
+                            success = true,
+                            message = "Payment successful, but some notifications failed to send.",
+                            redirect = Url.Action("Bill", "Home")
+                        });
                     }
                 }
                 catch (Exception notifyEx)
                 {
                     _logger.LogWarning(notifyEx, "Failed to send some notifications.");
-                    // Notifications already saved; just log the SignalR failure
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Payment successful, but some notifications failed to send.",
+                        redirect = Url.Action("Bill", "Home")
+                    });
                 }
-
-                return Json(new
-                {
-                    success = true,
-                    message = "Payment successful.",
-                    redirect = Url.Action("Bill", "Home")
-                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error inserting payment");
                 return Json(new { success = false, message = "Error processing payment." });
             }
+        }
+
+        private async Task<bool> SendEmailPaymentReceipt(string recipientEmail, string fullname, string billName, string amountPaid, string paymentMethod, string paymentDate)
+        {
+            try
+            {
+                var smtpClient = new SmtpClient("smtp.gmail.com")
+                {
+                    Port = 587,
+                    Credentials = new NetworkCredential("subvihousesubdivision@gmail.com", "tavxjmokgbjiuaco"),
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false
+                };
+
+                var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "subvi-logo.png");
+                var websiteUrl = "https://subvi.com";
+
+                var emailBody = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }}
+        .container {{ max-width: 600px; margin: 0 auto; background-color: #f7fafc; }}
+        .header {{ background: linear-gradient(135deg, #4299e1, #3182ce); padding: 2rem; text-align: center; }}
+        .content {{ padding: 2rem; background-color: white; }}
+        .receipt-box {{ background: #ebf8ff; border-left: 4px solid #4299e1; padding: 1.5rem; border-radius: 6px; }}
+        .footer {{ padding: 1.5rem; text-align: center; color: #718096; font-size: 0.9rem; }}
+        .button {{ background: #4299e1; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <img src='cid:company-logo' alt='Subvi Logo' style='height: 60px; margin-bottom: 1rem;' />
+            <h1 style='color: white; margin: 0;'>Payment Receipt</h1>
+        </div>
+
+        <div class='content'>
+            <h2 style='color: #2d3748;'>Hello {fullname},</h2>
+            <p style='color: #4a5568; line-height: 1.6;'>We have successfully received your payment. Please find the details below:</p>
+
+            <div class='receipt-box'>
+                <h3 style='margin-top: 0; color: #2b6cb0;'>Payment Details</h3>
+                <p style='color: #2d3748;'>Bill Name: {billName}</p>
+                <p style='color: #2d3748;'>Amount Paid: {amountPaid}</p>
+                <p style='color: #2d3748;'>Payment Method: {paymentMethod}</p>
+                <p style='color: #2d3748;'>Date Paid: {paymentDate}</p>
+            </div>
+
+            <div style='text-align: center; margin-top: 2rem;'>
+                <a href='{websiteUrl}/home/dashboard' class='button'
+                   style='background: linear-gradient(135deg, #4299e1, #3182ce);
+                          transition: transform 0.2s ease;
+                          box-shadow: 0 4px 6px rgba(66, 153, 225, 0.2);'>
+                    View More Details
+                </a>
+            </div>
+        </div>
+
+        <div class='footer'>
+            <p style='margin: 0.5rem 0;'>Best regards,<br><strong>Subvi Management Team</strong></p>
+            <p style='margin: 1rem 0; font-size: 0.8rem;'>This is an automated message - please do not reply directly to this email</p>
+            <div style='margin-top: 1rem;'>
+                <a href='{websiteUrl}' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Our Website</a>
+                <a href='{websiteUrl}/contacts' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Contact Support</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>";
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress("subvihousesubdivision@gmail.com", "Subvi House Subdivision"),
+                    Subject = $"💳 Payment Receipt: {billName}",
+                    Body = emailBody,
+                    IsBodyHtml = true,
+                };
+
+                mailMessage.To.Add(recipientEmail);
+
+                // Embed the logo
+                var logo = new LinkedResource(logoPath)
+                {
+                    ContentId = "company-logo",
+                    ContentType = new System.Net.Mime.ContentType("image/png") // Fully qualified ContentType
+                };
+
+                var htmlView = AlternateView.CreateAlternateViewFromString(emailBody, null, "text/html");
+                htmlView.LinkedResources.Add(logo);
+                mailMessage.AlternateViews.Add(htmlView);
+
+                smtpClient.Send(mailMessage);
+                return true;
+            }
+            catch (SmtpException smtpEx)
+            {
+                Console.WriteLine($"SMTP Error: {smtpEx.StatusCode}");
+                Console.WriteLine($"Details: {smtpEx.Message}");
+                Console.WriteLine($"Inner Exception: {smtpEx.InnerException?.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to send payment receipt email: {ex.Message}");
+            }
+
+            return false;
         }
 
         public class PaymentDto

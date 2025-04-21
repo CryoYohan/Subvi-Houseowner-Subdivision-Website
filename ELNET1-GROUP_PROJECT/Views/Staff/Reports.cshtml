@@ -337,7 +337,7 @@
         .then(response => response.json())
         .then(data => {
             const vehicleTypeSelect = document.getElementById('vehicleType');
-            const vehiclecarBrandSelect = document.getElementById('vehicleBrand');
+            const vehicleBrandSelect = document.getElementById('vehicleBrand');
 
             data.types.forEach(type => {
                 const option = document.createElement('option');
@@ -346,11 +346,11 @@
                 vehicleTypeSelect.appendChild(option);
             });
 
-            data.carbrands.forEach(carbrand => {
+            data.vehiclebrands.forEach(vehiclebrand => {
                 const option = document.createElement('option');
-                option.value = carbrand;
-                option.textContent = carbrand;
-                vehiclecarBrandSelect.appendChild(option);
+                option.value = vehiclebrand;
+                option.textContent = vehiclebrand;
+                vehicleBrandSelect.appendChild(option);
             });
         })
         .catch(error => {
@@ -515,7 +515,7 @@
 
             if (reportType === "VEHICLE_REGISTRATION") {
                 formData.append("vehicleType", document.getElementById("vehicleType").value);
-                formData.append("carbrand", document.getElementById("vehicleBrand").value);
+                formData.append("vehiclebrand", document.getElementById("vehicleBrand").value);
             } else {
                 formData.append("startDate", document.getElementById("startDate").value);
                 formData.append("endDate", document.getElementById("endDate").value);
@@ -558,7 +558,7 @@
                             vehicleId: "Vehicle ID",
                             plateNumber: "Plate Number",
                             type: "Type",
-                            carBrand: "Vehicle Brand",
+                            vehicleBrand: "Vehicle Brand",
                             status: "Status",
                             ownerName: "Owner Name"
                         },
@@ -735,7 +735,7 @@
                              vehicleId: "Vehicle ID",
                              plateNumber: "Plate Number",
                              type: "Type",
-                             carBrand: "Vehicle Brand",
+                             vehicleBrand: "Vehicle Brand",
                              status: "Status",
                              ownerName: "Owner Name"
                          },
@@ -882,7 +882,7 @@
                     vehicleId: "Vehicle ID",
                     plateNumber: "Plate Number",
                     type: "Vehicle Type",
-                    carBrand: "Vehicle Brand",
+                    vehicleBrand: "Vehicle Brand",
                     status: "Status",
                     ownerName: "Owner Name"
                 },

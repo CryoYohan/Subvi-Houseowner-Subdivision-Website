@@ -35,8 +35,8 @@ namespace ELNET1_GROUP_PROJECT.Models
 
         [Required]
         [MaxLength(50)]
-        [Column("CAR_BRAND")]
-        public string CarBrand { get; set; }
+        [Column("VEHICLE_BRAND")]
+        public string VehicleBrand { get; set; }
 
         [ForeignKey("UserId")]
         public User_Account? UserAccount { get; set; }
