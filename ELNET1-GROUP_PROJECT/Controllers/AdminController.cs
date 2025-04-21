@@ -82,19 +82,23 @@ public class AdminController : Controller
             .Join(_context.User_Accounts,
                 f => f.UserId,
                 u => u.Id,
-                (f, u) => new
+                (f, u) => new { f, u })
+            .Join(_context.User_Info,
+                fu => fu.u.Id,
+                ui => ui.UserAccountId,
+                (fu, ui) => new
                 {
-                    f.PostId,
-                    f.Title,
-                    f.Hashtag,
-                    f.Content,
-                    f.DatePosted,
-                    f.UserId,
-                    u.Profile,
-                    u.Firstname,
-                    u.Lastname
+                    fu.f.PostId,
+                    fu.f.Title,
+                    fu.f.Hashtag,
+                    fu.f.Content,
+                    fu.f.DatePosted,
+                    fu.f.UserId,
+                    ui.Profile,
+                    ui.Firstname,
+                    ui.Lastname
                 })
-            .OrderByDescending(f => f.DatePosted)
+            .OrderByDescending(p => p.DatePosted)
             .ToListAsync();
 
         var posts = rawPosts
@@ -226,8 +230,27 @@ public class AdminController : Controller
 
         try
         {
-            var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null) return Unauthorized();
+            var user = await _context.User_Accounts
+                .Where(u => u.Id == userId)
+                .Join(_context.User_Info,
+                      u => u.Id,
+                      ui => ui.UserAccountId,
+                      (u, ui) => new { u, ui })
+                .DefaultIfEmpty() 
+                .Select(x => new
+                {
+                    x.u.Id,
+                    x.u.Email,
+                    x.u.Role,
+                    x.ui.Firstname, 
+                    x.ui.Lastname,  
+                    x.ui.Profile,
+                    x.ui.PhoneNumber
+                })
+                .FirstOrDefaultAsync();
+
+                if (user == null)
+                    return NotFound();
 
             var forumPost = await _context.Forum.FirstOrDefaultAsync(f => f.PostId == postId);
             if (forumPost == null) return NotFound();

@@ -9,14 +9,8 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Key]
         [Column("USER_ID")]
         public int Id { get; set; }
-        [Column("PROFILE")]
-        public string? Profile { get; set; }
-        [Column("FIRSTNAME")]
-        [Required]
-        public string Firstname { get; set; }
-        [Column("LASTNAME")]
-        [Required]
-        public string Lastname { get;set; }
+        [Column("USERNAME")]
+        public string? Username { get; set; }
         [Column("EMAIL")]
         [Required]
         [EmailAddress]
@@ -27,15 +21,11 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("ROLE")]
         [Required]
         public string Role { get; set; }
-        [Column("ADDRESS")]
-        public string Address { get; set; }
-        [Column("CONTACT")]
-        public string PhoneNumber { get; set; }
         [Column("DATE_TIME")]
         public DateTime DateRegistered { get; set; }
         [Column("STATUS")]
         public string? Status { get; set; } = "ACTIVE";
-
+        public User_Info User_Info { get; set; }
         public ICollection<Forum>? Forum { get; set; }
     }
 }

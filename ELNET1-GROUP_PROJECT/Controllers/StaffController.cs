@@ -109,10 +109,12 @@ public class StaffController : Controller
         {
             return RedirectToAction("landing");
         }
-        var profilePath = _context.User_Accounts
-            .Where(u => u.Id == userId)
-            .Select(u => u.Profile)
-            .FirstOrDefault();
+        var profilePath = (from account in _context.User_Accounts
+                           join info in _context.User_Info
+                           on account.Id equals info.UserAccountId into joined
+                           from info in joined.DefaultIfEmpty()
+                           where account.Id == userId
+                           select info.Profile).FirstOrDefault();
 
         ViewBag.ProfilePath = profilePath;
 
@@ -170,22 +172,26 @@ public class StaffController : Controller
     [HttpGet("getvisitors")]
     public IActionResult GetVisitors(string status)
     {
-        var visitors = _context.Visitor_Pass
-            .Where(v => status == null || v.Status == status)
-            .OrderByDescending(v => v.DateTime)
-            .Join(_context.User_Accounts,
-                  v => v.UserId,
-                  u => u.Id,
-                  (v, u) => new
-                  {
-                      v.VisitorId,
-                      VisitorName = char.ToUpper(v.VisitorName[0]) + v.VisitorName.Substring(1),
-                      v.DateTime,
-                      v.Relationship,
-                      v.Status,
-                      FullName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
-                  })
-            .ToList();
+        var visitors = (from visitor in _context.Visitor_Pass
+                        join account in _context.User_Accounts
+                            on visitor.UserId equals account.Id
+                        join info in _context.User_Info
+                            on account.Id equals info.UserAccountId into infoJoin
+                        from info in infoJoin.DefaultIfEmpty()
+                        where status == null || visitor.Status == status
+                        orderby visitor.DateTime descending
+                        select new
+                        {
+                            visitor.VisitorId,
+                            VisitorName = char.ToUpper(visitor.VisitorName[0]) + visitor.VisitorName.Substring(1),
+                            visitor.DateTime,
+                            visitor.Relationship,
+                            visitor.Status,
+                            FullName = info != null
+                                ? char.ToUpper(info.Firstname[0]) + info.Firstname.Substring(1) + " " +
+                                  char.ToUpper(info.Lastname[0]) + info.Lastname.Substring(1)
+                                : "No Name"
+                        }).ToList();
 
         if (!visitors.Any())
         {
@@ -199,14 +205,17 @@ public class StaffController : Controller
     public IActionResult GetHomeowners()
     {
         var homeowners = _context.User_Accounts
-            .Where(u => u.Role == "Homeowner" && u.Status == "ACTIVE") 
-            .Select(u => new
-            {
-                UserId = u.Id,
-                FirstName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
-                LastName = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
-                Email = u.Email
-            })
+            .Where(u => u.Role == "Homeowner" && u.Status == "ACTIVE")
+            .GroupJoin(_context.User_Info,
+                u => u.Id,
+                ui => ui.UserAccountId,   
+                (u, uiGroup) => new
+                {
+                    UserId = u.Id,
+                    FirstName = uiGroup.FirstOrDefault() != null ? char.ToUpper(uiGroup.FirstOrDefault().Firstname[0]) + uiGroup.FirstOrDefault().Firstname.Substring(1) : null,
+                    LastName = uiGroup.FirstOrDefault() != null ? char.ToUpper(uiGroup.FirstOrDefault().Lastname[0]) + uiGroup.FirstOrDefault().Lastname.Substring(1) : null,
+                    Email = u.Email 
+                })
             .ToList();
 
         return Json(homeowners);
@@ -217,15 +226,17 @@ public class StaffController : Controller
     {
         var visitor = (from v in _context.Visitor_Pass
                        join u in _context.User_Accounts on v.UserId equals u.Id
+                       join ui in _context.User_Info on u.Id equals ui.UserAccountId into userInfoGroup
+                       from ui in userInfoGroup.DefaultIfEmpty()
                        where v.VisitorId == id
                        select new
                        {
                            v.VisitorId,
                            v.UserId,
-                           FirstName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
-                           LastName = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
-                           Email = u.Email,
-                           HomeownerName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                           FirstName = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1),
+                           LastName = char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1),
+                           Email = u.Email ,
+                           HomeownerName = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) + " " + char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1),
                            v.VisitorName,
                            v.Relationship
                        }).FirstOrDefault();
@@ -520,6 +531,8 @@ public class StaffController : Controller
     {
         var vehicle = (from v in _context.Vehicle_Registration
                        join u in _context.User_Accounts on v.UserId equals u.Id
+                       join ui in _context.User_Info on u.Id equals ui.UserAccountId into userInfoGroup
+                       from ui in userInfoGroup.DefaultIfEmpty()
                        where v.VehicleId == id
                        select new
                        {
@@ -530,10 +543,10 @@ public class StaffController : Controller
                            v.Color,
                            v.VehicleBrand,
                            v.UserId,
-                           FirstName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
-                           LastName = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                           FirstName = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1),
+                           LastName = char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1),
                            Email = u.Email,
-                           HomeownerName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                           HomeownerName = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) + " " + char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1),
                        }).FirstOrDefault();
 
         if (vehicle == null)
@@ -796,12 +809,14 @@ public class StaffController : Controller
         var reservations = (from r in _context.Reservations
                             join f in _context.Facility on r.FacilityId equals f.FacilityId
                             join u in _context.User_Accounts on r.UserId equals u.Id
+                            join ui in _context.User_Info on u.Id equals ui.UserAccountId into userInfoGroup
+                            from ui in userInfoGroup.DefaultIfEmpty()
                             where r.Status == status
                             select new ReservationViewModel
                             {
                                 Id = r.ReservationId,
                                 FacilityName = char.ToUpper(f.FacilityName[0]) + f.FacilityName.Substring(1),
-                                RequestedBy = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
+                                RequestedBy = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) + " " + char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1),
                                 SchedDate = r.SchedDate.ToString("MM/dd/yyyy"),
                                 StartTime = r.StartTime, 
                                 EndTime = r.EndTime,     
@@ -1376,26 +1391,28 @@ public class StaffController : Controller
         try
         {
             // Fetch service requests with user info
-            var requests = await _context.Service_Request
-                .Where(r => r.Status == status)
-                .Join(
-                    _context.User_Accounts,
-                    sr => sr.UserId,
-                    ua => ua.Id,
-                    (sr, ua) => new
-                    {
-                        sr.ServiceRequestId,
-                        sr.ReqType,
-                        sr.Description,
-                        sr.Status,
-                        sr.DateSubmitted,
-                        RejectedReason = sr.RejectedReason ?? string.Empty,
-                        ScheduleDate = sr.ScheduleDate != null ? sr.ScheduleDate.Value.ToString("yyyy-MM-dd HH:mm") : null,
-                        homeownerName = char.ToUpper(ua.Firstname[0]) + ua.Firstname.Substring(1) + " " +
-                                   char.ToUpper(ua.Lastname[0]) + ua.Lastname.Substring(1)
-                    }
-                )
-                .ToListAsync();
+            var requests = await (
+                from sr in _context.Service_Request
+                where sr.Status == status
+                join ua in _context.User_Accounts on sr.UserId equals ua.Id into userJoin
+                from ua in userJoin.DefaultIfEmpty()
+                join ui in _context.User_Info on ua.Id equals ui.UserAccountId into infoJoin
+                from ui in infoJoin.DefaultIfEmpty()
+                select new
+                {
+                    sr.ServiceRequestId,
+                    sr.ReqType,
+                    sr.Description,
+                    sr.Status,
+                    sr.DateSubmitted,
+                    RejectedReason = sr.RejectedReason ?? string.Empty,
+                    ScheduleDate = sr.ScheduleDate != null ? sr.ScheduleDate.Value.ToString("yyyy-MM-dd HH:mm") : null,
+                    homeownerName = ui != null
+                        ? char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) + " " +
+                          char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1)
+                        : "No Name"
+                }
+            ).ToListAsync();
 
             // Count service requests by status
             var pendingCount = await _context.Service_Request.CountAsync(r => r.Status == "Pending");
@@ -1567,6 +1584,8 @@ public class StaffController : Controller
         var result = (from bill in bills
                       join user in users
                           on bill.UserId equals user.Id
+                      join ui in _context.User_Info on user.Id equals ui.UserAccountId into userInfoGroup
+                      from ui in userInfoGroup.DefaultIfEmpty()
                       select new
                       {
                           bill.BillId,
@@ -1574,8 +1593,8 @@ public class StaffController : Controller
                           bill.DueDate,
                           bill.Status,
                           BillAmount = bill.BillAmount,
-                          FullName = char.ToUpper(user.Firstname[0]) + user.Firstname.Substring(1) + " " +
-                                     char.ToUpper(user.Lastname[0]) + user.Lastname.Substring(1)
+                          FullName = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) + " " +
+                                     char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1)
                       }).ToList();
 
         // Apply filter
@@ -1598,17 +1617,19 @@ public class StaffController : Controller
     [HttpGet("homeowners")]
     public IActionResult GetActiveHomeowners()
     {
-        var homeowners = _context.User_Accounts
-            .Where(u => u.Role == "Homeowner" && u.Status == "ACTIVE")
-            .Select(u => new {
-                userId = u.Id,
-                fullName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " +
-                                     char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
-                email = u.Email
-            })
-            .ToList();
-
-        return Ok(homeowners);
+        var homeowners = (from u in _context.User_Accounts
+                        where u.Role == "Homeowner" && u.Status == "ACTIVE"
+                        join ui in _context.User_Info on u.Id equals ui.UserAccountId into infoJoin
+                        from ui in infoJoin.DefaultIfEmpty()
+                        select new
+                        {
+                            userId = u.Id,
+                            fullName = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) + " " +
+                                       char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1),
+                            email = u.Email
+                        }
+                        ).ToListAsync();
+            return Ok(homeowners);
     }
 
     [HttpGet("bills/getbyid/{id}")]
@@ -1731,13 +1752,14 @@ public class StaffController : Controller
     }
 
     //-------------- PAYMENTS --------------//
-
     [HttpGet("bills/data/{status}")]
     public async Task<IActionResult> GetBills(string status = "Paid")
     {
         var billsWithUser = from bill in _context.Bill
                             join user in _context.User_Accounts
                                 on bill.UserId equals user.Id
+                            join ui in _context.User_Info on user.Id equals ui.UserAccountId into userInfoGroup
+                            from ui in userInfoGroup.DefaultIfEmpty()
                             where _context.Payment.Any(p => p.BillId == bill.BillId)
                             select new
                             {
@@ -1746,7 +1768,7 @@ public class StaffController : Controller
                                 bill.DueDate,
                                 bill.Status,
                                 bill.BillAmount,
-                                FullName = char.ToUpper(user.Firstname[0]) + user.Firstname.Substring(1) + " " + char.ToUpper(user.Lastname[0]) + user.Lastname.Substring(1)
+                                FullName = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) + " " + char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1)
                             };
 
         if (status == "Paid")
@@ -2323,24 +2345,28 @@ public class StaffController : Controller
     [HttpGet("getfeedbacklist")]
     public IActionResult GetFeedbackList(string type)
     {
-        var list = _context.Feedback
-            .Where(f => f.FeedbackType == type && (type != "Complaint" || f.ComplaintStatus != "Resolved"))
-            .Join(_context.User_Accounts,
-                  f => f.UserId,
-                  u => u.Id,
-                  (f, u) => new
-                  {
-                      f.FeedbackId,
-                      f.FeedbackType,
-                      f.Description,
-                      f.ComplaintStatus,
-                      f.DateSubmitted,
-                      f.UserId,
-                      FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
-                                 (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower()
-                  })
-            .OrderByDescending(f => f.DateSubmitted)
-            .ToList();
+        var list = (
+            from f in _context.Feedback
+            where f.FeedbackType == type && (type != "Complaint" || f.ComplaintStatus != "Resolved")
+            join u in _context.User_Accounts on f.UserId equals u.Id into userJoin
+            from u in userJoin.DefaultIfEmpty()
+            join ui in _context.User_Info on u.Id equals ui.UserAccountId into infoJoin
+            from ui in infoJoin.DefaultIfEmpty()
+            orderby f.DateSubmitted descending
+            select new
+            {
+                f.FeedbackId,
+                f.FeedbackType,
+                f.Description,
+                f.ComplaintStatus,
+                f.DateSubmitted,
+                f.UserId,
+                FullName = (u != null)
+                    ? (ui.Firstname ?? "").Substring(0, 1).ToUpper() + (ui.Firstname ?? "").Substring(1).ToLower() + " " +
+                      (ui.Lastname ?? "").Substring(0, 1).ToUpper() + (ui.Lastname ?? "").Substring(1).ToLower()
+                    : "No User"
+            }
+        ).ToList();
 
         return Json(list);
     }
@@ -2350,6 +2376,8 @@ public class StaffController : Controller
     {
         var feedbacks = (from f in _context.Feedback
                          join u in _context.User_Accounts on f.UserId equals u.Id
+                         join ui in _context.User_Info on u.Id equals ui.UserAccountId into userInfoGroup
+                         from ui in userInfoGroup.DefaultIfEmpty()
                          where f.FeedbackType == "Complaint" && f.ComplaintStatus == "Resolved"
                          orderby f.DateSubmitted descending
                          select new
@@ -2359,8 +2387,8 @@ public class StaffController : Controller
                              f.Description,
                              f.ComplaintStatus,
                              f.DateSubmitted,
-                             FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
-                                        (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower()
+                             FullName = (ui.Firstname ?? "").Substring(0, 1).ToUpper() + (ui.Firstname ?? "").Substring(1).ToLower() + " " +
+                                        (ui.Lastname ?? "").Substring(0, 1).ToUpper() + (ui.Lastname ?? "").Substring(1).ToLower()
                          }).ToList();
 
         return Ok(feedbacks);
@@ -2371,6 +2399,8 @@ public class StaffController : Controller
     {
         var feedback = (from f in _context.Feedback
                         join u in _context.User_Accounts on f.UserId equals u.Id
+                        join ui in _context.User_Info on u.Id equals ui.UserAccountId into userInfoGroup
+                        from ui in userInfoGroup.DefaultIfEmpty()
                         where f.FeedbackId == feedbackId 
                         select new
                         {
@@ -2381,8 +2411,8 @@ public class StaffController : Controller
                             f.ComplaintStatus,
                             Rating = f.Rating,
                             FullName =
-                                (char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1).ToLower()) + " " +
-                                (char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1).ToLower())
+                                (char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1).ToLower()) + " " +
+                                (char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1).ToLower())
                         }).FirstOrDefault();
 
         if (feedback == null)
@@ -2396,25 +2426,29 @@ public class StaffController : Controller
     [HttpGet("getconversation")]
     public IActionResult GetConversation(int feedbackId)
     {
-        var convo = _context.FeedbackConversation
-            .Where(c => c.FeedbackId == feedbackId)
-            .Join(_context.User_Accounts,
-                  c => c.UserId,
-                  u => u.Id,
-                  (c, u) => new
-                  {
-                      c.ConvoId,
-                      c.FeedbackId,
-                      c.SenderRole,
-                      c.Message,
-                      c.DateSent,
-                      c.UserId,
-                      FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
-                                 (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower(),
-                      ProfileImage = string.IsNullOrEmpty(u.Profile) ? null : u.Profile
-                  })
-            .OrderBy(c => c.DateSent)
-            .ToList();
+        var convo = (
+            from c in _context.FeedbackConversation
+            where c.FeedbackId == feedbackId
+            join u in _context.User_Accounts on c.UserId equals u.Id into userJoin
+            from u in userJoin.DefaultIfEmpty()
+            join ui in _context.User_Info on u.Id equals ui.UserAccountId into infoJoin
+            from ui in infoJoin.DefaultIfEmpty()
+            orderby c.DateSent
+            select new
+            {
+                c.ConvoId,
+                c.FeedbackId,
+                c.SenderRole,
+                c.Message,
+                c.DateSent,
+                c.UserId,
+                FullName = ui != null
+                    ? (ui.Firstname ?? "").Substring(0, 1).ToUpper() + (ui.Firstname ?? "").Substring(1).ToLower() + " " +
+                      (ui.Lastname ?? "").Substring(0, 1).ToUpper() + (ui.Lastname ?? "").Substring(1).ToLower()
+                    : "No User",
+                ProfileImage = ui != null ? ui.Profile : null
+            }
+        ).ToList();
 
         return Json(convo);
     }
@@ -2700,12 +2734,16 @@ public class StaffController : Controller
         switch (reportType)
         {
             case "VEHICLE_REGISTRATION":
-                var vehicleQuery = _context.Vehicle_Registration
-                    .Join(_context.User_Accounts,
-                        vehicle => vehicle.UserId,
-                        user => user.Id,
-                        (vehicle, user) => new { vehicle, user })
-                    .AsQueryable();
+                var vehicleQuery = (
+                    from vehicle in _context.Vehicle_Registration
+                    join user in _context.User_Accounts
+                        on vehicle.UserId equals user.Id into userJoin
+                    from user in userJoin.DefaultIfEmpty()
+                    join info in _context.User_Info
+                        on user.Id equals info.UserAccountId into infoJoin
+                    from info in infoJoin.DefaultIfEmpty()
+                    select new { vehicle, user, info }
+                ).AsQueryable();
 
                 if (!string.IsNullOrEmpty(vehicleType) && vehicleType != "All")
                 {
@@ -2730,8 +2768,8 @@ public class StaffController : Controller
                     v.vehicle.Type,
                     v.vehicle.Color,
                     v.vehicle.Status,
-                    OwnerName = char.ToUpper(v.user.Firstname[0]) + v.user.Firstname.Substring(1).ToLower() + " " +
-                                char.ToUpper(v.user.Lastname[0]) + v.user.Lastname.Substring(1).ToLower()
+                    OwnerName = char.ToUpper(v.info.Firstname[0]) + v.info.Firstname.Substring(1).ToLower() + " " +
+                                char.ToUpper(v.info.Lastname[0]) + v.info.Lastname.Substring(1).ToLower()
                 }).ToList<object>();
                 break;
 
@@ -2742,18 +2780,19 @@ public class StaffController : Controller
                 var startDateOnly = DateOnly.FromDateTime(startR);
                 var endDateOnly = DateOnly.FromDateTime(endR);
 
-                var reservationsQuery = _context.Reservations
-                    .Join(_context.Facility,
-                        res => res.FacilityId,
-                        fac => fac.FacilityId,
-                        (res, fac) => new { res, fac })
-                    .Join(_context.User_Accounts,
-                        combined => combined.res.UserId,
-                        user => user.Id,
-                        (combined, user) => new { combined.res, combined.fac, user })
-                    .Where(x =>
-                        x.res.SchedDate >= startDateOnly &&
-                        x.res.SchedDate <= endDateOnly);
+                var reservationsQuery = (
+                    from res in _context.Reservations
+                    join fac in _context.Facility
+                        on res.FacilityId equals fac.FacilityId
+                    join user in _context.User_Accounts
+                        on res.UserId equals user.Id into userJoin
+                    from user in userJoin.DefaultIfEmpty()
+                    join info in _context.User_Info
+                        on user.Id equals info.UserAccountId into infoJoin
+                    from info in infoJoin.DefaultIfEmpty()
+                    where res.SchedDate >= startDateOnly && res.SchedDate <= endDateOnly
+                    select new { res, fac, user, info }
+                ).AsQueryable();
 
                 if (status != "All")
                 {
@@ -2775,8 +2814,8 @@ public class StaffController : Controller
                         x.res.StartTime,
                         x.res.EndTime,
                         x.res.Status,
-                        ReservedBy = char.ToUpper(x.user.Firstname[0]) + x.user.Firstname.Substring(1).ToLower() + " " +
-                                     char.ToUpper(x.user.Lastname[0]) + x.user.Lastname.Substring(1).ToLower()
+                        ReservedBy = char.ToUpper(x.info.Firstname[0]) + x.info.Firstname.Substring(1).ToLower() + " " +
+                                     char.ToUpper(x.info.Lastname[0]) + x.info.Lastname.Substring(1).ToLower()
                     }).ToList<object>();
 
                 result = reservations;
@@ -2788,15 +2827,20 @@ public class StaffController : Controller
                 string startDateStr = startS.ToString("yyyy-MM-dd HH:mm:ss");
                 string endDateStr = endS.ToString("yyyy-MM-dd HH:mm:ss");
 
-                var serviceQuery = _context.Service_Request
-                    .Join(_context.User_Accounts,
-                        request => request.UserId,
-                        user => user.Id,
-                        (request, user) => new { request, user })
-                    .Where(x =>
-                        string.Compare(x.request.DateSubmitted, startDateStr) >= 0 &&
-                        string.Compare(x.request.DateSubmitted, endDateStr) <= 0);
+                var serviceQuery = (
+                    from request in _context.Service_Request
+                    join user in _context.User_Accounts
+                        on request.UserId equals user.Id into userJoin
+                    from user in userJoin.DefaultIfEmpty()
+                    join info in _context.User_Info
+                        on user.Id equals info.UserAccountId into infoJoin
+                    from info in infoJoin.DefaultIfEmpty()
+                    where string.Compare(request.DateSubmitted, startDateStr) >= 0 &&
+                          string.Compare(request.DateSubmitted, endDateStr) <= 0
+                    select new { request, user, info }
+                ).AsQueryable();
 
+                // Filter by status
                 if (status != "All")
                 {
                     serviceQuery = serviceQuery.Where(x => x.request.Status == status);
@@ -2834,8 +2878,8 @@ public class StaffController : Controller
                         }
 
                         obj["RequestedBy"] =
-                            char.ToUpper(x.user.Firstname[0]) + x.user.Firstname.Substring(1).ToLower() + " " +
-                            char.ToUpper(x.user.Lastname[0]) + x.user.Lastname.Substring(1).ToLower();
+                            char.ToUpper(x.info.Firstname[0]) + x.info.Firstname.Substring(1).ToLower() + " " +
+                            char.ToUpper(x.info.Lastname[0]) + x.info.Lastname.Substring(1).ToLower();
 
                         return obj;
                     })
@@ -2850,6 +2894,8 @@ public class StaffController : Controller
 
                 var visitorQuery = from pass in _context.Visitor_Pass
                                    join user in _context.User_Accounts on pass.UserId equals user.Id
+                                   join info in _context.User_Info on user.Id equals info.UserAccountId into infoJoin
+                                   from info in infoJoin.DefaultIfEmpty()
                                    where pass.DateTime >= startV && pass.DateTime <= endV
                                    select new
                                    {
@@ -2858,7 +2904,7 @@ public class StaffController : Controller
                                        DateTime = pass.DateTime.ToString("MM/dd/yyyy hh:mm tt").ToUpper(),
                                        pass.Status,
                                        pass.Relationship,
-                                       HomeownerName = Capitalize(user.Firstname) + " " + Capitalize(user.Lastname)
+                                       HomeownerName = Capitalize(info.Firstname) + " " + Capitalize(info.Lastname)
                                    };
 
                 if (status != "All")
@@ -2902,18 +2948,22 @@ public class StaffController : Controller
         {
             return Unauthorized();
         };
-        var user = await _context.User_Accounts
-            .Where(u => u.Id == userId)
-            .Select(u => new
+        var user = await (
+            from ua in _context.User_Accounts
+            join ui in _context.User_Info
+                on ua.Id equals ui.UserAccountId into uiJoin
+            from ui in uiJoin.DefaultIfEmpty()
+            where ua.Id == userId
+            select new
             {
-                Profile = u.Profile ?? "",
-                u.Firstname,
-                u.Lastname,
-                u.Email,
-                Contact = u.PhoneNumber,
-                u.Address
-            })
-            .FirstOrDefaultAsync();
+                Profile = !string.IsNullOrEmpty(ui.Profile) ? ui.Profile : (ui.Profile ?? ""),
+                Firstname = ui.Firstname,
+                Lastname = ui.Lastname,
+                Email = ua.Email,
+                Contact = ui.PhoneNumber,
+                Address = ui.Address
+            }
+        ).FirstOrDefaultAsync();
 
         if (user == null)
             return NotFound(new { message = "User not found." });
@@ -2928,11 +2978,16 @@ public class StaffController : Controller
         if (!int.TryParse(userIdStr, out int userId))
             return Unauthorized();
 
-        var user = await _context.User_Accounts.FindAsync(userId);
+        var user = await _context.User_Info
+            .FirstOrDefaultAsync(ui => ui.UserAccountId == userId);
+
+        if (user == null) return NotFound();
+
         if (user == null) return NotFound();
 
         var ext = Path.GetExtension(file.FileName);
-        var name = $"{char.ToUpper(user.Firstname[0])}{user.Lastname}-{userId}{ext}";
+        var name = $"{char.ToUpper(user.Firstname[0])}{user.Lastname}-{user.UserAccountId}{ext}";
+
         var savePath = Path.Combine("wwwroot/assets/userprofile", name);
         var relativePath = $"/assets/userprofile/{name}";
 
@@ -2954,35 +3009,38 @@ public class StaffController : Controller
         if (!int.TryParse(userIdStr, out int userId))
             return Unauthorized();
 
-        var user = await _context.User_Accounts.FindAsync(userId);
-        if (user == null) return NotFound();
+        var user = await _context.User_Accounts
+            .Where(u => u.Id == userId)
+            .Include(u => u.User_Info) // Assumes navigation property
+            .FirstOrDefaultAsync();
 
-        // Email check
-        var existingEmail = await _context.User_Accounts
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower() && u.Id != userId);
-        if (existingEmail != null)
-            return Conflict(new { message = "Email already in use by another user." });
+        if (user == null || user.User_Info == null)
+            return NotFound();
 
         // Full name check
-        var nameExists = await _context.User_Accounts
-            .FirstOrDefaultAsync(u => u.Firstname.ToLower() == request.Firstname.ToLower() &&
-                                      u.Lastname.ToLower() == request.Lastname.ToLower() &&
-                                      u.Id != userId);
-        if (nameExists != null)
+        var nameExists = await _context.User_Info
+            .Where(ui => ui.Firstname.ToLower() == request.Firstname.ToLower() &&
+                         ui.Lastname.ToLower() == request.Lastname.ToLower() &&
+                         ui.UserAccountId != userId)
+            .AnyAsync();
+
+        if (nameExists)
             return Conflict(new { message = "Another user already has the same full name." });
 
         // Contact check
-        var contactExists = await _context.User_Accounts
-            .FirstOrDefaultAsync(u => u.PhoneNumber == request.Contact && u.Id != userId);
-        if (contactExists != null)
+        var contactExists = await _context.User_Info
+            .Where(ui => ui.PhoneNumber == request.Contact && ui.UserAccountId != userId)
+            .AnyAsync();
+
+        if (contactExists)
             return Conflict(new { message = "Contact already in use." });
 
-        // Update fields
-        user.Firstname = request.Firstname;
-        user.Lastname = request.Lastname;
+        // ✅ Update actual entities
         user.Email = request.Email;
-        user.Address = request.Address;
-        user.PhoneNumber = request.Contact;
+        user.User_Info.Firstname = request.Firstname;
+        user.User_Info.Lastname = request.Lastname;
+        user.User_Info.PhoneNumber = request.Contact;
+        user.User_Info.Address = request.Address;
 
         await _context.SaveChangesAsync();
         return Ok(new { message = "Profile updated successfully." });

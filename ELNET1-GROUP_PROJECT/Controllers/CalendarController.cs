@@ -100,7 +100,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         public async Task<IActionResult> AddEvent([FromBody] EventDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Description) || string.IsNullOrWhiteSpace(dto.Date_Time))
-                return BadRequest("Description and Date_Time are required.");
+                return BadRequest("Description and Date & Time are required.");
 
             var parsedDate = DateTime.Parse(dto.Date_Time);
 
