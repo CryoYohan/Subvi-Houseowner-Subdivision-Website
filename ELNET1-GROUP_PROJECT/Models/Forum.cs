@@ -25,15 +25,22 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("USER_ID")]
         public int UserId { get; set; }
 
-        // Foreign key relation to User_Accounts
+        // Foreign key to User_Account
         [ForeignKey("UserId")]
         public User_Account UserAccount { get; set; }
 
-        // Not mapped convenience props for display
+        // Convenience props using nested User_Info
         [NotMapped]
-        public string Profile => $"{UserAccount?.Profile}";
-        public string Firstname => $"{UserAccount?.Firstname}";
-        public string Lastname => $"{UserAccount?.Lastname}";
-        public string FullName => $"{UserAccount?.Firstname} {UserAccount?.Lastname}";
+        public string Profile => UserAccount?.User_Info?.Profile;
+
+        [NotMapped]
+        public string Firstname => UserAccount?.User_Info?.Firstname;
+
+        [NotMapped]
+        public string Lastname => UserAccount?.User_Info?.Lastname;
+
+        [NotMapped]
+        public string FullName => $"{UserAccount?.User_Info?.Firstname} {UserAccount?.User_Info?.Lastname}";
     }
+
 }

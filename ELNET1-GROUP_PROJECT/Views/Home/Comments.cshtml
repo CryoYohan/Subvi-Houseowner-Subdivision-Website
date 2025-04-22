@@ -126,28 +126,53 @@
 
     <!-- Main Content -->
     <div class="flex-1 p-8">
+        <div id="header" title=" Go Back to Community Forum Home" class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+            <i class="bi bi-chat-left-dots"></i>
+            <h1 class="text-2xl font-bold">Community Forum</h1>
+
+            <!-- Tooltip Text (Hidden by default, shown on hover) -->
+            <div class="tooltip-text absolute left-1/2 transform -translate-x-1/2 bottom-0 mb-6 p-2 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Go Back to Community Forum Home
+            </div>
+
+            <!-- Redirect link on click -->
+            <a href="/staff/communityforum" class="absolute inset-0"></a>
+        </div>
+
         <!-- Post Header -->
         <div class="post-details">
-            <div class="flex items-start gap-4 mb-6">
-                <div class="user-avatar">
-                    @Model.Post.Firstname[0]@Model.Post.Lastname[0]
-                </div>
+            <div class="flex items-start gap-2 mb-1">
+                @if (!string.IsNullOrEmpty(Model.Post.Profile))
+                {
+                    <img src="@Model.Post.Profile" alt="@Model.Post.Firstname @Model.Post.Lastname" class="img-fluid rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                }
+                else
+                {
+                    <div class="user-avatar p-4 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold;">
+                        @Model.Post.Firstname[0] @Model.Post.Lastname[0]
+                    </div>
+                }
                 <div>
                     <h1 class="text-3xl font-bold text-slate-800 mb-2">@Model.Post.Title</h1>
                     <p class="text-slate-500 text-sm">
-                        Posted by <span class="font-medium">@Model.Post.Firstname @Model.Post.Lastname</span>
+                        Posted by
+                        <span class="font-medium">
+                            @(Model.Post.Role == "Admin"
+                                ? $"Admin {Model.Post.Firstname}"
+                                : $"{Model.Post.Firstname} {Model.Post.Lastname}")
+                        </span>
                         · @Model.Post.DatePosted.ToString("MMM dd, yyyy 'at' h:mm tt")
                     </p>
                 </div>
             </div>
-            <div class="prose max-w-none text-slate-700">
+            <div class="text-slate-700" style="max-height: 40px; overflow-y: auto;">
                 @Model.Post.Content
             </div>
         </div>
 
         <!-- Replies Section -->
         <div class="replies-section">
-            <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center justify-between mb-3">
                 <h3 class="text-xl font-semibold text-slate-800">
                     <i class="fas fa-comment-dots mr-2 text-blue-500"></i>
                     @Model.Replies.Count replies
@@ -164,23 +189,46 @@
             }
             else
             {
-                @foreach (var reply in Model.Replies)
-                {
-                    <div class="reply">
-                        <div class="flex items-start gap-3 mb-3">
-                            <div class="user-avatar text-sm">
-                                @reply.Firstname[0]@reply.Lastname[0]
-                            </div>
-                            <div>
-                                <div class="font-medium text-slate-800">@reply.FullName</div>
-                                <div class="text-sm text-slate-500">
-                                    @reply.Date.ToString("MMM dd, yyyy 'at' h:mm tt")
+                <div class="overflow-y-auto pr-2" style="max-height: 200px">
+                    @foreach (var reply in Model.Replies.OrderByDescending(r => r.Date))
+                    {
+                        <div class="reply mb-4">
+                            <div class="flex items-start gap-3 mb-3">
+                                @if (string.IsNullOrEmpty(reply.Profile))
+                                {
+                                    <div class="user-avatar bg-blue-100 text-blue-700 font-semibold rounded-full w-10 h-10 flex items-center justify-center text-sm">
+                                        @reply.Firstname[0]@reply.Lastname[0]
+                                    </div>
+                                }
+                                else
+                                {
+                                    <img src="@reply.Profile" alt="Profile" class="w-10 h-10 rounded-full object-cover" />
+                                }
+
+                                <div>
+                                    <div class="font-medium text-slate-800">
+                                        @(reply.Role == "Admin" ? "Admin " + reply.Firstname : reply.FullName)
+                                    </div>
+                                    <div class="text-sm text-slate-500">
+                                        @reply.Date.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                    </div>
                                 </div>
                             </div>
+                            <p class="text-slate-700 leading-relaxed">
+                                @if (reply.Content.Length > 100)
+                                {
+                                    <span class="content-preview">@reply.Content.Substring(0, 100)...</span>
+                                    <span class="content-full" style="display:none;">@reply.Content</span>
+                                    <a href="javascript:void(0);" class="text-blue-500 see-more" onclick="toggleContent(this)">See more...</a>
+                                }
+                                else
+                                {
+                                    @reply.Content
+                                }
+                            </p>
                         </div>
-                        <p class="text-slate-700 leading-relaxed">@reply.Content</p>
-                    </div>
-                }
+                    }
+                </div>
             }
 
             <!-- Reply Form -->
@@ -192,9 +240,15 @@
                 <form method="post" class="reply-form" asp-action="AddReply" asp-controller="Home">
                     <input type="hidden" name="PostId" value="@Model.Post.PostId" />
                     <textarea name="Content"
-                              rows="4"
+                              rows="3"
                               class="w-full mb-4"
-                              placeholder="Share your thoughts..."></textarea>
+                              placeholder="Share your thoughts..."
+                              id="contentTextarea"
+                              style="resize: none"
+                              maxlength="255"
+                              oninput="updateCharCount()"></textarea>
+                    <p id="charCount" class="text-right text-sm text-gray-500">0/255</p>
+                    <p id="errorMessage" class="text-red-500 text-sm hidden">You have reached the character limit!</p>
                     <button type="submit"
                             class="bg-blue-600 hover:bg-blue-800 text-white px-6 py-2 rounded-lg font-medium transition-colors">
                         <i class="fas fa-paper-plane mr-2"></i>
@@ -216,4 +270,40 @@
             });
         });
     });
+
+    //For See more/See Less functionality
+    function toggleContent(link) {
+        const fullContent = link.previousElementSibling;
+        const preview = fullContent.previousElementSibling;
+
+        if (fullContent.style.display === 'none') {
+            fullContent.style.display = 'inline';
+            preview.style.display = 'none';
+            link.textContent = 'See less...';
+        } else {
+            fullContent.style.display = 'none';
+            preview.style.display = 'inline';
+            link.textContent = 'See more...';
+        }
+    }
+
+    //For typing limit
+    function updateCharCount() {
+      const textarea = document.getElementById('contentTextarea');
+      const charCount = document.getElementById('charCount');
+      const errorMessage = document.getElementById('errorMessage');
+
+      // Get the current length of the text in the textarea
+      const currentLength = textarea.value.length;
+
+      // Update the character count
+      charCount.textContent = `${currentLength}/255`;
+
+      // Show the error message if the limit is reached
+      if (currentLength === 255) {
+        errorMessage.classList.remove('hidden');
+      } else {
+        errorMessage.classList.add('hidden');
+      }
+    }
 </script>

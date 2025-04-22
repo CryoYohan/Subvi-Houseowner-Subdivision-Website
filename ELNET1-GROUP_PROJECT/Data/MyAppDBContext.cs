@@ -16,16 +16,10 @@ namespace ELNET1_GROUP_PROJECT.Data
    
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
-
-            modelBuilder.Entity<User_Info>().ToTable("USER_INFO");
-            modelBuilder.Entity<User_Account>().ToTable("USER_ACCOUNT");
-
-            modelBuilder.Entity<User_Info>()
-                .HasOne(ui => ui.User_Accounts)
-                .WithOne()
-                .HasForeignKey<User_Info>(ui => ui.UserAccountId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<User_Account>()
+                .HasOne(u => u.User_Info)
+                .WithOne(i => i.User_Accounts)
+                .HasForeignKey<User_Info>(i => i.UserAccountId);
 
             modelBuilder.Entity<Facility>()
                 .HasKey(f => f.FacilityId);
@@ -50,6 +44,8 @@ namespace ELNET1_GROUP_PROJECT.Data
 
             modelBuilder.Entity<Like>()
                 .HasKey(s => s.LikeId);
+
+            base.OnModelCreating(modelBuilder);
         }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Announcement> Announcement { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Bill> Bill { get; set; }

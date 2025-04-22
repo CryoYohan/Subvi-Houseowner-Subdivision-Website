@@ -337,11 +337,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         `).join('');
                             const userAvatar = `
-                                <div class="user-avatar p-4 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold;">
+                                <div class="user-avatar p-4 text-white rounded-circle d-flex align-items-center justify-content-center">
                                     ${post.profile && post.profile.trim() !== ''
-                                                                ? `<img src="${post.profile}" alt="${post.fullName}'s Profile Picture" class="img-fluid rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">`
-                                                                : (post.firstname && post.lastname ? post.firstname[0] + post.lastname[0] : '')
-                                                            }
+                                    ? `<img src="${post.profile}" alt="${post.fullName}'s Profile Picture" class="img-fluid rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">`
+                                    : (post.firstname && post.lastname ? post.firstname[0] + post.lastname[0] : '')
+                                }
                                 </div>
                             `;
 
@@ -352,8 +352,14 @@ document.addEventListener("DOMContentLoaded", () => {
                                     <div class="ms-3">
                                         <h5 class="card-title fw-semibold">${post.title}</h5>
                                         ${mentionsHtml ? `<div class="mb-2">${mentionsHtml}</div>` : ''}
-                                        <p class="text-muted mb-1">Posted by ${post.fullName} on ${post.datePosted}</p>
-                                        <p class="card-text">${post.content}</p>
+                                        <p class="text-muted mb-1">
+                                            Posted by
+                                            ${post.role === "Admin" ? `Admin ${post.firstname} ${post.lastname}` : post.fullName} 
+                                            on ${new Date(post.datePosted).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                        </p>
+                                        <p class="card-text">
+                                            ${post.content.length > 100 ? post.content.substring(0, 100) + "..." : post.content}
+                                        </p>
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-end gap-3">
@@ -513,3 +519,25 @@ function SearchplaceCaretAtEnd(el) {
         }
     }
 }
+
+function updateCharCount() {
+    const textarea = document.getElementById('content');
+    const charCount = document.getElementById('charCount');
+    const errorMessage = document.getElementById('errorMessage');
+
+    // Get the current length of the text in the textarea
+    const currentLength = textarea.value.length;
+
+    // Update the character count
+    charCount.textContent = `${currentLength}/255`;
+
+    // Show the error message if the limit is reached
+    if (currentLength === 255) {
+        errorMessage.classList.remove('hidden');
+    } else {
+        errorMessage.classList.add('hidden');
+    }
+}
+
+// Disable resizing of the textarea
+document.getElementById('content').style.resize = 'none';

@@ -7,6 +7,7 @@ namespace ELNET1_GROUP_PROJECT.Models
     {
         public int ReplyId { get; set; }
         public string Content { get; set; }
+        public string Role { get; set; }
         public DateTime Date { get; set; }
         public int UserId { get; set; }
         public string? Profile { get; set; }

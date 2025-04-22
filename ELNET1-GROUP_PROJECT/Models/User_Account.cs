@@ -9,8 +9,6 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Key]
         [Column("USER_ID")]
         public int Id { get; set; }
-        [Column("USERNAME")]
-        public string? Username { get; set; }
         [Column("EMAIL")]
         [Required]
         [EmailAddress]
@@ -21,10 +19,10 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("ROLE")]
         [Required]
         public string Role { get; set; }
-        [Column("DATE_TIME")]
-        public DateTime DateRegistered { get; set; }
         [Column("STATUS")]
         public string? Status { get; set; } = "ACTIVE";
+        [Column("DATE_TIME")]
+        public DateTime DateRegistered { get; set; }
         public User_Info User_Info { get; set; }
         public ICollection<Forum>? Forum { get; set; }
     }

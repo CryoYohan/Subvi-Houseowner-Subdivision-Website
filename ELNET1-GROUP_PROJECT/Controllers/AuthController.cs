@@ -69,11 +69,12 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             }
 
             var user = await _context.User_Accounts
-                .FirstOrDefaultAsync(u => u.Email == loginDTO.Email && u.Status == "ACTIVE");
+                .FirstOrDefaultAsync(u =>
+                    (u.Email == loginDTO.Email) && u.Status == "ACTIVE");
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDTO.Password, user.Password))
             {
-                return Unauthorized(new { message = "Login Failed. Please check your email or password." });
+                return Unauthorized(new { message = "Login Failed. Please check your entered email or password." });
             }
 
             var token = GenerateJwtToken(user);

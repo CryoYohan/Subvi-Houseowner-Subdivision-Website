@@ -31,13 +31,14 @@ public class HomeDashboardController : ControllerBase
     {
         var announcements = await (from announcement in _context.Announcement
                                    join user in _context.User_Accounts on announcement.UserId equals user.Id
+                                   join info in _context.User_Info on user.Id equals info.UserAccountId
                                    select new
                                    {
                                        announcement.AnnouncementId,
                                        announcement.Title,
                                        announcement.Description,
                                        announcement.DatePosted,
-                                       PostedBy = user.Firstname + " " + user.Lastname // Combine First and Last Name
+                                       PostedBy = info.Firstname + " " + info.Lastname // Combine First and Last Name
                                    }).ToListAsync();
 
         return Ok(announcements);

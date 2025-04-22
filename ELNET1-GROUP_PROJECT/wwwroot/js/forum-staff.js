@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function fetchAnnouncementTitles() {
-    fetch("/Admin/GetAnnouncementTitles")
+    fetch("/staff/GetAnnouncementTitles")
         .then(res => res.json())
         .then(data => mentionTitles = data);
 }
@@ -204,7 +204,7 @@ function focusMentionInput() {
 // Toggle Like/Unlike
 async function toggleLike(postId) {
     try {
-        const response = await fetch(`/Admin/ToggleLike?postId=${postId}`, { method: 'POST' });
+        const response = await fetch(`/staff/togglelike?postId=${postId}`, { method: 'POST' });
         if (!response.ok) {
             console.error('Failed to toggle like');
             return;
@@ -300,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (query) params.append("query", query);
         if (mention) params.append("mention", mention);
         
-            fetch(`/Admin/SearchDiscussions?${params.toString()}`)
+            fetch(`/staff/SearchDiscussions?${params.toString()}`)
                 .then(response => response.json())
                 .then(data => {
                     const resultsDiv = document.getElementById('forum-posts');
@@ -339,9 +339,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             const userAvatar = `
                                 <div class="user-avatar p-4 text-white rounded-circle d-flex align-items-center justify-content-center">
                                     ${post.profile && post.profile.trim() !== ''
-                                    ? `<img src="${post.profile}" alt="${post.fullName}'s Profile Picture" class="img-fluid rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">`
-                                    : (post.firstname && post.lastname ? post.firstname[0] + post.lastname[0] : '')
-                                }
+                                                                ? `<img src="${post.profile}" alt="${post.fullName}'s Profile Picture" class="img-fluid rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">`
+                                                                : (post.firstname && post.lastname ? post.firstname[0] + post.lastname[0] : '')
+                                                            }
                                 </div>
                             `;
 
@@ -367,7 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                         <i id="like-icon-${post.postId}" class="bi ${iconClass}"></i>
                                         <span id="like-count-${post.postId}" data-likes="${post.likeCount}">${likeCount}</span>
                                     </button>
-                                    <a href="/Admin/Comments?id=${post.postId}&title=${encodeURIComponent(post.title)}" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+                                    <a href="/staff/Comments?id=${post.postId}&title=${encodeURIComponent(post.title)}" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
                                         <i class="bi bi-chat"></i>
                                         <span>${post.repliesDisplay} replies</span>
                                     </a>

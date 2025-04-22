@@ -12,21 +12,6 @@ using ELNET1_GROUP_PROJECT.Controllers;
 using ELNET1_GROUP_PROJECT.SignalR;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
-using OfficeOpenXml;
-using iText.Layout;
-using iText.Layout.Element;
-using iText.Kernel.Colors;
-using iText.Kernel.Pdf;
-using iText.Layout.Element;
-using iText.Layout.Properties;
-using iText.Layout.Borders;
-using Syncfusion.DocIO;
-using Syncfusion.DocIO.DLS;
-using System.IO;
-using System.Reflection.Metadata;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Azure.Core;
 
 [Route("staff")]
 public class StaffController : Controller
@@ -92,6 +77,352 @@ public class StaffController : Controller
         return jwtToken?.Claims.FirstOrDefault(c => c.Type == "Role")?.Value;
     }
 
+    [Route("communityforum")]
+    public async Task<IActionResult> CommunityForum()
+    {
+        RefreshJwtCookies();
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return RedirectToAction("landing");
+        }
+
+        var rawPosts = await _context.Forum
+            .Join(_context.User_Accounts,
+                f => f.UserId,
+                u => u.Id,
+                (f, u) => new { f, u })
+            .Join(_context.User_Info,
+                fu => fu.u.Id,
+                ui => ui.UserAccountId,
+                (fu, ui) => new
+                {
+                    fu.f.PostId,
+                    fu.f.Title,
+                    fu.f.Hashtag,
+                    fu.f.Content,
+                    fu.f.DatePosted,
+                    fu.f.UserId,
+                    ui.Profile,
+                    ui.Firstname,
+                    ui.Lastname,
+                    fu.u.Role
+                })
+            .OrderByDescending(p => p.DatePosted)
+            .ToListAsync();
+
+        var posts = rawPosts
+            .Select(f => new ForumPost
+            {
+                PostId = f.PostId,
+                Title = char.ToUpper(f.Title[0]) + f.Title.Substring(1),
+                Hashtag = f.Hashtag ?? null,
+                Content = f.Content,
+                DatePosted = f.DatePosted,
+                UserId = f.UserId,
+                Profile = f.Profile,
+                Role = f.Role,  
+                Firstname = char.ToUpper(f.Firstname[0]) + f.Firstname.Substring(1),
+                Lastname = char.ToUpper(f.Lastname[0]) + f.Lastname.Substring(1),
+                FullName = char.ToUpper(f.Firstname[0]) + f.Firstname.Substring(1) + " " + char.ToUpper(f.Lastname[0]) + f.Lastname.Substring(1),
+                Likes = _context.Like.Count(l => l.PostId == f.PostId),
+                RepliesCount = _context.Replies.Count(r => r.PostId == f.PostId),
+                IsLiked = _context.Like.Any(l => l.PostId == f.PostId && l.UserId == userId)
+            })
+            .OrderByDescending(f => f.DatePosted)
+            .ToList();
+
+        return View(posts);
+    }
+
+    [Route ("searchdiscussions")]
+    public IActionResult SearchDiscussions(string? query, string? mention)
+    {
+        RefreshJwtCookies();
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return RedirectToAction("landing");
+        }
+
+        var results = _context.Forum
+            .Join(_context.User_Accounts, 
+                forum => forum.UserId, 
+                user => user.Id,             
+                (forum, user) => new          
+                {
+                    forum.PostId,
+                    forum.Title,
+                    forum.Content,
+                    forum.DatePosted,
+                    forum.Hashtag,
+                    forum.UserId,
+                    user.Role,                
+                    forum.UserAccount,        
+                })
+            .Join(_context.User_Info,        
+                forumUser => forumUser.UserId,   
+                info => info.UserAccountId,  
+                (forumUser, info) => new          
+                {
+                    forumUser.PostId,
+                    forumUser.Title,
+                    forumUser.Content,
+                    forumUser.DatePosted,
+                    forumUser.Hashtag,
+                    forumUser.UserId,
+                    forumUser.UserAccount,      
+                    forumUser.Role,              
+                    UserInfo = info             
+                })
+            .AsQueryable();
+
+        // Handle @mention if present
+        if (!string.IsNullOrWhiteSpace(mention))
+        {
+            string formattedMention = $"[{mention.Trim()}]";
+            results = results.Where(fp => fp.Hashtag.Contains(formattedMention));
+        }
+
+        // Handle free-text query (Title or Content)
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            results = results.Where(fp =>
+                fp.Title.Contains(query) || fp.Content.Contains(query));
+        }
+
+        // Materialize results before calculating Likes/Replies to avoid EF function translation issues
+        var rawResults = results
+            .OrderByDescending(fp => fp.DatePosted)
+            .ToList();
+
+        var data = rawResults
+            .Select(fp => new {
+                fp.PostId,
+                fp.Title,
+                fp.Hashtag,
+                fp.Content,
+                fp.Role,
+                DatePosted = fp.DatePosted.ToString("MMMM dd, yyyy"),
+                fp.UserInfo.Profile,
+                Firstname = char.ToUpper(fp.UserInfo.Firstname[0]) + fp.UserInfo.Firstname.Substring(1),
+                Lastname = char.ToUpper(fp.UserInfo.Lastname[0]) + fp.UserInfo.Lastname.Substring(1),
+                FullName = char.ToUpper(fp.UserInfo.Firstname[0]) + fp.UserInfo.Firstname.Substring(1) + " " +
+                           char.ToUpper(fp.UserInfo.Lastname[0]) + fp.UserInfo.Lastname.Substring(1),
+                LikeCount = _context.Like.Count(l => l.PostId == fp.PostId),
+                RepliesDisplay = _context.Replies.Count(r => r.PostId == fp.PostId),
+                IsLiked = _context.Like.Any(l => l.PostId == fp.PostId && l.UserId == userId)
+            }).ToList();
+
+        return Json(data);
+    }
+
+    //Mention Announcement Title
+    [HttpGet("getannouncementtitles")]
+    public IActionResult GetAnnouncementTitles()
+    {
+        var titles = _context.Announcement.Select(a => a.Title).ToList();
+        return Json(titles);
+    }
+
+    // Add a new post
+    [HttpPost("addpost")]
+    public async Task<IActionResult> AddPost(string title, string content, string? hashtag)
+    {
+        RefreshJwtCookies();
+        var Iduser = HttpContext.Request.Cookies["Id"];
+
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(content))
+            return BadRequest("Title and Content cannot be empty.");
+
+        if (!int.TryParse(Iduser, out int userId))
+            return BadRequest("Invalid User ID.");
+
+        try
+        {
+            var newPost = new Forum
+            {
+                Title = char.ToUpper(title[0]) + title.Substring(1),
+                Content = content,
+                DatePosted = DateTime.Now,
+                UserId = userId,
+                Hashtag = hashtag
+            };
+
+            _context.Forum.Add(newPost);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("CommunityForum");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding post: {ex.Message}");
+            return StatusCode(500, "An error occurred while adding the post.");
+        }
+    }
+
+    [HttpPost("togglelike")]
+    public async Task<IActionResult> ToggleLike(int postId)
+    {
+        RefreshJwtCookies();
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return BadRequest("Invalid User ID.");
+        }
+
+        try
+        {
+            var user = await _context.User_Accounts
+                .Where(u => u.Id == userId)
+                .Join(_context.User_Info,
+                      u => u.Id,
+                      ui => ui.UserAccountId,
+                      (u, ui) => new { u, ui })
+                .DefaultIfEmpty()
+                .Select(x => new
+                {
+                    x.u.Id,
+                    x.u.Email,
+                    x.u.Role,
+                    x.ui.Firstname,
+                    x.ui.Lastname,
+                    x.ui.Profile,
+                    x.ui.PhoneNumber
+                })
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                return NotFound();
+
+            var forumPost = await _context.Forum.FirstOrDefaultAsync(f => f.PostId == postId);
+            if (forumPost == null) return NotFound();
+
+            string Capitalize(string name) => string.IsNullOrEmpty(name) ? "" : char.ToUpper(name[0]) + name.Substring(1).ToLower();
+            var personName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
+            var title = forumPost.Title;
+
+            var existingLike = await _context.Like
+                .FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
+
+            if (existingLike == null)
+            {
+                // Add like
+                _context.Like.Add(new Like { PostId = postId, UserId = userId });
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                // Remove like (unlike)
+                _context.Like.Remove(existingLike);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction("CommunityForum");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling like: {ex.Message}");
+            return StatusCode(500, "An error occurred while toggling the like.");
+        }
+    }
+
+    [HttpGet("comments")]
+    public async Task<IActionResult> Comments(int id, string title)
+    {
+        RefreshJwtCookies();
+
+        var post = await (
+            from f in _context.Forum
+            join u in _context.User_Accounts on f.UserId equals u.Id
+            join ui in _context.User_Info on u.Id equals ui.UserAccountId into userInfoJoin
+            from ui in userInfoJoin.DefaultIfEmpty()
+            where f.PostId == id
+            select new
+            {
+                f.PostId,
+                Title = !string.IsNullOrEmpty(f.Title) ? char.ToUpper(f.Title[0]) + f.Title.Substring(1) : "",
+                f.Hashtag,
+                f.Content,
+                f.DatePosted,
+                f.UserId,
+                u.Role,
+                Profile = ui != null ? ui.Profile : "",
+                FullName = ui != null && !string.IsNullOrEmpty(ui.Firstname) ? char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) : "" +
+                           ui != null && !string.IsNullOrEmpty(ui.Lastname) ? char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1) : "",
+                Firstname = ui != null && !string.IsNullOrEmpty(ui.Firstname) ? char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) : "",
+                Lastname = ui != null && !string.IsNullOrEmpty(ui.Lastname) ? char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1) : ""
+            }
+        ).FirstOrDefaultAsync(); 
+
+        var replies = await (from r in _context.Replies
+                             join u in _context.User_Accounts on r.UserId equals u.Id
+                             join ui in _context.User_Info on u.Id equals ui.UserAccountId into userInfoJoin
+                             from ui in userInfoJoin.DefaultIfEmpty()
+                             where r.PostId == id
+                             select new ReplyViewModel
+                             {
+                                 ReplyId = r.ReplyId,
+                                 Content = r.Content,
+                                 Date = r.Date,
+                                 UserId = r.UserId,
+                                 Profile = ui.Profile,
+                                 Role = u.Role,
+                                 FullName = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) + " " + char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1),
+                                 Firstname = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1),
+                                 Lastname = char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1)
+                             })
+            .OrderByDescending(r => r.Date)
+            .ToListAsync(); 
+
+        var viewModel = new CommentsViewModel
+        {
+            Post = post,
+            Replies = replies
+        };
+
+        return View(viewModel);
+    }
+
+    private string GetTruncatedTitle(string title)
+    {
+        var words = title.Split(' ');
+        if (words.Length >= 5)
+        {
+            return string.Join("-", words.Take(5)) + "...";
+        }
+        return string.Join("-", words);
+    }
+
+    [HttpPost("addreply")]
+    public async Task<IActionResult> AddReply(int postId, string content)
+    {
+        RefreshJwtCookies();
+        var Iduser = HttpContext.Request.Cookies["Id"];
+        if (!int.TryParse(Iduser, out int userId))
+        {
+            return RedirectToAction("landing");
+        }
+
+        // Get post title from FORUM table
+        var forumPost = _context.Forum.FirstOrDefault(f => f.PostId == postId);
+        if (forumPost == null) return NotFound();
+
+        var title = forumPost.Title;
+
+        // Save the reply
+        var reply = new Replies
+        {
+            Content = content,
+            Date = DateTime.Now,
+            PostId = postId,
+            UserId = userId
+        };
+
+        _context.Replies.Add(reply);
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction("Comments", new { id = postId, title = GetTruncatedTitle(title) });
+    }
 
     [Route("")]
     [Route("dashboard")]

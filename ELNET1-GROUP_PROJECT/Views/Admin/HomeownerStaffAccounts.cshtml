@@ -1,4 +1,4 @@
-﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.User_Account>
+﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.UserDataRequest>
 
 
 @{
@@ -94,8 +94,10 @@
             <span><i class="fas fa-users text-blue-700 text-xl"></i></span>
             <h1 class="text-blue-700 font-bold text-lg">Homeowners & Staff Accounts</h1>
         </div>
+
+        <!--
         <div class="grid grid-cols-2 gap-4">
-            <!-- Left Side: Sign Up Form -->
+            Left Side: Sign Up Form 
             <div class="bg-white shadow-lg rounded-lg p-6">
                 <h2 class="text-2xl font-bold text-blue-600 mb-4">Add Homeowner or Staff</h2>
                 <h3 class="text-sm text-gray-600 mb-6">Enter details to register</h3> 
@@ -157,11 +159,12 @@
                         </div>
                     </div>
                 }
-            </div>
+            </div>class="grid grid-cols-1 gap-2"
+            -->
 
             <!-- Right Side: User Accounts Table -->
             <div class="flex-1">
-                <div class="grid grid-cols-1 gap-2">
+                <div class="w-full">
                     <!-- Right Side: User Accounts Table -->
                     <div class="bg-white shadow-lg rounded-lg p-4 transition-all duration-300">
                         <!-- User Info Section (Hidden by Default) -->
@@ -274,6 +277,7 @@
             <h2 class="text-2xl font-bold text-blue-600 mb-4">Edit User</h2>
             <form asp-action="EditUser" method="post">
                 <input type="hidden" id="editUserId" name="Id" />
+                <input type="hidden" id="editPersonId" name="PersonId" />
                 <div class="space-y-4">
                     <div>
                         <label for="editFirstName" class="block text-sm font-medium text-gray-700">First Name</label>

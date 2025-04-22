@@ -49,7 +49,7 @@ document.getElementById("login-form").addEventListener("submit", async function 
             successmessageElem.classList.remove("hidden");
         } else {
             const errorData = await response.json(); 
-            errormessageElem.textContent = errorData.message || "Invalid Credentials. Please check your email or password.";
+            errormessageElem.textContent = errorData.message || "Invalid Credentials. Please check your entered email or password.";
             errormessageElem.classList.remove("hidden");
         }
     } catch (err) {
