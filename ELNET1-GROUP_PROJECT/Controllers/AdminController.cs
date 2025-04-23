@@ -18,12 +18,13 @@ public class AdminController : Controller
 {
     private readonly MyAppDBContext _context;
     private readonly IHubContext<NotificationHub> _hubContext;
-
-    public AdminController(MyAppDBContext context, IHubContext<NotificationHub> hubContext)
+    private readonly IWebHostEnvironment _env;
+    public AdminController(MyAppDBContext context, IHubContext<NotificationHub> hubContext, IWebHostEnvironment env)
     {
         _context = context;
         ViewData["Layout"] = "_AdminLayout";
         _hubContext = hubContext;
+        _env = env;
     }
 
     //Resetting the cookies time
@@ -997,7 +998,331 @@ public class AdminController : Controller
         return View(users);
     }
 
+    [Route("admin/homeownerstaffaccounts/register")]
+    public IActionResult RegisterHomeowner()
+    {
+        RefreshJwtCookies();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult GetAvailableLots()
+    {
+        var lots = _context.Lot
+            .Where(l => l.Status == "Available")
+            .OrderByDescending(l => l.CreatedAt)
+            .Select(l => new
+            {
+                l.LotId,
+                l.BlockNumber,
+                l.LotNumber,
+                l.SizeSqm,
+                l.Price,
+                l.Description
+            })
+            .ToList();
+
+        return Ok(lots);
+    }
+
     [HttpPost]
+    public async Task<IActionResult> RegisterHomeowner(IFormCollection form)
+    {
+        try
+        {
+            var firstname = form["firstname"].ToString();
+            var lastname = form["lastname"].ToString();
+            var address = form["address"].ToString();
+            var contact = form["contact"].ToString();
+            var email = form["email"].ToString();
+            var remarks = form["remarks"].ToString();
+            var lotId = int.Parse(form["lot_id"].ToString());
+
+            // Check for existing email
+            if (await _context.User_Accounts.AnyAsync(u => u.Email == email))
+            {
+                return BadRequest(new { message = "Email already exists. Please use a different one." });
+            }
+
+            // Check for existing contact
+            if (await _context.User_Info.AnyAsync(u => u.PhoneNumber == contact))
+            {
+                return BadRequest(new { message = "Contact number already exists. Please use a different one." });
+            }
+
+            // Check for duplicate name
+            var existingUsers = await _context.User_Info.ToListAsync();
+            bool nameExists = existingUsers.Any(u =>
+                string.Equals(u.Firstname, firstname, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(u.Lastname, lastname, StringComparison.OrdinalIgnoreCase));
+
+            if (nameExists)
+            {
+                return BadRequest(new { message = "A person with the same first and last name already exists." });
+            }
+
+            var userInfo = new User_Info
+            {
+                Firstname = firstname,
+                Lastname = lastname,
+                Address = address,
+                PhoneNumber = contact,
+                DateCreated = DateTime.Now
+            };
+
+            _context.User_Info.Add(userInfo);
+            await _context.SaveChangesAsync();
+
+            var password = BCrypt.Net.BCrypt.HashPassword($"subvi-{userInfo.PersonId:D6}");
+            var userAccount = new User_Account
+            {
+                Email = email,
+                Password = password,
+                Role = "Homeowner",
+                Status = "ACTIVE",
+                DateRegistered = DateTime.Now
+            };
+
+            _context.User_Accounts.Add(userAccount);
+            await _context.SaveChangesAsync();
+
+            userInfo.UserAccountId = userAccount.Id;
+            _context.User_Info.Update(userInfo);
+            await _context.SaveChangesAsync();
+
+            var application = new Applications
+            {
+                PersonId = userInfo.PersonId,
+                LotId = lotId,
+                DateApplied = DateTime.Now,
+                Remarks = remarks
+            };
+
+            _context.Applications.Add(application);
+            await _context.SaveChangesAsync();
+
+            // Make sure Application ID is generated
+            if (application.ApplicationId <= 0)
+            {
+                return BadRequest(new { message = "Failed to create application record." });
+            }
+
+            var uploadsPath = Path.Combine(_env.WebRootPath, "uploads", userInfo.PersonId.ToString());
+            Directory.CreateDirectory(uploadsPath);
+
+            foreach (var file in form.Files)
+            {
+                var fileName = Path.GetFileName(file.FileName);
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var document = new Documents
+                {
+                    ApplicationId = application.ApplicationId,
+                    PersonId = userInfo.PersonId,
+                    LotId = lotId,
+                    FileName = file.FileName,
+                    FilePath = $"/uploads/{userInfo.PersonId}/{fileName}",
+                    UploadDate = DateTime.Now
+                };
+
+                _context.Documents.Add(document);
+            }
+
+            await _context.SaveChangesAsync();
+
+            var lot = await _context.Lot.FirstOrDefaultAsync(l => l.LotId == lotId);
+            if (lot != null)
+            {
+                lot.Status = "Sold";
+                _context.Lot.Update(lot);
+                await _context.SaveChangesAsync();
+            }
+
+            string fullname = $"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(userInfo.Firstname.ToLower())} {CultureInfo.CurrentCulture.TextInfo.ToTitleCase(userInfo.Lastname.ToLower())}";
+            bool emailSent = false;
+
+            if (userAccount.Role == "Homeowner")
+            {
+                try
+                {
+                    SendEmail(userAccount.Email, fullname, userAccount.Email, $"Subvi-{userInfo.PersonId:D6}");
+                    emailSent = true;
+                }
+                catch
+                {
+                    emailSent = false;
+                }
+            }
+
+            var notification = new Notification
+            {
+                Title = "Account Created",
+                Message = $"Your user account was successfully created. Email: {userAccount.Email}, Password: Subvi-{userInfo.PersonId:D6}. Please change your password for security reasons. Welcome to Subvi, we hope you enjoy your new home.",
+                IsRead = false,
+                Type = "Account",
+                TargetRole = userAccount.Role,
+                UserId = userAccount.Role == "Homeowner" ? userAccount.Id : null,
+                DateCreated = DateTime.Now
+            };
+
+            _context.Notifications.Add(notification);
+            _context.SaveChanges();
+
+            await _hubContext.Clients.User(userAccount.Id.ToString()).SendAsync("ReceiveNotification", new
+            {
+                Title = notification.Title,
+                Message = notification.Message,
+                DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+            });
+
+            string message = emailSent
+                ? "Information and Account Registered Successfully, and email sent to person successfully."
+                : "Information and Account Registered Successfully, but email did not successfully send.";
+
+            return Ok(new { message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = "Failed to register homeowner." });
+        }
+    }
+
+    // Email sending function
+    private bool SendEmail(string recipientEmail, string fullname, string username, string password)
+    {
+        try
+        {
+            var smtpClient = new SmtpClient("smtp.gmail.com")
+            {
+                Port = 587,
+                Credentials = new NetworkCredential("subvihousesubdivision@gmail.com", "kiccqgjvvxwiypcn"),
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false
+            };
+
+            // Local path to logo
+            var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "subvi-logo.png");
+            var websiteUrl = "https://subvi.com";
+
+            var emailBody = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }}
+                    .container {{ max-width: 600px; margin: 0 auto; background-color: #f7fafc; }}
+                    .header {{ background: linear-gradient(135deg, #4299e1, #3182ce); padding: 2rem; text-align: center; }}
+                    .content {{ padding: 2rem; background-color: white; }}
+                    .credentials {{ background: #f8fafc; border-radius: 8px; padding: 1.5rem; margin: 1rem 0; }}
+                    .footer {{ padding: 1.5rem; text-align: center; color: #718096; font-size: 0.9rem; }}
+                    .button {{ background: #4299e1; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <img src='cid:company-logo' alt='Subvi Logo' style='height: 60px; margin-bottom: 1rem;'>
+                        <h1 style='color: white; margin: 0;'>Welcome to Subvi House Subdivision</h1>
+                    </div>
+                
+                    <div class='content'>
+                        <h2 style='color: #2d3748; margin-top: 0;'>Hello, {fullname}!</h2>
+                        <p style='color: #4a5568; line-height: 1.6;'>
+                            Your account has been successfully created. Here are your login credentials:
+                        </p>
+
+                        <div class='credentials'>
+                            <p style='margin: 0.5rem 0;'>
+                                <strong style='color: #2d3748;'>Username:</strong> 
+                                <span style='color: #4a5568;'>{username}</span>
+                            </p>
+                            <p style='margin: 0.5rem 0;'>
+                                <strong style='color: #2d3748;'>Password:</strong> 
+                                <span style='color: #4a5568;'>{password}</span>
+                            </p>
+                        </div>
+
+                        <p style='color: #4a5568; line-height: 1.6;'>
+                            For security reasons, we recommend changing your password after your first login.
+                        </p>
+
+                        <div style='text-align: center; margin: 2rem 0;'>
+                            <a href='{websiteUrl}/login' class='button' 
+                               style='background: linear-gradient(135deg, #4299e1, #3182ce); 
+                                      transition: transform 0.2s ease;
+                                      box-shadow: 0 4px 6px rgba(66, 153, 225, 0.2);'>
+                                Login Now
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class='footer'>
+                        <p style='margin: 0.5rem 0;'>
+                            Best regards,<br>
+                            <strong>Subvi Management Team</strong>
+                        </p>
+                        <p style='margin: 1rem 0; font-size: 0.8rem;'>
+                            This is an automated message - please do not reply directly to this email
+                        </p>
+                        <div style='margin-top: 1rem;'>
+                            <a href='{websiteUrl}' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Our Website</a>
+                            <a href='{websiteUrl}/contacts' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Contact Support</a>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>";
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress("subvihousesubdivision@gmail.com", "Subvi House Subdivision"),
+                Subject = "Welcome to Subvi House Subdivision - Your Account Details",
+                Body = emailBody,
+                IsBodyHtml = true,
+            };
+
+            mailMessage.To.Add(recipientEmail);
+
+            // Fixed logo embedding
+            var logo = new LinkedResource(logoPath)
+            {
+                ContentId = "company-logo", 
+                ContentType = new ContentType("image/png") 
+            };
+
+            var htmlView = AlternateView.CreateAlternateViewFromString(emailBody, null, "text/html");
+            htmlView.LinkedResources.Add(logo);
+            mailMessage.AlternateViews.Add(htmlView);
+
+            smtpClient.Send(mailMessage);
+            return true;
+        }
+        catch (SmtpException smtpEx)
+        {
+            Console.WriteLine($"SMTP Error: {smtpEx.StatusCode}");
+            Console.WriteLine($"Details: {smtpEx.Message}");
+            Console.WriteLine($"Inner Exception: {smtpEx.InnerException?.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send email: {ex.Message}");
+        }
+        return false;
+    }
+
+    /*
+     [HttpPost]
     // POST: /Admin/AddUserAccount
     public async Task<IActionResult> AddUserAccount(UserDataRequest model)
     {
@@ -1137,131 +1462,6 @@ public class AdminController : Controller
         return View(model);
     }
 
-    // Email sending function
-    private bool SendEmail(string recipientEmail, string fullname, string username, string password)
-    {
-        try
-        {
-            var smtpClient = new SmtpClient("smtp.gmail.com")
-            {
-                Port = 587,
-                Credentials = new NetworkCredential("subvihousesubdivision@gmail.com", "tavxjmokgbjiuaco"),
-                EnableSsl = true,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false
-            };
-
-            // Local path to logo
-            var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "subvi-logo.png");
-            var websiteUrl = "https://subvi.com";
-
-            var emailBody = $@"
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }}
-                    .container {{ max-width: 600px; margin: 0 auto; background-color: #f7fafc; }}
-                    .header {{ background: linear-gradient(135deg, #4299e1, #3182ce); padding: 2rem; text-align: center; }}
-                    .content {{ padding: 2rem; background-color: white; }}
-                    .credentials {{ background: #f8fafc; border-radius: 8px; padding: 1.5rem; margin: 1rem 0; }}
-                    .footer {{ padding: 1.5rem; text-align: center; color: #718096; font-size: 0.9rem; }}
-                    .button {{ background: #4299e1; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; }}
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <img src='cid:company-logo' alt='Subvi Logo' style='height: 60px; margin-bottom: 1rem;'>
-                        <h1 style='color: white; margin: 0;'>Welcome to Subvi House Subdivision</h1>
-                    </div>
-                
-                    <div class='content'>
-                        <h2 style='color: #2d3748; margin-top: 0;'>Hello, {fullname}!</h2>
-                        <p style='color: #4a5568; line-height: 1.6;'>
-                            Your account has been successfully created. Here are your login credentials:
-                        </p>
-
-                        <div class='credentials'>
-                            <p style='margin: 0.5rem 0;'>
-                                <strong style='color: #2d3748;'>Username:</strong> 
-                                <span style='color: #4a5568;'>{username}</span>
-                            </p>
-                            <p style='margin: 0.5rem 0;'>
-                                <strong style='color: #2d3748;'>Password:</strong> 
-                                <span style='color: #4a5568;'>{password}</span>
-                            </p>
-                        </div>
-
-                        <p style='color: #4a5568; line-height: 1.6;'>
-                            For security reasons, we recommend changing your password after your first login.
-                        </p>
-
-                        <div style='text-align: center; margin: 2rem 0;'>
-                            <a href='{websiteUrl}/login' class='button' 
-                               style='background: linear-gradient(135deg, #4299e1, #3182ce); 
-                                      transition: transform 0.2s ease;
-                                      box-shadow: 0 4px 6px rgba(66, 153, 225, 0.2);'>
-                                Login Now
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class='footer'>
-                        <p style='margin: 0.5rem 0;'>
-                            Best regards,<br>
-                            <strong>Subvi Management Team</strong>
-                        </p>
-                        <p style='margin: 1rem 0; font-size: 0.8rem;'>
-                            This is an automated message - please do not reply directly to this email
-                        </p>
-                        <div style='margin-top: 1rem;'>
-                            <a href='{websiteUrl}' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Our Website</a>
-                            <a href='{websiteUrl}/contacts' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Contact Support</a>
-                        </div>
-                    </div>
-                </div>
-            </body>
-            </html>";
-
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress("subvihousesubdivision@gmail.com", "Subvi House Subdivision"),
-                Subject = "Welcome to Subvi House Subdivision - Your Account Details",
-                Body = emailBody,
-                IsBodyHtml = true,
-            };
-
-            mailMessage.To.Add(recipientEmail);
-
-            // Fixed logo embedding
-            var logo = new LinkedResource(logoPath)
-            {
-                ContentId = "company-logo", 
-                ContentType = new ContentType("image/png") 
-            };
-
-            var htmlView = AlternateView.CreateAlternateViewFromString(emailBody, null, "text/html");
-            htmlView.LinkedResources.Add(logo);
-            mailMessage.AlternateViews.Add(htmlView);
-
-            smtpClient.Send(mailMessage);
-            return true;
-        }
-        catch (SmtpException smtpEx)
-        {
-            Console.WriteLine($"SMTP Error: {smtpEx.StatusCode}");
-            Console.WriteLine($"Details: {smtpEx.Message}");
-            Console.WriteLine($"Inner Exception: {smtpEx.InnerException?.Message}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to send email: {ex.Message}");
-        }
-        return false;
-    }
-
-    /*
     // Function to delete all users
     public IActionResult DeleteAllUsers()
     {
@@ -1896,7 +2096,7 @@ public class AdminController : Controller
             var smtpClient = new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
-                Credentials = new NetworkCredential("subvihousesubdivision@gmail.com", "tavxjmokgbjiuaco"),
+                Credentials = new NetworkCredential("subvihousesubdivision@gmail.com", "kiccqgjvvxwiypcn"),
                 EnableSsl = true,
                 DeliveryMethod = SmtpDeliveryMethod.Network,
                 UseDefaultCredentials = false

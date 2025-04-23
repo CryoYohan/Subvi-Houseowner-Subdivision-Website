@@ -100,3 +100,11 @@
     // Initial render
     renderWeek();
 });
+    function toggleDescription(descId, toggleId, shortText, fullText) {
+        const descEl = document.getElementById(descId);
+        const toggleEl = document.getElementById(toggleId);
+        const isExpanded = toggleEl.textContent.trim() === "See less";
+
+        descEl.textContent = isExpanded ? shortText : fullText;
+        toggleEl.textContent = isExpanded ? "See more..." : "See less";
+    }

@@ -149,17 +149,44 @@
         }
         else
         {
-           @foreach (var announcement in Model)
+            @foreach (var announcement in Model)
             {
+                var fullDescription = announcement.Description;
+                var shortDescription = fullDescription.Length > 100
+                ? fullDescription.Substring(0, 100) + "..."
+                : fullDescription;
+                var isLong = fullDescription.Length > 100;
+                var descId = $"desc-{announcement.AnnouncementId}";
+                var toggleId = $"toggle-{announcement.AnnouncementId}";
+                var shortJs = System.Text.Json.JsonSerializer.Serialize(shortDescription);
+                var fullJs = System.Text.Json.JsonSerializer.Serialize(fullDescription);
+
                 <div class="bg-white shadow-md rounded-lg p-4 mb-4">
                     <div class="flex justify-between items-center">
                         <h3 class="text-lg font-bold text-blue-600">@announcement.Title</h3>
                         <span class="text-sm text-gray-500">Posted @Convert.ToDateTime(announcement.DatePosted).ToString("MMMM dd, yyyy hh:mm tt")</span>
                     </div>
-                    <p class="mt-2 text-gray-700">@announcement.Description</p>
+
+                    <p id="@descId" class="mt-2 text-gray-700 inline">@shortDescription</p>
+
+                    @if (isLong)
+                    {
+                        <a href="#" id="@toggleId"
+                           class="text-blue-600 text-sm font-medium inline ml-2 hover:underline"
+                           onclick="toggleDescription('@descId', '@toggleId', @shortJs, @fullJs); return false;">
+                            See more...
+                        </a>
+                    }
+
                     <div class="flex justify-end mt-4 space-x-2">
-                        <button onclick='openAnnouncementEditModal(@Html.Raw(Json.Serialize(announcement)))' class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition">Edit</button>
-                        <button onclick="confirmDelete(@announcement.AnnouncementId)" class="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition">Delete</button>
+                        <button onclick='openAnnouncementEditModal(@Html.Raw(Json.Serialize(announcement)))'
+                                class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition">
+                            Edit
+                        </button>
+                        <button onclick="confirmDelete(@announcement.AnnouncementId)"
+                                class="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition">
+                            Delete
+                        </button>
                     </div>
                 </div>
             }

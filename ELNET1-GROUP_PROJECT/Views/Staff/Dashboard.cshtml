@@ -216,30 +216,54 @@
 
             data.forEach(a => {
                 const date = new Date(a.datePosted);
-
-                // Get formatted parts
                 const options = { year: 'numeric', month: 'long', day: 'numeric' };
                 const formattedDate = date.toLocaleDateString('en-US', options);
 
-                // Convert to 12-hour time, remove seconds
                 let hours = date.getHours();
                 const minutes = date.getMinutes().toString().padStart(2, '0');
                 const ampm = hours >= 12 ? 'PM' : 'AM';
                 hours = hours % 12 || 12;
-
                 const formattedTime = `${hours}:${minutes} ${ampm}`;
+
                 const li = document.createElement("li");
-                li.className = "border-l-4 border-blue-900 pl-4";
+                li.className = "border-l-4 border-blue-900 pl-4 mb-4";
+
+                // Truncate long descriptions to 100 chars
+                const fullDescription = a.description;
+                const isLong = fullDescription.length > 100;
+                const shortDescription = isLong ? fullDescription.slice(0, 100) + "..." : fullDescription;
+
+                const descriptionId = `desc-${a.id}`;
+                const toggleId = `toggle-${a.id}`;
 
                 li.innerHTML = `
                     <h4 class="text-lg font-semibold text-gray-700">${a.title}</h4>
-                    <p class="text-gray-600">${a.description}</p>
+                    <p id="${descriptionId}" class="text-gray-600 inline">${shortDescription}</p>
+                    ${isLong ? `<span id="${toggleId}" class="cursor-pointer text-blue-600 text-sm font-medium inline ml-2 hover:underline">See more...</span>` : ""}
                     <div class="flex justify-between text-sm font-bold text-blue-900 mt-1">
                         <span>Posted: ${formattedDate} at ${formattedTime}</span>
                         <span>By Admin</span>
                     </div>
                 `;
+
                 list.appendChild(li);
+
+                if (isLong) {
+                    const toggle = li.querySelector(`#${toggleId}`);
+                    const desc = li.querySelector(`#${descriptionId}`);
+
+                    toggle.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        const expanded = toggle.textContent === "See less";
+                        if (expanded) {
+                            desc.textContent = shortDescription;
+                            toggle.textContent = "See more...";
+                        } else {
+                            desc.textContent = fullDescription;
+                            toggle.textContent = "See less";
+                        }
+                    });
+                }
             });
         } catch (err) {
             list.innerHTML = `<li class="text-red-500 italic">Failed to load announcements.</li>`;

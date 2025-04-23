@@ -1042,7 +1042,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 var smtpClient = new SmtpClient("smtp.gmail.com")
                 {
                     Port = 587,
-                    Credentials = new NetworkCredential("subvihousesubdivision@gmail.com", "tavxjmokgbjiuaco"),
+                    Credentials = new NetworkCredential("subvihousesubdivision@gmail.com", "kiccqgjvvxwiypcn"),
                     EnableSsl = true,
                     DeliveryMethod = SmtpDeliveryMethod.Network,
                     UseDefaultCredentials = false
@@ -1052,59 +1052,59 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 var websiteUrl = "https://subvi.com";
 
                 var emailBody = $@"
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }}
-        .container {{ max-width: 600px; margin: 0 auto; background-color: #f7fafc; }}
-        .header {{ background: linear-gradient(135deg, #4299e1, #3182ce); padding: 2rem; text-align: center; }}
-        .content {{ padding: 2rem; background-color: white; }}
-        .receipt-box {{ background: #ebf8ff; border-left: 4px solid #4299e1; padding: 1.5rem; border-radius: 6px; }}
-        .footer {{ padding: 1.5rem; text-align: center; color: #718096; font-size: 0.9rem; }}
-        .button {{ background: #4299e1; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; }}
-    </style>
-</head>
-<body>
-    <div class='container'>
-        <div class='header'>
-            <img src='cid:company-logo' alt='Subvi Logo' style='height: 60px; margin-bottom: 1rem;' />
-            <h1 style='color: white; margin: 0;'>Payment Receipt</h1>
-        </div>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }}
+                        .container {{ max-width: 600px; margin: 0 auto; background-color: #f7fafc; }}
+                        .header {{ background: linear-gradient(135deg, #4299e1, #3182ce); padding: 2rem; text-align: center; }}
+                        .content {{ padding: 2rem; background-color: white; }}
+                        .receipt-box {{ background: #ebf8ff; border-left: 4px solid #4299e1; padding: 1.5rem; border-radius: 6px; }}
+                        .footer {{ padding: 1.5rem; text-align: center; color: #718096; font-size: 0.9rem; }}
+                        .button {{ background: #4299e1; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; }}
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <img src='cid:company-logo' alt='Subvi Logo' style='height: 60px; margin-bottom: 1rem;' />
+                            <h1 style='color: white; margin: 0;'>Payment Receipt</h1>
+                        </div>
 
-        <div class='content'>
-            <h2 style='color: #2d3748;'>Hello {fullname},</h2>
-            <p style='color: #4a5568; line-height: 1.6;'>We have successfully received your payment. Please find the details below:</p>
+                        <div class='content'>
+                            <h2 style='color: #2d3748;'>Hello {fullname},</h2>
+                            <p style='color: #4a5568; line-height: 1.6;'>We have successfully received your payment. Please find the details below:</p>
 
-            <div class='receipt-box'>
-                <h3 style='margin-top: 0; color: #2b6cb0;'>Payment Details</h3>
-                <p style='color: #2d3748;'>Bill Name: {billName}</p>
-                <p style='color: #2d3748;'>Amount Paid: {amountPaid}</p>
-                <p style='color: #2d3748;'>Payment Method: {paymentMethod}</p>
-                <p style='color: #2d3748;'>Date Paid: {paymentDate}</p>
-            </div>
+                            <div class='receipt-box'>
+                                <h3 style='margin-top: 0; color: #2b6cb0;'>Payment Details</h3>
+                                <p style='color: #2d3748;'>Bill Name: {billName}</p>
+                                <p style='color: #2d3748;'>Amount Paid: {amountPaid}</p>
+                                <p style='color: #2d3748;'>Payment Method: {paymentMethod}</p>
+                                <p style='color: #2d3748;'>Date Paid: {paymentDate}</p>
+                            </div>
 
-            <div style='text-align: center; margin-top: 2rem;'>
-                <a href='{websiteUrl}/home/dashboard' class='button'
-                   style='background: linear-gradient(135deg, #4299e1, #3182ce);
-                          transition: transform 0.2s ease;
-                          box-shadow: 0 4px 6px rgba(66, 153, 225, 0.2);'>
-                    View More Details
-                </a>
-            </div>
-        </div>
+                            <div style='text-align: center; margin-top: 2rem;'>
+                                <a href='{websiteUrl}/home/dashboard' class='button'
+                                   style='background: linear-gradient(135deg, #4299e1, #3182ce);
+                                          transition: transform 0.2s ease;
+                                          box-shadow: 0 4px 6px rgba(66, 153, 225, 0.2);'>
+                                    View More Details
+                                </a>
+                            </div>
+                        </div>
 
-        <div class='footer'>
-            <p style='margin: 0.5rem 0;'>Best regards,<br><strong>Subvi Management Team</strong></p>
-            <p style='margin: 1rem 0; font-size: 0.8rem;'>This is an automated message - please do not reply directly to this email</p>
-            <div style='margin-top: 1rem;'>
-                <a href='{websiteUrl}' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Our Website</a>
-                <a href='{websiteUrl}/contacts' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Contact Support</a>
-            </div>
-        </div>
-    </div>
-</body>
-</html>";
+                        <div class='footer'>
+                            <p style='margin: 0.5rem 0;'>Best regards,<br><strong>Subvi Management Team</strong></p>
+                            <p style='margin: 1rem 0; font-size: 0.8rem;'>This is an automated message - please do not reply directly to this email</p>
+                            <div style='margin-top: 1rem;'>
+                                <a href='{websiteUrl}' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Our Website</a>
+                                <a href='{websiteUrl}/contacts' style='color: #4299e1; text-decoration: none; margin: 0 10px;'>Contact Support</a>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>";
 
                 var mailMessage = new MailMessage
                 {

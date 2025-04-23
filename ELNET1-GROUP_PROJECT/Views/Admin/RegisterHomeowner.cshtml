@@ -1,0 +1,665 @@
+﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.User_Account>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Reservations";
+}
+
+@section Scripts {
+    <script src="~/js/notification-admin.js"></script>
+}
+
+<link rel="stylesheet" href="~/css/homeowner-registration-admin.css" />
+
+<div class="flex overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="bg-white rounded-tr-2xl z-50 rounded-br-2xl shadow-md w-72 p-4 py-6">
+        <h2 class="text-2xl font-bold text-blue-600 text-center mb-6">Admin Panel</h2>
+        <nav class="flex-1 space-y-3">
+            <a asp-controller="admin" asp-action="dashboard" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-home w-6"></i>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a asp-controller="admin" asp-action="reservations" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reservations" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-calendar-check w-6"></i>
+                <span class="ml-3">Reservations</span>
+            </a>
+            <a asp-controller="admin" asp-action="homeownerstaffaccounts" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "HomeownerStaffAccounts" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-users w-6"></i>
+                <span class="ml-3">Homeowners & Staff Accounts</span>
+            </a>
+            <a asp-controller="admin" asp-action="paymenthistory" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full0 transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "PaymentHistory" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-history w-6"></i>
+                <span class="ml-3">Bill Payment History</span>
+            </a>
+            <a asp-controller="admin" asp-action="services" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Services" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-tools w-6"></i>
+                <span class="ml-3">Services</span>
+            </a>
+            <a asp-controller="admin" asp-action="announcements" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Announcements" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-bullhorn w-6"></i>
+                <span class="ml-3">Announcements</span>
+            </a>
+            <a asp-controller="admin" asp-action="poll" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-poll w-6"></i>
+                <span class="ml-3">Poll</span>
+            </a>
+            <a asp-controller="admin" asp-action="feedback" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Feedback" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-comment-alt w-6"></i>
+                <span class="ml-3">Feedback</span>
+            </a>
+            <a asp-controller="admin" asp-action="reports" style="text-decoration: none;"
+               class="flex items-center space-x-4 p-3 hover:bg-gray-100 sidebar-item rounded-l-full transition no-underline @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "active-item" : "transition ease-in-out")">
+                <i class="fas fa-chart-line w-6"></i>
+                <span class="ml-3">Reports</span>
+            </a>
+        </nav>
+    </aside>
+    <div class="p-2 w-full ">
+        <div class="mx-auto mt-6 bg-white p-6 rounded-xl shadow-lg space-y-6 transition-all duration-500">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-blue-600">Register Homeowner</h2>
+                    <p class="text-sm text-gray-500">Follow the steps to complete homeowner registration.</p>
+                </div>
+                <button onclick="window.location.href='/admin/homeownerstaffaccounts'"
+                        class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow transition duration-150">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9.75L12 3l9 6.75V21a1.5 1.5 0 01-1.5 1.5H4.5A1.5 1.5 0 013 21V9.75z" />
+                    </svg>
+                    Go Back
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-6">
+                <div id="progressBar" class="bg-blue-500 h-3 rounded-full transition-all duration-700 ease-in-out" style="width: 25%;"></div>
+            </div>
+
+            <!-- Step Sections -->
+            <div id="step1" class="step-section animate-fade-in p-6 bg-white rounded-2xl shadow-md">
+                <h3 class="text-2xl font-bold text-blue-600 mb-5">Step 1: User Information</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <input id="firstname" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Firstname" />
+                        <span class="text-red-500 text-sm hidden" id="firstnameError">Firstname is required.</span>
+                    </div>
+
+                    <div>
+                        <input id="lastname" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Lastname" />
+                        <span class="text-red-500 text-sm hidden" id="lastnameError">Lastname is required.</span>
+                    </div>
+
+                    <div class="col-span-2">
+                        <input id="address" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Address" />
+                        <span class="text-red-500 text-sm hidden" id="addressError">Address is required.</span>
+                    </div>
+
+                    <div>
+                        <input id="contact"
+                               class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                               placeholder="Contact Number"
+                               oninput="this.value = this.value.replace(/[^0-9\-]/g, '')"
+                               onkeypress="return /[0-9\-]/.test(event.key)" />
+                        <span class="text-red-500 text-sm hidden" id="contactError">Contact or Phone number is required.</span>
+                    </div>
+
+                    <div>
+                        <input id="email" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Email" />
+                        <span class="text-red-500 text-sm hidden" id="emailError">Email is required.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="step2" class="step-section hidden animate-fade-in">
+                <h3 class="text-xl font-semibold text-blue-500 mb-3">Step 2: Select Available Lot</h3>
+
+                <div id="lotSelectionContainer">
+                    <input type="text" id="lotSearch" placeholder="Search lots..." class="input w-full mb-4" />
+                    <div id="lotContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2" style="max-height: 300px">
+                        <!-- Lot cards will be injected here -->
+                    </div>
+                    <p id="noLotsMessage" class="text-red-500 text-sm mt-2 hidden">No available lots at the moment.</p>
+                </div>
+                <div id="selectedLotInfo" class="hidden p-4 border rounded-lg bg-blue-50 shadow-sm flex justify-between items-start">
+                    <div>
+                        <p class="text-blue-600 font-semibold" id="selectedLotName">Block - Lot</p>
+                        <p class="text-sm text-gray-500" id="selectedLotDesc">Lot description...</p>
+                    </div>
+                    <button onclick="deselectLot()" class="ml-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition-all">Change</button>
+                </div>
+
+                <div id="remarksContainer" class="mt-4 hidden">
+                    <label for="remarks" class="block text-sm font-medium text-gray-700">Remarks (Optional)</label>
+                    <textarea id="remarks" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md p-2 resize-none"></textarea>
+                </div>
+            </div>
+
+            <div id="step3" class="step-section hidden animate-fade-in">
+                <h3 class="text-xl font-semibold text-blue-500 mb-3">Step 3: Upload Documents</h3>
+
+                <button id="toggleUploadBoxBtn" type="button" class="mb-3 bg-blue-500 text-white px-3 py-1 rounded" onclick="toggleUploadBox()">Upload New</button>
+
+                <div id="uploadBox" class="space-y-2 mb-3 hidden">
+                    <input type="text" id="tempFileName" placeholder="Document name" class="form-input w-full border border-gray-300 rounded p-2 mb-2">
+                    <input type="file" id="tempFileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" class="form-input w-full border border-gray-300 rounded p-2 mb-2">
+                    <div class="flex gap-2">
+                        <button type="button" class="bg-green-500 text-white px-3 py-1 rounded" onclick="addTempDocument()">Add</button>
+                        <button type="button" class="bg-gray-400 text-white px-3 py-1 rounded" onclick="closeUploadBox()">Close</button>
+                    </div>
+                </div>
+
+                <div id="uploadedFiles" class="space-y-2"></div>
+                <p id="uploadError" class="text-red-500 text-sm mt-2 hidden">Please upload at least one document.</p>
+
+                <!-- Image Preview Modal -->
+                <div id="previewModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
+                    <div class="bg-white p-4 rounded shadow-lg relative max-w-lg w-full">
+                        <button onclick="document.getElementById('previewModal').classList.add('hidden')" class="absolute top-2 right-2 text-red-500 text-xl">✖</button>
+                        <img id="modalPreviewImage" src="" alt="Preview" class="w-full rounded" />
+                    </div>
+                </div>
+            </div>
+
+            <div id="step4" class="step-section hidden animate-fade-in">
+                <h3 class="text-xl font-semibold text-blue-500 mb-3">Step 4: Review & Submit</h3>
+                <div id="reviewSection">
+                    <h2 class="text-lg font-bold mb-4">Review Your Details</h2>
+                    <p><strong>Name:</strong> <span id="reviewName"></span></p>
+                    <p><strong>Address:</strong> <span id="reviewAddress"></span></p>
+                    <p><strong>Contact:</strong> <span id="reviewContact"></span></p>
+                    <p><strong>Email:</strong> <span id="reviewEmail"></span></p>
+                    <p><strong>Selected Lot:</strong> <span id="reviewLot"></span></p>
+                    <p><strong>Remarks:</strong> <span id="reviewRemarks"></span></p>
+                    <p><strong>Uploaded Documents:</strong></p>
+                    <ul class="list-disc ml-6" id="reviewDocuments"></ul>
+                </div>
+            </div>
+            <div id="submitError" class="text-red-600 font-medium mb-3 hidden"></div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex justify-between mt-6 items-center">
+                <!-- Left Side: Previous -->
+                <div>
+                    <button id="prevBtn" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 hidden" onclick="prevStep(-1)">Previous</button>
+                </div>
+
+                <!-- Right Side: Next or Submit -->
+                <div class="flex items-center space-x-3 ml-auto">
+                    <div id="submitBtn" class="flex items-center hidden">
+                        <button type="button" onclick="submitRegistration()" class="btn btn-primary">Submit Registration</button>
+                        <div id="submitSpinner" class="ml-2 hidden">
+                            <span class="loader"></span>
+                        </div>
+                    </div>
+
+                    <button id="nextBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700" onclick="nextStep(1)">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<script>
+    let currentStep = 1;
+    let selectedLotId = null;
+    const uploadedFiles = [];
+    let allLots = [];
+
+    function prevStep(n) {
+        const totalSteps = 4;
+
+        const current = document.getElementById(`step${currentStep}`);
+        current.classList.add("hidden");
+
+        currentStep += n;
+        const prev = document.getElementById(`step${currentStep}`);
+        prev.classList.remove("hidden");
+
+        document.getElementById("prevBtn").classList.toggle("hidden", currentStep === 1);
+        document.getElementById("nextBtn").classList.toggle("hidden", currentStep === totalSteps);
+        document.getElementById("submitBtn").classList.toggle("hidden", currentStep !== totalSteps);
+
+        document.getElementById("progressBar").style.width = `${(currentStep / totalSteps) * 100}%`;
+    }
+
+    function nextStep(n) {
+        const totalSteps = 4;
+        if (currentStep === 1 && !validateStep1()) return;
+        if (currentStep === 2 && !validateStep2()) return;
+        if (currentStep === 3) {
+        if (!validateStep3()) return;
+            populateReview();
+        }
+
+        const current = document.getElementById(`step${currentStep}`);
+        current.classList.add("hidden");
+
+        currentStep += n;
+        const next = document.getElementById(`step${currentStep}`);
+        next.classList.remove("hidden");
+
+        document.getElementById("prevBtn").classList.toggle("hidden", currentStep === 1);
+        document.getElementById("nextBtn").classList.toggle("hidden", currentStep === totalSteps);
+        document.getElementById("submitBtn").classList.toggle("hidden", currentStep !== totalSteps);
+
+        document.getElementById("progressBar").style.width = `${(currentStep / totalSteps) * 100}%`;
+    }
+
+    function validateStep1() {
+        const fields = ['firstname', 'lastname', 'address', 'contact', 'email'];
+        let isValid = true;
+
+        fields.forEach(id => {
+            const input = document.getElementById(id);
+            const error = document.getElementById(`${id}Error`);
+            let valid = true;
+
+            if (!input.value.trim()) {
+                valid = false;
+            }
+
+            // Specific validations
+            if (id === 'contact') {
+                const contactPattern = /^[0-9\-]+$/;
+                valid = contactPattern.test(input.value.trim());
+            }
+
+            if (id === 'email') {
+                const emailPattern = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+                valid = emailPattern.test(input.value.trim());
+            }
+
+            if (!valid) {
+                error.classList.remove('hidden');
+                isValid = false;
+            } else {
+                error.classList.add('hidden');
+            }
+        });
+
+        return isValid;
+    }
+
+    document.getElementById('lotSearch').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+
+        const filteredLots = allLots.filter(lot => {
+            const block = lot.blockNumber.toLowerCase();
+            const lotNum = lot.lotNumber.toLowerCase();
+            const size = lot.sizeSqm.toLowerCase();
+            const price = lot.price.toLowerCase();
+            const desc = lot.description.toLowerCase();
+
+            if (query === "block") return block !== "";
+            if (query === "lot") return lotNum !== "";
+
+            // Otherwise, do normal search
+            return (
+                block.includes(query) ||
+                lotNum.includes(query) ||
+                size.includes(query) ||
+                price.includes(query) ||
+                desc.includes(query)
+            );
+        });
+
+        loadAvailableLots(filteredLots);
+    });
+
+    function loadAvailableLots(lots) {
+        const container = document.getElementById('lotContainer');
+        const noLotsMessage = document.getElementById('noLotsMessage');
+        container.innerHTML = '';
+
+        if (!lots || lots.length === 0) {
+            noLotsMessage.classList.remove('hidden');
+            return;
+        }
+
+        noLotsMessage.classList.add('hidden');
+
+        lots.forEach(lot => {
+            const card = document.createElement('div');
+            card.className = 'cursor-pointer p-4 rounded-lg border shadow hover:shadow-lg transition-all duration-300 bg-white';
+            card.setAttribute('data-lot-id', lot.lotId);
+            card.onclick = () => selectLot(card, lot.lotId);
+
+            card.innerHTML = `
+                <input type="radio" name="lotRadio" class="hidden" value="${lot.lotId}">
+                <div>
+                    <p class="text-blue-600 font-semibold">Block ${lot.blockNumber} - Lot ${lot.lotNumber}</p>
+                    <p class="text-sm text-gray-500">${lot.sizeSqm} sqm — ₱${lot.price.toLocaleString()}</p>
+                    <p class="text-xs text-gray-400 mt-1">${lot.description || ''}</p>
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/admin/getavailablelots')
+            .then(res => res.json())
+            .then(data => {
+                allLots = data; // Store fetched data
+                loadAvailableLots(allLots);
+            })
+            .catch(err => {
+                console.error('Failed to load lots', err);
+                document.getElementById('noLotsMessage').textContent = 'Error loading lots. Please try again later.';
+                document.getElementById('noLotsMessage').classList.remove('hidden');
+            });
+    });
+
+    function selectLot(cardElement, lotId) {
+        const cards = document.querySelectorAll('#lotContainer > div');
+        cards.forEach(card => card.classList.remove('ring', 'ring-blue-500', 'bg-blue-50'));
+
+        cardElement.classList.add('ring', 'ring-blue-500', 'bg-blue-50');
+        selectedLotId = lotId;
+
+        const block = cardElement.querySelector('p:nth-child(1)').textContent;
+        const desc = cardElement.querySelector('p:nth-child(3)')?.textContent || '';
+        const shortDesc = desc.length > 50 ? desc.substring(0, 50) + '...' : desc;
+
+        document.getElementById('selectedLotName').textContent = block;
+        document.getElementById('selectedLotDesc').textContent = shortDesc;
+
+        document.getElementById('lotSelectionContainer').classList.add('hidden');
+        document.getElementById('selectedLotInfo').classList.remove('hidden');
+        document.getElementById('remarksContainer').classList.remove('hidden');
+    }
+
+    function deselectLot() {
+        selectedLotId = null;
+        document.getElementById('lotSelectionContainer').classList.remove('hidden');
+        document.getElementById('selectedLotInfo').classList.add('hidden');
+        document.getElementById('remarksContainer').classList.add('hidden');
+
+        const cards = document.querySelectorAll('#lotContainer > div');
+        cards.forEach(card => card.classList.remove('ring', 'ring-blue-500', 'bg-blue-50'));
+    }
+
+    function validateStep2() {
+        if (!selectedLotId) {
+            alert("Please select a lot before proceeding to the next step.");
+            return false;
+        }
+        return true;
+    }
+
+    function validateStep3() {
+        const uploadError = document.getElementById('uploadError');
+
+        if (!uploadedFiles || uploadedFiles.length === 0) {
+            uploadError.classList.remove('hidden');
+            return false;
+        }
+
+        uploadError.classList.add('hidden');
+        return true;
+    }
+
+    function toggleUploadBox() {
+        const uploadBox = document.getElementById('uploadBox');
+        const toggleBtn = document.getElementById('toggleUploadBoxBtn');
+
+        const isOpen = !uploadBox.classList.contains('hidden');
+        uploadBox.classList.toggle('hidden', isOpen);
+        toggleBtn.textContent = isOpen ? 'Upload New' : 'Close';
+    }
+
+    function closeUploadBox() {
+        document.getElementById('uploadBox').classList.add('hidden');
+        document.getElementById('toggleUploadBoxBtn').textContent = 'Upload New';
+        document.getElementById('tempFileName').value = '';
+        document.getElementById('tempFileInput').value = '';
+    }
+
+    function addTempDocument() {
+        const name = document.getElementById('tempFileName').value.trim();
+        const fileInput = document.getElementById('tempFileInput');
+        const file = fileInput.files[0];
+
+        if (!name || !file) {
+            alert("Please provide both document name and file.");
+            return;
+        }
+
+        const index = uploadedFiles.length;
+        uploadedFiles.push({ name, file });
+
+        const container = document.getElementById('uploadedFiles');
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex justify-between items-center bg-gray-100 p-3 rounded-md gap-3';
+        wrapper.id = `uploadedFile-${index}`;
+
+        const isImage = file.type.startsWith('image/');
+        const objectURL = URL.createObjectURL(file);
+
+        wrapper.innerHTML = `
+            <div class="flex items-center gap-3 cursor-pointer" onclick="previewDocument('${objectURL}', ${isImage})">
+                ${isImage ? `<img src="${objectURL}" alt="${name}" class="w-10 h-10 object-cover rounded border" />` : `<div class="w-10 h-10 flex items-center justify-center bg-white border rounded text-sm font-bold">DOC</div>`}
+                <div>
+                    <p class="font-medium">${name}</p>
+                    <p class="text-sm text-gray-500">${file.name}</p>
+                </div>
+            </div>
+            <button type="button" class="text-red-500 text-lg" onclick="removeDocument(${index})">✖</button>
+        `;
+
+        container.appendChild(wrapper);
+        closeUploadBox();
+    }
+
+    // Preview handler
+    function previewDocument(fileURL, isImage) {
+        if (isImage) {
+            // Show modal with image
+            const modal = document.getElementById('previewModal');
+            const modalImage = document.getElementById('modalPreviewImage');
+            modalImage.src = fileURL;
+            modal.classList.remove('hidden');
+        } else {
+            // Open document in new tab
+            window.open(fileURL, '_blank');
+        }
+    }
+
+    function removeDocument(index) {
+        uploadedFiles.splice(index, 1); // remove from array
+        document.getElementById(`uploadedFile-${index}`)?.remove(); // remove from DOM
+
+        // re-render the list if needed
+        refreshUploadedFileList();
+    }
+
+    function refreshUploadedFileList() {
+        const container = document.getElementById('uploadedFiles');
+        container.innerHTML = '';
+
+        uploadedFiles.forEach((doc, index) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex justify-between items-center bg-gray-100 p-3 rounded-md';
+            wrapper.id = `uploadedFile-${index}`;
+
+            const isImage = doc.file.type.startsWith('image/');
+            let previewHTML = '';
+
+            if (isImage) {
+                const imageURL = URL.createObjectURL(doc.file);
+                previewHTML = `
+                    <img src="${imageURL}" alt="preview" class="w-10 h-10 object-cover rounded mr-3 cursor-pointer" onclick="openPreviewModal('${imageURL}', '${doc.name}')" />
+                `;
+            } else {
+                previewHTML = `
+                    <div class="w-10 h-10 bg-gray-300 rounded flex items-center justify-center mr-3 cursor-pointer" onclick="openPreviewModal(null, '${doc.name}', '${doc.file.name}')">
+                        📄
+                    </div>
+                `;
+            }
+
+            wrapper.innerHTML = `
+                <div class="flex items-center gap-2">
+                    ${previewHTML}
+                    <div>
+                        <p class="font-medium">${doc.name}</p>
+                        <p class="text-sm text-gray-500">${doc.file.name}</p>
+                    </div>
+                </div>
+                <button type="button" class="text-red-500 text-lg" onclick="removeDocument(${index})">✖</button>
+            `;
+
+            container.appendChild(wrapper);
+        });
+    }
+
+    function openPreviewModal(imageURL, title, fileName = '') {
+        if (imageURL) {
+            // Show image preview modal
+            const modal = document.getElementById('previewModal');
+            const img = modal.querySelector('img');
+            const titleEl = modal.querySelector('.modal-title');
+
+            img.src = imageURL;
+            titleEl.textContent = title;
+            modal.classList.remove('hidden');
+        } else {
+            // Find the file from uploadedFiles
+            const doc = uploadedFiles.find(f => f.file.name === fileName);
+            if (doc && doc.file) {
+                const blobURL = URL.createObjectURL(doc.file);
+                window.open(blobURL, '_blank');
+            } else {
+                alert('Document file not found.');
+            }
+        }
+    }
+
+    function populateReview() {
+        const firstname = document.getElementById('firstname')?.value || '';
+        const lastname = document.getElementById('lastname')?.value || '';
+        const address = document.getElementById('address')?.value || '';
+        const contact = document.getElementById('contact')?.value || '';
+        const email = document.getElementById('email')?.value || '';
+        const lotName = document.getElementById('selectedLotName')?.textContent || '';
+        const remarks = document.getElementById('remarks')?.value || 'N/A';
+
+        document.getElementById('reviewName').textContent = `${firstname} ${lastname}`.trim();
+        document.getElementById('reviewAddress').textContent = address;
+        document.getElementById('reviewContact').textContent = contact;
+        document.getElementById('reviewEmail').textContent = email;
+        document.getElementById('reviewLot').textContent = lotName;
+        document.getElementById('reviewRemarks').textContent = remarks;
+
+        const docList = document.getElementById('reviewDocuments');
+        docList.innerHTML = '';
+
+        uploadedFiles.forEach((doc, index) => {
+            const isImage = doc.file.type.startsWith('image/');
+            const li = document.createElement('li');
+            li.className = 'flex items-center gap-3 mb-2';
+
+            let previewHTML = '';
+            if (isImage) {
+                const imgURL = URL.createObjectURL(doc.file);
+                previewHTML = `<img src="${imgURL}" alt="preview" class="w-10 h-10 object-cover rounded cursor-pointer" onclick="openPreviewModal('${imgURL}', '${doc.name}')" />`;
+            } else {
+                previewHTML = `<div class="w-10 h-10 bg-gray-300 flex items-center justify-center rounded cursor-pointer" onclick="openPreviewModal(null, '${doc.name}', '${doc.file.name}')">📄</div>`;
+            }
+
+            li.innerHTML = `
+                ${previewHTML}
+                <div>
+                    <p class="font-medium">${doc.name}</p>
+                    <p class="text-sm text-gray-500">${doc.file.name}</p>
+                </div>
+            `;
+
+            docList.appendChild(li);
+        });
+    }
+
+    async function submitRegistration() {
+        const errorDiv = document.getElementById('submitError');
+        const spinner = document.getElementById('submitSpinner');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Reset UI
+        errorDiv.classList.add('hidden');
+        errorDiv.textContent = '';
+        spinner.classList.remove('hidden');
+        submitBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append("firstname", document.getElementById('firstname').value);
+        formData.append("lastname", document.getElementById('lastname').value);
+        formData.append("address", document.getElementById('address').value);
+        formData.append("contact", document.getElementById('contact').value);
+        formData.append("email", document.getElementById('email').value);
+        formData.append("lot_id", selectedLotId);
+        formData.append("remarks", document.getElementById('remarks').value || '');
+
+        let hasValidDocument = false;
+        uploadedFiles.forEach((entry) => {
+            if (entry && entry.file && entry.name) {
+                formData.append("documents", entry.file);
+                formData.append("docNames", entry.name);
+                hasValidDocument = true;
+            }
+        });
+
+        if (!hasValidDocument) {
+            errorDiv.textContent = "Please upload at least one document with a name.";
+            errorDiv.classList.remove('hidden');
+            spinner.classList.add('hidden');
+            submitBtn.disabled = false;
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/registerhomeowner', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: result.message,
+                    confirmButtonText: 'OK'
+                });
+                window.location.href = '/admin/homeownerstaffaccounts';
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Submission Failed',
+                    text: result.message || "Please try again later.",
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "Something went wrong. Please try again.",
+            });
+        }
+
+        spinner.classList.add('hidden');
+        submitBtn.disabled = false;
+    }
+</script>

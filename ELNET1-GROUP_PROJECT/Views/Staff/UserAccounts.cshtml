@@ -184,6 +184,7 @@
                                         <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Name</th>
                                         <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Email</th>
                                         <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Role</th>
+                                        <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Status</th>
                                         <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
@@ -195,6 +196,17 @@
                                             <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500 capitalize">@user.Firstname @user.Lastname</td>
                                             <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">@user.Email</td>
                                             <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">@user.Role</td>
+                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-center">
+                                                @if (user.Status == "ACTIVE")
+                                                {
+                                                    <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">Active</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-semibold">Inactive</span>
+                                                }
+                                            </td>
+
                                             <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">
                                                 <button onclick='resetPassword(@user.Id, event)' class="bg-yellow-500 text-white px-2 py-1 rounded-md hover:bg-yellow-600">
                                                     <i class="fas fa-key mr-1"></i> Reset Password
@@ -206,7 +218,6 @@
                             </table>
                         </div>
                     }
-                        
                     </div>
                 </div>
             </div>

@@ -112,11 +112,31 @@
                         }
                         else
                         {
-                            @foreach (var announcement in Model)
+                            foreach (var announcement in Model)
                             {
+                                var fullDescription = announcement.Description;
+                                var shortDescription = fullDescription.Length > 100
+                                ? fullDescription.Substring(0, 100) + "..."
+                                : fullDescription;
+                                var isLong = fullDescription.Length > 100;
+                                var descId = $"desc-{announcement.AnnouncementId}";
+                                var toggleId = $"toggle-{announcement.AnnouncementId}";
+                                var shortJs = System.Text.Json.JsonSerializer.Serialize(shortDescription);
+                                var fullJs = System.Text.Json.JsonSerializer.Serialize(fullDescription);
                                 <div class="bg-gray-100 p-3 rounded-lg">
                                     <h3 class="text-lg font-bold text-blue-600">@announcement.Title</h3>
-                                    <p>@announcement.Description</p>
+
+                                    <p id="@descId" class="text-gray-700 inline">@shortDescription</p>
+
+                                    @if (isLong)
+                                    {
+                                        <a href="#" id="@toggleId"
+                                           class="text-blue-600 text-sm font-medium inline ml-2 hover:underline no-underline"
+                                           onclick="toggleDescription('@descId', '@toggleId', @shortJs, @fullJs); return false;">
+                                            See more...
+                                        </a>
+                                    }
+
                                     <p class="text-right text-xs text-gray-500">
                                         Posted @Convert.ToDateTime(announcement.DatePosted).ToString("MMMM dd, yyyy hh:mm tt")
                                     </p>
