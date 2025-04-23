@@ -47,6 +47,9 @@ namespace ELNET1_GROUP_PROJECT.Data
 
             base.OnModelCreating(modelBuilder);
         }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.Lot> Lot { get; set; }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.Applications> Applications { get; set; }
+        public DbSet<ELNET1_GROUP_PROJECT.Models.Documents> Documents { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Announcement> Announcement { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Bill> Bill { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Payments> Payment { get; set; }

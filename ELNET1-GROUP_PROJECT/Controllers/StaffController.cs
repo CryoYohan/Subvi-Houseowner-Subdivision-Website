@@ -12,6 +12,9 @@ using ELNET1_GROUP_PROJECT.Controllers;
 using ELNET1_GROUP_PROJECT.SignalR;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System.Net.Mail;
+using System.Net;
 
 [Route("staff")]
 public class StaffController : Controller
@@ -458,19 +461,164 @@ public class StaffController : Controller
     }
 
     //For resetting password
-    [HttpPost("user/resetpassword/{id}")]
-    public IActionResult ResetPassword(int id)
+    [HttpPost("user/resetpassword")]
+    public async Task<IActionResult> ResetPassword(int id)
     {
         var user = _context.User_Accounts.FirstOrDefault(u => u.Id == id);
         if (user == null)
-            return NotFound();
+            return NotFound(new { message = "User not found." });
 
-        user.Password = "?";
+        var info = (from account in _context.User_Accounts
+                    join userInfo in _context.User_Info
+                        on account.Id equals userInfo.PersonId into joined
+                    from userInfo in joined.DefaultIfEmpty()
+                    where account.Id == id
+                    select new
+                    {
+                        Account = account,
+                        Info = userInfo // this can be null if there's no match
+                    }).FirstOrDefault();
+
+        if (info == null)
+            return NotFound(new { message = "User info not found." });
+
+        // Find the maximum number of digits among all IDs
+        int maxDigits = _context.User_Accounts.Max(u => u.Id.ToString().Length);
+        int paddedLength = Math.Max(6, maxDigits); // minimum 6 digits
+
+        // Generate password like Subvi-000021 (or longer if needed)
+        string paddedId = id.ToString().PadLeft(paddedLength, '0');
+        string plainPassword = $"subvi-{paddedId}";
+
+        // Hash and update
+        user.Password = BCrypt.Net.BCrypt.HashPassword(plainPassword);
         _context.SaveChanges();
 
-        return Ok();
+        // Create a notification
+        var notification = new Notification
+        {
+            UserId = id,
+            TargetRole = "Homeowner",
+            Type = "Visitor",
+            Title = "Visitor Status Updated to Active",
+            Message = $"Good Day! We want you to know that your password has been reset as of {DateTime.Now:MM/dd/yyyy}.",
+            IsRead = false,
+            DateCreated = DateTime.Now
+        };
+
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+        await _hubContext.Clients.User(id.ToString()).SendAsync("ReceiveNotification", notification);
+
+        // Send email
+        string fullname = info.Info != null
+                ? $"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(info.Info.Firstname.ToLower())} {CultureInfo.CurrentCulture.TextInfo.ToTitleCase(info.Info.Lastname.ToLower())}"
+                : "Valued User";
+        bool sent = SendResetPasswordEmail(user.Email, fullname, plainPassword);
+
+        if (!sent)
+        {
+            return Ok(new { message = "Password reset successfully, but failed to send email." });
+        }
+
+        return Ok(new { message = "Password has been reset and email sent successfully." });
     }
 
+    private bool SendResetPasswordEmail(string recipientEmail, string fullname, string newPassword)
+    {
+        try
+        {
+            var smtpClient = new SmtpClient("smtp.gmail.com")
+            {
+                Port = 587,
+                Credentials = new NetworkCredential("subvihousesubdivision@gmail.com", "kiccqgjvvxwiypcn"),
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false
+            };
+
+            var logoPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "subvi-logo.png");
+            var websiteUrl = "https://subvi.com";
+
+            var emailBody = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }}
+                    .container {{ max-width: 600px; margin: 0 auto; background-color: #f7fafc; }}
+                    .header {{ background: linear-gradient(135deg, #4299e1, #3182ce); padding: 2rem; text-align: center; }}
+                    .content {{ padding: 2rem; background-color: white; }}
+                    .credentials {{ background: #f1f5f9; border-radius: 8px; padding: 1.5rem; margin: 1rem 0; }}
+                    .footer {{ padding: 1.5rem; text-align: center; color: #718096; font-size: 0.9rem; }}
+                    .button {{ background: #4299e1; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <img src='cid:company-logo' alt='Subvi Logo' style='height: 60px; margin-bottom: 1rem;' />
+                        <h1 style='color: white; margin: 0;'>Password Reset Successful</h1>
+                    </div>
+            
+                    <div class='content'>
+                        <h2 style='color: #2d3748;'>Hello, {fullname}!</h2>
+                        <p style='color: #4a5568; line-height: 1.6;'>
+                            Your account password has been successfully reset. Here are your updated login credentials:
+                        </p>
+
+                        <div class='credentials'>
+                            <p><strong>Email:</strong> <span style='color: #2d3748;'>{recipientEmail}</span></p>
+                            <p><strong>New Password:</strong> <span style='color: #2d3748;'>{newPassword}</span></p>
+                        </div>
+
+                        <p style='color: #4a5568;'>We recommend changing your password after logging in for your security.</p>
+
+                        <div style='text-align: center; margin: 2rem 0;'>
+                            <a href='{websiteUrl}/login' class='button'>
+                                Login to Your Account
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class='footer'>
+                        <p>Regards,</p>
+                        <p><strong>Subvi Management Team</strong></p>
+                        <p style='font-size: 0.8rem;'>This is an automated message - please do not reply</p>
+                    </div>
+                </div>
+            </body>
+            </html>";
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress("subvihousesubdivision@gmail.com", "Subvi House Subdivision"),
+                Subject = "Your Subvi Account Password Has Been Reset",
+                Body = emailBody,
+                IsBodyHtml = true
+            };
+
+            mailMessage.To.Add(recipientEmail);
+
+            var logo = new LinkedResource(logoPath)
+            {
+                ContentId = "company-logo",
+                ContentType = new System.Net.Mime.ContentType("image/png")
+            };
+
+            var htmlView = AlternateView.CreateAlternateViewFromString(emailBody, null, "text/html");
+            htmlView.LinkedResources.Add(logo);
+            mailMessage.AlternateViews.Add(htmlView);
+
+            smtpClient.Send(mailMessage);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Email send error: {ex.Message}");
+            return false;
+        }
+    }
 
     [Route("")]
     [Route("dashboard")]
