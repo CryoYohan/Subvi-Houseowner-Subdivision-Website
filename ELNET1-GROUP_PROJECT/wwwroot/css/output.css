@@ -1082,6 +1082,10 @@ video {
   max-height: 10rem;
 }
 
+.max-h-\[90vh\] {
+  max-height: 90vh;
+}
+
 .min-h-screen {
   min-height: 100vh;
 }
@@ -1210,6 +1214,10 @@ video {
   max-width: 42rem;
 }
 
+.max-w-4xl {
+  max-width: 56rem;
+}
+
 .max-w-\[48\%\] {
   max-width: 48%;
 }
@@ -1232,10 +1240,6 @@ video {
 
 .flex-shrink-0 {
   flex-shrink: 0;
-}
-
-.shrink {
-  flex-shrink: 1;
 }
 
 .flex-grow {
@@ -1934,6 +1938,10 @@ video {
 
 .bg-opacity-10 {
   --tw-bg-opacity: 0.1;
+}
+
+.bg-opacity-40 {
+  --tw-bg-opacity: 0.4;
 }
 
 .bg-opacity-50 {
@@ -2688,6 +2696,10 @@ video {
 
 .delay-300 {
   transition-delay: 300ms;
+}
+
+.duration-150 {
+  transition-duration: 150ms;
 }
 
 .duration-200 {

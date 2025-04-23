@@ -26,5 +26,6 @@ namespace ELNET1_GROUP_PROJECT.Models
         public string PhoneNumber { get; set; }
         [Column("DATE_TIME")]
         public DateTime DateCreated { get; set; }
+
     }
 }

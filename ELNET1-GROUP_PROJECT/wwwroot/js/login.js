@@ -6,6 +6,11 @@ function openLoginModal() {
 // Close the login modal
 function closeLoginModal() {
     document.getElementById("login-modal").classList.add("hidden");
+    document.getElementById("login-form").reset(); // Reset form fields
+    document.getElementById("login-message-error").classList.add("hidden");
+    document.getElementById("login-message-error").textContent = '';
+    document.getElementById("login-message-success").classList.add("hidden");
+    document.getElementById("login-message-success").textContent = '';
 }
 
 const passwordInput = document.getElementById('login-password');
