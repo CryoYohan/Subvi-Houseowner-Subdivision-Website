@@ -1,0 +1,309 @@
+﻿@model IEnumerable<ELNET1_GROUP_PROJECT.Models.UserDataRequest>
+
+
+@{
+    Layout = "_StaffLayout";
+    ViewData["Title"] = "User Accounts";
+}
+
+@section Scripts {
+    <script src="~/js/notification-staff.js"></script>
+}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <text>
+            Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: '@TempData["SuccessMessage"]'
+            });
+        </text>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <text>
+            Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: '@TempData["ErrorMessage"]'
+            });
+        </text>
+    }
+    });
+</script>
+
+<div class="flex overflow-hidden">
+    <!-- Sidebar -->
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 flex flex-col">
+        <!-- Sidebar Header -->
+        <div class="px-3 py-2 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
+        </div>
+
+        <!-- Navigation Links -->
+        <ul class="flex-1 px-4 py-6 space-y-2">
+            <li class="nav-item">
+                <a href="/staff/dashboard" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-home w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/pass/visitors" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VisitorsPass" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tasks w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Visitors Pass</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/vehicle/registration" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VehicleRegistration" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Vehicle Registration</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/reservation" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ReservationRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-bell w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Reservation Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/requests/services" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ServiceRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tools w-6"></i>
+                    <span class="font-medium">Service Requests</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/bills_and_payments" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "BillsAndPayments" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-file-invoice-dollar w-6"></i>
+                    <span class="font-medium">Bills & Payments</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/poll_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-poll w-6"></i>
+                    <span class="font-medium">Poll Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/event_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Event" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-calendar-check w-6"></i>
+                    <span class="font-medium">Event Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/feedbacks" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Feedback" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-comment-alt w-6"></i>
+                    <span class="font-medium">Feedbacks</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/reports" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5"></i>
+                    <span class="font-medium">Reports</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-2">
+        <div class="bg-white shadow-md rounded-xl p-2 mb-2 flex items-center space-x-3">
+            <span><i class="fas fa-users text-blue-700 text-xl"></i></span>
+            <h1 class="text-blue-700 font-bold text-lg">User Accounts</h1>
+        </div>
+            <div class="flex-1">
+                <div class="w-full">
+                    <!-- User Accounts Table -->
+                    <div class="bg-white shadow-lg rounded-lg p-4 transition-all duration-300">
+                        <!-- User Info Section (Hidden by Default) -->
+                        <div id="userInfoBox" class="hidden bg-blue-50 p-3 rounded-lg shadow-md mb-4 transition-all duration-300 relative">
+                            <!-- Status Badge -->
+                            <span id="userStatusBadge" class="absolute top-2 right-0 px-3 py-1 text-sm font-semibold rounded-full bg-green-500 text-white">Active</span>
+
+                            <h3 class="text-xl font-bold text-blue-600 mb-2">User Information</h3>
+                            <div class="space-y-2 text-gray-700">
+                                <div><i class="fas fa-id-badge text-blue-500"></i> <span id="userInfoId"></span></div>
+                                <div><i class="fas fa-user text-blue-500"></i> <span id="userInfoName"></span></div>
+                                <div><i class="fas fa-user-tag text-blue-500"></i> <span id="userInfoRole"></span></div>
+                                <div><i class="fas fa-map-marker-alt text-blue-500"></i> <span id="userInfoAddress"></span></div>
+                                <div><i class="fas fa-phone text-blue-500"></i> <span id="userInfoPhone"></span></div>
+                                <div><i class="fas fa-envelope text-blue-500"></i> <span id="userInfoEmail"></span></div>
+                            </div>
+                            <div class="mt-4 flex justify-end space-x-2">
+                                <button onclick="closeUserInfoBox()" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Close</button>
+                                <button onclick="openEditModalFromBox()" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Edit</button>
+                                <button onclick="deleteUserFromBox()" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between mb-1">
+                            <div>
+                                <h2 class="text-2xl font-bold text-blue-600">User Accounts</h2>
+                                <p id="userCount" class="text-sm text-gray-500">All: @Model.Count() Total Users</p>
+                            </div>
+
+                            <div class="flex items-center space-x-2">
+                                <!-- Role Filter -->
+                                <div class="flex items-center space-x-2">
+                                    <label for="roleFilter" class="text-sm font-medium text-gray-700">Filter:</label>
+                                    <select id="roleFilter" onchange="filterByRole()" class="p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="All">All</option>
+                                        <option value="Staff">Staff</option>
+                                        <option value="Homeowner">Homeowner</option>
+                                        <option value="Inactive">Inactive User</option>
+                                    </select>
+                                </div>
+
+                                <!-- Search Box -->
+                                <div class="relative">
+                                    <input type="text" id="searchInput" oninput="searchUsers()" placeholder="Search users..."
+                                           class="p-1 pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                    <i class="fas fa-search absolute right-1 top-1.5 text-gray-400 text-sm"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                    @if (!Model.Any())
+                    {
+                        <div class="bg-white shadow-md rounded-lg p-4 mb-4 text-center">
+                            <p class="text-gray-500">No Users. Add to create now.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div id="userTableContainer" class="transition-all duration-300 overflow-y-auto" style="max-height: 520px;">
+                            <table class="min-w-full bg-white">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">ID</th>
+                                        <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Name</th>
+                                        <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Role</th>
+                                        <th class="px-2 py-2 text-center text-xs font-sm text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTableBody" class="divide-y divide-gray-200">
+                                    @foreach (var user in Model)
+                                    {
+                                        <tr onclick='openUserInfoBox(@Html.Raw(Json.Serialize(user)))' data-role="@user.Role" data-status="@user.Status" class="cursor-pointer hover:bg-blue-200 transition">
+                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">@user.Id</td>
+                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500 capitalize">@user.Firstname @user.Lastname</td>
+                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">@user.Email</td>
+                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">@user.Role</td>
+                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-center text-gray-500">
+                                                <button onclick='resetPassword(@user.Id, event)' class="bg-yellow-500 text-white px-2 py-1 rounded-md hover:bg-yellow-600">
+                                                    <i class="fas fa-key mr-1"></i> Reset Password
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Editing User -->
+    <div id="editUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 p-6">
+            <h2 class="text-2xl font-bold text-blue-600 mb-4">Edit User</h2>
+            <form asp-action="EditUser" method="post">
+                <input type="hidden" id="editUserId" name="Id" />
+                <input type="hidden" id="editPersonId" name="PersonId" />
+                <div class="space-y-4">
+                    <div>
+                        <label for="editFirstName" class="block text-sm font-medium text-gray-700">First Name</label>
+                        <input type="text" style="text-transform: capitalize;"  class="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Firstname" id="editFirstName" placeholder="Enter First Name">
+                    </div>
+                    <div>
+                        <label for="editLastName" class="block text-sm font-medium text-gray-700">Last Name</label>
+                        <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Lastname" id="editLastName" placeholder="Enter Last Name">
+                    </div>
+                    <div>
+                        <label for="editRole" class="block text-sm font-medium text-gray-700">Role</label>
+                        <select name="Role" id="editRole" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="" disabled selected>Select Role</option>
+                            <option value="Staff">Staff</option>
+                            <option value="Homeowner">Homeowner</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="editAddress" class="block text-sm font-medium text-gray-700">Address</label>
+                        <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Address" id="editAddress" placeholder="Enter Address">
+                    </div>
+                    <div>
+                        <label for="editPhoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input type="tel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                               name="PhoneNumber"
+                               id="editPhoneNumber"
+                               placeholder="Enter Phone Number"
+                               pattern="[0-9\-]*"
+                               title="Phone number can only contain numbers and hyphens"
+                               oninput="this.value = this.value.replace(/[^0-9\-]/g, '')">
+                    </div>
+                    <div>
+                        <label for="editEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Email" id="editEmail" placeholder="Enter Email ex. name@example.com">
+                    </div>
+                    <div>
+                        <label for="editPassword" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Password" id="editPassword" placeholder="Enter New Password (leave blank to keep current)">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="closeEditModal()" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Cancel</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Save Changes</button>
+                </div>
+            </form>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+        //For resetting password
+    function resetPassword(userId, event) {
+        event.stopPropagation(); // Prevent row click
+
+        Swal.fire({
+            title: "Reset Password?",
+            text: "This will reset the user's password to the default. Continue?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, reset it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/staff/user/resetpassword?id=${userId}`, {
+                    method: 'POST'
+                })
+                    .then(res => {
+                        if (res.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Password Reset',
+                                text: "The password has been reset successfully!"
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Reset Failed',
+                                text: "Something went wrong while resetting the password."
+                            });
+                        }
+                    });
+            }
+        });
+    }
+</script>

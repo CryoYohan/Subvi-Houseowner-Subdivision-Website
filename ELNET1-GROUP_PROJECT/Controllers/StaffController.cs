@@ -424,6 +424,54 @@ public class StaffController : Controller
         return RedirectToAction("Comments", new { id = postId, title = GetTruncatedTitle(title) });
     }
 
+    [Route("useraccounts")]
+    public IActionResult UserAccounts()
+    {
+        RefreshJwtCookies();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Staff")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+
+        // Perform LEFT JOIN to combine USER_ACCOUNT with USER_INFO
+        var users = (from ua in _context.User_Accounts
+                     join ui in _context.User_Info on ua.Id equals ui.UserAccountId into joined
+                     from ui in joined.DefaultIfEmpty()
+                     where ua.Role != "Admin"
+                     select new UserDataRequest
+                     {
+                         Id = ua.Id,
+                         Email = ua.Email,
+                         Role = ua.Role,
+                         Status = ua.Status,
+                         DateRegistered = ua.DateRegistered,
+                         Firstname = ui != null ? ui.Firstname : null,
+                         Lastname = ui != null ? ui.Lastname : null,
+                         Address = ui != null ? ui.Address : null,
+                         PhoneNumber = ui != null ? ui.PhoneNumber : null,
+                         Profile = ui != null ? ui.Profile : null,
+                         DateCreated = ui.DateCreated
+                     }).ToList();
+
+        return View(users);
+    }
+
+    //For resetting password
+    [HttpPost("user/resetpassword/{id}")]
+    public IActionResult ResetPassword(int id)
+    {
+        var user = _context.User_Accounts.FirstOrDefault(u => u.Id == id);
+        if (user == null)
+            return NotFound();
+
+        user.Password = "?";
+        _context.SaveChanges();
+
+        return Ok();
+    }
+
+
     [Route("")]
     [Route("dashboard")]
     public IActionResult Dashboard()

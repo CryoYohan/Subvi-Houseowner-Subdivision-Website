@@ -76,7 +76,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 p-8">
+    <div class="flex-1 p-2  max-w-full">
         <div id="header" title=" Go Back to Community Forum Home" class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
             <i class="bi bi-chat-left-dots"></i>
             <h1 class="text-2xl font-bold">Community Forum</h1>
@@ -118,7 +118,7 @@
                     </p>
                 </div>
             </div>
-            <div class="text-slate-700" style="max-height: 40px; overflow-y: auto;">
+            <div class="text-slate-700 whitespace-pre-wrap break-words w-full max-w-full overflow-y-auto" style="max-height: 30px;">
                 @Model.Post.Content
             </div>
         </div>
@@ -167,7 +167,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <p class="text-slate-700 leading-relaxed">
+                            <p class="text-slate-700 leading-relaxed whitespace-pre-wrap break-words w-full max-w-full">
                                 @if (reply.Content.Length > 100)
                                 {
                                     <span class="content-preview">@reply.Content.Substring(0, 100)...</span>
