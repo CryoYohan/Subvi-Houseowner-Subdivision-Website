@@ -100,7 +100,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         public async Task<IActionResult> AddEvent([FromBody] EventDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Description) || string.IsNullOrWhiteSpace(dto.Date_Time))
-                return BadRequest("Description and Date_Time are required.");
+                return BadRequest("Description and Date & Time are required.");
 
             var parsedDate = DateTime.Parse(dto.Date_Time);
 
@@ -421,6 +421,8 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     from r in _context.Reservations
                     join f in _context.Facility on r.FacilityId equals f.FacilityId
                     join u in _context.User_Accounts on r.UserId equals u.Id
+                    join ui in _context.User_Info on u.Id equals ui.UserAccountId into userInfoJoin
+                    from ui in userInfoJoin.DefaultIfEmpty()
                     where r.Status == "Approved"
                     select new
                     {
@@ -428,8 +430,8 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                         StartTime = r.StartTime,
                         EndTime = r.EndTime,
                         FacilityName = f.FacilityName,
-                        FirstName = u.Firstname,
-                        LastName = u.Lastname
+                        FirstName = ui != null ? ui.Firstname : "",
+                        LastName = ui != null ? ui.Lastname : ""
                     }
                 ).ToListAsync();
 

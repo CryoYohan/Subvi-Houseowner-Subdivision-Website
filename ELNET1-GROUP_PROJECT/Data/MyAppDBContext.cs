@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ELNET1_GROUP_PROJECT.Models;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace ELNET1_GROUP_PROJECT.Data
 {
@@ -7,6 +8,7 @@ namespace ELNET1_GROUP_PROJECT.Data
     {
         public MyAppDBContext(DbContextOptions<MyAppDBContext> options) : base(options) { }
 
+        public DbSet<User_Info> User_Info { get; set; }
         public DbSet<User_Account> User_Accounts { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Service_Request> Service_Request { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Facility> Facility { get; set; }
@@ -14,12 +16,10 @@ namespace ELNET1_GROUP_PROJECT.Data
    
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
-
-            // Add a unique constraint for Email field
             modelBuilder.Entity<User_Account>()
-                .HasIndex(u => u.Email)
-                .IsUnique();
+                .HasOne(u => u.User_Info)
+                .WithOne(i => i.User_Accounts)
+                .HasForeignKey<User_Info>(i => i.UserAccountId);
 
             modelBuilder.Entity<Facility>()
                 .HasKey(f => f.FacilityId);
@@ -44,6 +44,8 @@ namespace ELNET1_GROUP_PROJECT.Data
 
             modelBuilder.Entity<Like>()
                 .HasKey(s => s.LikeId);
+
+            base.OnModelCreating(modelBuilder);
         }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Announcement> Announcement { get; set; }
         public DbSet<ELNET1_GROUP_PROJECT.Models.Bill> Bill { get; set; }

@@ -132,8 +132,8 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             {
                 return RedirectToAction("landing");
             }
-            var profilePath = _context.User_Accounts
-                                .FirstOrDefault(u => u.Id == userId)?.Profile;
+            var profilePath = _context.User_Info
+                                .FirstOrDefault(u => u.UserAccountId == userId)?.Profile;
 
             ViewBag.ProfilePath = profilePath;
 
@@ -274,12 +274,21 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 return Json(new { success = false, message = "User not authenticated." });
 
             // Get the user from the database
-            var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+            var user = (from ua in _context.User_Accounts
+                        join ui in _context.User_Info on ua.Id equals ui.UserAccountId
+                        where ua.Id == userId
+                        select new
+                        {
+                            ui.Firstname,
+                            ui.Lastname
+                        }).FirstOrDefault();
+
             if (user == null)
                 return Json(new { success = false, message = "User not found." });
 
             string Capitalize(string input) =>
-            string.IsNullOrWhiteSpace(input) ? input : char.ToUpper(input[0]) + input.Substring(1).ToLower();
+                string.IsNullOrWhiteSpace(input) ? input : char.ToUpper(input[0]) + input.Substring(1).ToLower();
+
             string personName = $"{Capitalize(user.Firstname)} {Capitalize(user.Lastname)}";
 
             // Check if facility already exists
@@ -372,7 +381,14 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             var adminNotifications = new List<Notification>();
 
             var today = DateTime.Today;
-            var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+            var user = (from ua in _context.User_Accounts
+                        join ui in _context.User_Info on ua.Id equals ui.UserAccountId
+                        where ua.Id == userId
+                        select new
+                        {
+                            ui.Firstname,
+                            ui.Lastname
+                        }).FirstOrDefault();
 
             foreach (var bill in bills)
             {
@@ -621,7 +637,15 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
             if (sendNotif)
             {
-                var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+                var user = (from ua in _context.User_Accounts
+                            join ui in _context.User_Info on ua.Id equals ui.UserAccountId
+                            where ua.Id == userId
+                            select new
+                            {
+                                ui.Firstname,
+                                ui.Lastname
+                            }).FirstOrDefault();
+
                 var fullName = user != null
                     ? $"{char.ToUpper(user.Firstname[0]) + user.Firstname[1..].ToLower()} {char.ToUpper(user.Lastname[0]) + user.Lastname[1..].ToLower()}"
                     : $"User #{userId}";
@@ -843,7 +867,16 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 }
 
                 // Create user full name for notifications
-                var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Id == userId);
+                var user = await (from ua in _context.User_Accounts
+                                  join ui in _context.User_Info on ua.Id equals ui.UserAccountId
+                                  where ua.Id == userId
+                                  select new
+                                  {
+                                      ua.Email,
+                                      ui.Firstname,
+                                      ui.Lastname
+                                  }).FirstOrDefaultAsync();
+
                 var fullName = user != null
                     ? $"{char.ToUpper(user.Firstname[0]) + user.Firstname[1..].ToLower()} {char.ToUpper(user.Lastname[0]) + user.Lastname[1..].ToLower()}"
                     : $"User #{userId}";
@@ -853,23 +886,23 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 string billName = bill.BillName ?? $"Bill #{payment.BillId}";
 
                 string receiptMessage = $"""
-    💳 *Payment Receipt*
-    Bill Name: {billName}
-    Date Paid: {formattedDatePaidMessage}
-    Amount Paid: {formattedAmount}
-    Payment Method: {payment.PaymentMethod}
+                    💳 *Payment Receipt*
+                    Bill Name: {billName}
+                    Date Paid: {formattedDatePaidMessage}
+                    Amount Paid: {formattedAmount}
+                    Payment Method: {payment.PaymentMethod}
 
-    Thank you for your payment.
-    """;
+                    Thank you for your payment.
+                """;
 
                 string staffMessage = $"""
-    📥 *New Payment Received*
-    From: {fullName}
-    Bill Name: {billName}
-    Amount Paid: {formattedAmount}
-    Date Paid: {formattedDatePaidMessage}
-    Method: {payment.PaymentMethod}
-    """;
+                    📥 *New Payment Received*
+                    From: {fullName}
+                    Bill Name: {billName}
+                    Amount Paid: {formattedAmount}
+                    Date Paid: {formattedDatePaidMessage}
+                    Method: {payment.PaymentMethod}
+                """;
 
                 // Now insert notification only after successful payment and bill update
                 var notifications = new List<Notification>
@@ -1231,7 +1264,18 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     return Unauthorized("User not authenticated.");
                 }
 
-                var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+                var user = (from ua in _context.User_Accounts
+                            join ui in _context.User_Info on ua.Id equals ui.UserAccountId
+                            where ua.Id == userId
+                            select new
+                            {
+                                ua.Id,
+                                ui.Firstname,
+                                ui.Lastname,
+                                ua.Email,
+                                ua.Status,
+                                ua.Role
+                            }).FirstOrDefault();
                 if (user == null)
                 {
                     return NotFound("User not found.");
@@ -1335,19 +1379,24 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 .Join(_context.User_Accounts,
                     f => f.UserId,
                     u => u.Id,
-                    (f, u) => new
+                    (f, u) => new { f, u })
+                .Join(_context.User_Info,
+                    fu => fu.u.Id,
+                    ui => ui.UserAccountId,
+                    (fu, ui) => new
                     {
-                        f.PostId,
-                        f.Title,
-                        f.Hashtag,
-                        f.Content,
-                        f.DatePosted,
-                        f.UserId,
-                        u.Profile,
-                        u.Firstname,
-                        u.Lastname
+                        fu.f.PostId,
+                        fu.f.Title,
+                        fu.f.Hashtag,
+                        fu.f.Content,
+                        fu.f.DatePosted,
+                        fu.f.UserId,
+                        ui.Profile,
+                        ui.Firstname,
+                        ui.Lastname,
+                        fu.u.Role
                     })
-                .OrderByDescending(f => f.DatePosted)
+                .OrderByDescending(p => p.DatePosted)
                 .ToListAsync();
 
             var posts = rawPosts
@@ -1360,6 +1409,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     DatePosted = f.DatePosted,
                     UserId = f.UserId,
                     Profile = f.Profile,
+                    Role = f.Role,
                     Firstname = char.ToUpper(f.Firstname[0]) + f.Firstname.Substring(1),
                     Lastname = char.ToUpper(f.Lastname[0]) + f.Lastname.Substring(1),
                     FullName = char.ToUpper(f.Firstname[0]) + f.Firstname.Substring(1) + " " + char.ToUpper(f.Lastname[0]) + f.Lastname.Substring(1),
@@ -1383,8 +1433,36 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             }
 
             var results = _context.Forum
-                .Include(fp => fp.UserAccount) // Include the related UserAccount data
-                .AsQueryable();
+            .Join(_context.User_Accounts,
+                forum => forum.UserId,
+                user => user.Id,
+                (forum, user) => new
+                {
+                    forum.PostId,
+                    forum.Title,
+                    forum.Content,
+                    forum.DatePosted,
+                    forum.Hashtag,
+                    forum.UserId,
+                    user.Role,
+                    forum.UserAccount,
+                })
+            .Join(_context.User_Info,
+                forumUser => forumUser.UserId,
+                info => info.UserAccountId,
+                (forumUser, info) => new
+                {
+                    forumUser.PostId,
+                    forumUser.Title,
+                    forumUser.Content,
+                    forumUser.DatePosted,
+                    forumUser.Hashtag,
+                    forumUser.UserId,
+                    forumUser.UserAccount,
+                    forumUser.Role,
+                    UserInfo = info
+                })
+            .AsQueryable();
 
             // Handle @mention if present
             if (!string.IsNullOrWhiteSpace(mention))
@@ -1411,11 +1489,13 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     fp.Title,
                     fp.Hashtag,
                     fp.Content,
+                    fp.Role,
                     DatePosted = fp.DatePosted.ToString("MMMM dd, yyyy"),
-                    fp.Profile,
-                    Firstname = char.ToUpper(fp.Firstname[0]) + fp.Firstname.Substring(1),
-                    Lastname = char.ToUpper(fp.Lastname[0]) + fp.Lastname.Substring(1),
-                    FullName = char.ToUpper(fp.Firstname[0]) + fp.Firstname.Substring(1) + " " + char.ToUpper(fp.Lastname[0]) + fp.Lastname.Substring(1),
+                    fp.UserInfo.Profile,
+                    Firstname = char.ToUpper(fp.UserInfo.Firstname[0]) + fp.UserInfo.Firstname.Substring(1),
+                    Lastname = char.ToUpper(fp.UserInfo.Lastname[0]) + fp.UserInfo.Lastname.Substring(1),
+                    FullName = char.ToUpper(fp.UserInfo.Firstname[0]) + fp.UserInfo.Firstname.Substring(1) + " " +
+                               char.ToUpper(fp.UserInfo.Lastname[0]) + fp.UserInfo.Lastname.Substring(1),
                     LikeCount = _context.Like.Count(l => l.PostId == fp.PostId),
                     RepliesDisplay = _context.Replies.Count(r => r.PostId == fp.PostId),
                     IsLiked = _context.Like.Any(l => l.PostId == fp.PostId && l.UserId == userId)
@@ -1448,7 +1528,15 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             try
             {
                 // Get full name of the user
-                var user = await _context.User_Accounts.FindAsync(userId);
+                var user = (from ua in _context.User_Accounts
+                            join ui in _context.User_Info on ua.Id equals ui.UserAccountId
+                            where ua.Id == userId
+                            select new
+                            {
+                                ua.Id,
+                                ui.Firstname,
+                                ui.Lastname
+                            }).FirstOrDefault();
                 if (user == null)
                     return BadRequest("User not found.");
 
@@ -1512,7 +1600,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
             try
             {
-                var user = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Id == userId);
+                var user = (from ua in _context.User_Accounts join ui in _context.User_Info on ua.Id equals ui.UserAccountId where ua.Id == userId select new { ua.Id, ui.Firstname, ui.Lastname, ua.Email, ua.Status, ua.Role }).FirstOrDefault();
                 if (user == null) return Unauthorized();
 
                 var forumPost = await _context.Forum.FirstOrDefaultAsync(f => f.PostId == postId);
@@ -1575,34 +1663,43 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         public IActionResult Comments(int id, string title)
         {
             RefreshJwtCookies();
-            // Fetch the post and replies based on the PostId (id)
             var post = _context.Forum
                 .Where(f => f.PostId == id)
-                .Join(_context.User_Accounts, f => f.UserId, u => u.Id, (f, u) => new
-                {
-                    f.PostId,
-                    Title = char.ToUpper(f.Title[0]) + f.Title.Substring(1),
-                    Hashtag = f.Hashtag ?? null,
-                    f.Content,
-                    f.DatePosted,
-                    f.UserId,
-                    Firstname = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
-                    Lastname = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
-                })
+                .Join(_context.User_Accounts,
+                    f => f.UserId,
+                    u => u.Id,
+                    (f, u) => new { f, u })
+                .Join(_context.User_Info,
+                    temp => temp.u.Id,
+                    info => info.UserAccountId,
+                    (temp, info) => new
+                    {
+                        temp.f.PostId,
+                        Title = char.ToUpper(temp.f.Title[0]) + temp.f.Title.Substring(1),
+                        Hashtag = temp.f.Hashtag ?? null,
+                        temp.f.Content,
+                        temp.f.DatePosted,
+                        temp.f.UserId,
+                        temp.u.Role, // Include the Role from User_Account
+                        Firstname = char.ToUpper(info.Firstname[0]) + info.Firstname.Substring(1),
+                        Lastname = char.ToUpper(info.Lastname[0]) + info.Lastname.Substring(1),
+                        Profile = info.Profile ?? ""
+                    })
                 .FirstOrDefault();
 
-            // Fetch replies and join with User_Accounts to get the FullName
             var replies = _context.Replies
                 .Where(r => r.PostId == id)
-                .Join(_context.User_Accounts, r => r.UserId, u => u.Id, (r, u) => new ReplyViewModel
+                .Join(_context.User_Accounts, r => r.UserId, u => u.Id, (r, u) => new { r, u })
+                .Join(_context.User_Info, temp => temp.u.Id, info => info.UserAccountId, (temp, info) => new ReplyViewModel
                 {
-                    ReplyId = r.ReplyId,
-                    Content = r.Content,
-                    Date = r.Date,
-                    UserId = r.UserId,
-                    FullName = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1) + " " + char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1),
-                    Firstname = char.ToUpper(u.Firstname[0]) + u.Firstname.Substring(1),
-                    Lastname = char.ToUpper(u.Lastname[0]) + u.Lastname.Substring(1)
+                    ReplyId = temp.r.ReplyId,
+                    Content = temp.r.Content,
+                    Date = temp.r.Date,
+                    UserId = temp.r.UserId,
+                    FullName = char.ToUpper(info.Firstname[0]) + info.Firstname.Substring(1) + " " + char.ToUpper(info.Lastname[0]) + info.Lastname.Substring(1),
+                    Firstname = char.ToUpper(info.Firstname[0]) + info.Firstname.Substring(1),
+                    Lastname = char.ToUpper(info.Lastname[0]) + info.Lastname.Substring(1),
+                    Role = temp.u.Role
                 })
                 .OrderByDescending(r => r.Date)
                 .ToList();
@@ -1638,7 +1735,15 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             }
 
             // Fetch user from USER_ACCOUNT
-            var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+            var user = (from ua in _context.User_Accounts
+                        join ui in _context.User_Info on ua.Id equals ui.UserAccountId
+                        where ua.Id == userId
+                        select new
+                        {
+                            ua.Id,
+                            ui.Firstname,
+                            ui.Lastname
+                        }).FirstOrDefault();
             if (user == null) return Unauthorized();
 
             // Capitalize first letter of first and last name
@@ -1845,6 +1950,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
             var feedbacks = (from f in _context.Feedback
                              join u in _context.User_Accounts on f.UserId equals u.Id
+                             join info in _context.User_Info on u.Id equals info.UserAccountId
                              where f.UserId == userId &&
                                    f.FeedbackType == "Complaint" &&
                                    f.ComplaintStatus == "Resolved"
@@ -1856,8 +1962,8 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                                  f.Description,
                                  f.ComplaintStatus,
                                  f.DateSubmitted,
-                                 FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
-                                            (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower()
+                                 FullName = (info.Firstname ?? "").Substring(0, 1).ToUpper() + (info.Firstname ?? "").Substring(1).ToLower() + " " +
+                                            (info.Lastname ?? "").Substring(0, 1).ToUpper() + (info.Lastname ?? "").Substring(1).ToLower()
                              }).ToList();
 
             return Ok(feedbacks);
@@ -1889,21 +1995,19 @@ namespace ELNET1_GROUP_PROJECT.Controllers
         {
             var convo = _context.FeedbackConversation
                 .Where(c => c.FeedbackId == feedbackId)
-                .Join(_context.User_Accounts,
-                      c => c.UserId,
-                      u => u.Id,
-                      (c, u) => new
-                      {
-                          c.ConvoId,
-                          c.FeedbackId,
-                          c.SenderRole,
-                          c.Message,
-                          c.DateSent,
-                          c.UserId,
-                          FullName = (u.Firstname ?? "").Substring(0, 1).ToUpper() + (u.Firstname ?? "").Substring(1).ToLower() + " " +
-                                     (u.Lastname ?? "").Substring(0, 1).ToUpper() + (u.Lastname ?? "").Substring(1).ToLower(),
-                          ProfileImage = string.IsNullOrEmpty(u.Profile) ? null : u.Profile
-                      })
+                .Join(_context.User_Accounts, c => c.UserId, u => u.Id, (c, u) => new { c, u })
+                .Join(_context.User_Info, temp => temp.u.Id, info => info.UserAccountId, (temp, info) => new
+                {
+                    temp.c.ConvoId,
+                    temp.c.FeedbackId,
+                    temp.c.SenderRole,
+                    temp.c.Message,
+                    temp.c.DateSent,
+                    temp.c.UserId,
+                    FullName = (info.Firstname ?? "").Substring(0, 1).ToUpper() + (info.Firstname ?? "").Substring(1).ToLower() + " " +
+                               (info.Lastname ?? "").Substring(0, 1).ToUpper() + (info.Lastname ?? "").Substring(1).ToLower(),
+                    ProfileImage = string.IsNullOrEmpty(info.Profile) ? null : info.Profile
+                })
                 .OrderBy(c => c.DateSent)
                 .ToList();
 
@@ -1919,7 +2023,15 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             }
 
             // Get user info
-            var user = _context.User_Accounts.FirstOrDefault(u => u.Id == userId);
+            var user = (from ua in _context.User_Accounts
+                        join ui in _context.User_Info on ua.Id equals ui.UserAccountId
+                        where ua.Id == userId
+                        select new
+                        {
+                            ua.Id,
+                            ui.Firstname,
+                            ui.Lastname
+                        }).FirstOrDefault();
             if (user == null)
             {
                 return NotFound("User not found.");
@@ -2044,18 +2156,18 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             if (!int.TryParse(Iduser, out int userId))
             {
                 return Unauthorized();
-            }
-        ;
+            };
+
             var user = await _context.User_Accounts
                 .Where(u => u.Id == userId)
-                .Select(u => new
+                .Join(_context.User_Info, u => u.Id, info => info.UserAccountId, (u, info) => new
                 {
-                    Profile = u.Profile ?? "",
-                    u.Firstname,
-                    u.Lastname,
+                    Profile = info.Profile ?? null, 
+                    info.Firstname,
+                    info.Lastname,
                     u.Email,
-                    Contact = u.PhoneNumber,
-                    u.Address
+                    Contact = info.PhoneNumber,  
+                    info.Address
                 })
                 .FirstOrDefaultAsync();
 
@@ -2071,11 +2183,19 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             if (!int.TryParse(userIdStr, out int userId))
                 return Unauthorized();
 
-            var user = await _context.User_Accounts.FindAsync(userId);
-            if (user == null) return NotFound();
+            var userWithInfo = await _context.User_Accounts
+                .Where(u => u.Id == userId)
+                .Join(_context.User_Info,
+                      u => u.Id,
+                      info => info.UserAccountId,
+                      (u, info) => new { User = u, Info = info })
+                .FirstOrDefaultAsync();
+
+            if (userWithInfo == null)
+                return NotFound();
 
             var ext = Path.GetExtension(file.FileName);
-            var name = $"{char.ToUpper(user.Firstname[0])}{user.Lastname}-{userId}{ext}";
+            var name = $"{char.ToUpper(userWithInfo.Info.Firstname[0])}{userWithInfo.Info.Lastname}-{userId}{ext}";
             var savePath = Path.Combine("wwwroot/assets/userprofile", name);
             var relativePath = $"/assets/userprofile/{name}";
 
@@ -2084,7 +2204,7 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            user.Profile = relativePath;
+            userWithInfo.Info.Profile = relativePath;
             await _context.SaveChangesAsync();
 
             return Ok(new { path = relativePath });
@@ -2096,8 +2216,17 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             if (!int.TryParse(userIdStr, out int userId))
                 return Unauthorized();
 
-            var user = await _context.User_Accounts.FindAsync(userId);
-            if (user == null) return NotFound();
+            // Get the user with related info
+            var userWithInfo = await _context.User_Accounts
+                .Where(u => u.Id == userId)
+                .Join(_context.User_Info,
+                      u => u.Id,
+                      info => info.UserAccountId,
+                      (u, info) => new { User = u, Info = info })
+                .FirstOrDefaultAsync();
+
+            if (userWithInfo == null)
+                return NotFound();
 
             // Email check
             var existingEmail = await _context.User_Accounts
@@ -2105,26 +2234,38 @@ namespace ELNET1_GROUP_PROJECT.Controllers
             if (existingEmail != null)
                 return Conflict(new { message = "Email already in use by another user." });
 
-            // Full name check
-            var nameExists = await _context.User_Accounts
-                .FirstOrDefaultAsync(u => u.Firstname.ToLower() == request.Firstname.ToLower() &&
-                                          u.Lastname.ToLower() == request.Lastname.ToLower() &&
-                                          u.Id != userId);
+            // Full name check (on User_Info)
+            var nameExists = await _context.User_Info
+                .Join(_context.User_Accounts,
+                      info => info.UserAccountId,
+                      ua => ua.Id,
+                      (info, ua) => new { Info = info, Account = ua })
+                .FirstOrDefaultAsync(x =>
+                    x.Info.Firstname.ToLower() == request.Firstname.ToLower() &&
+                    x.Info.Lastname.ToLower() == request.Lastname.ToLower() &&
+                    x.Account.Id != userId);
+
             if (nameExists != null)
                 return Conflict(new { message = "Another user already has the same full name." });
 
-            // Contact check
-            var contactExists = await _context.User_Accounts
-                .FirstOrDefaultAsync(u => u.PhoneNumber == request.Contact && u.Id != userId);
+            // Contact check (on User_Info)
+            var contactExists = await _context.User_Info
+                .Join(_context.User_Accounts,
+                      info => info.UserAccountId,
+                      ua => ua.Id,
+                      (info, ua) => new { Info = info, Account = ua })
+                .FirstOrDefaultAsync(x =>
+                    x.Info.PhoneNumber == request.Contact && x.Account.Id != userId);
+
             if (contactExists != null)
                 return Conflict(new { message = "Contact already in use." });
 
             // Update fields
-            user.Firstname = request.Firstname;
-            user.Lastname = request.Lastname;
-            user.Email = request.Email;
-            user.Address = request.Address;
-            user.PhoneNumber = request.Contact;
+            userWithInfo.User.Email = request.Email;
+            userWithInfo.Info.Firstname = request.Firstname;
+            userWithInfo.Info.Lastname = request.Lastname;
+            userWithInfo.Info.Address = request.Address;
+            userWithInfo.Info.PhoneNumber = request.Contact;
 
             await _context.SaveChangesAsync();
             return Ok(new { message = "Profile updated successfully." });

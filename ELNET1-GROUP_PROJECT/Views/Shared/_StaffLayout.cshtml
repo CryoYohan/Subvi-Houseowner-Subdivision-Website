@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
     <link rel="stylesheet" href="~/css/output.css">
     <link rel="stylesheet" href="~/css/staffhome.css">
+    <link rel="stylesheet" href="~/css/forum.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/dist/tailwind.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.css">
@@ -30,14 +31,31 @@
                         <span class="text-blue-400">.</span>
                     </h1>
 
+                    @{
+                        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+                        var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                        var isActive = currentAction == "CommunityForum" || currentAction == "Comments";
+                        var isUserPageActive = currentAction == "useraccounts";
+                    }
                     <!-- Right Section -->
                     <div class="flex items-center gap-6">
+                        <li class="nav-item">
+                            <a asp-controller="staff"
+                               asp-action="useraccounts"
+                               class="p-2 text-blue-500 text-lg no-underline relative inline-block transition-all duration-300 ease-in-out
+                                    @(isUserPageActive ? "border-b-2 border-blue-500 font-bold" : "hover:after:content-[''] hover:after:absolute hover:after:left-0 hover:after:bottom-0 hover:after:w-full hover:after:h-[2px] hover:after:bg-blue-500 hover:after:transition-all hover:after:duration-300")">
+                                User Accounts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="staff"
+                               asp-action="communityforum"
+                               class="p-2 text-blue-500 text-lg no-underline relative inline-block transition-all duration-300 ease-in-out
+                                    @(isActive ? "border-b-2 border-blue-500 font-bold" : "hover:after:content-[''] hover:after:absolute hover:after:left-0 hover:after:bottom-0 hover:after:w-full hover:after:h-[2px] hover:after:bg-blue-500 hover:after:transition-all hover:after:duration-300")">
+                                Community Forum
+                            </a>
+                        </li>
                         <!-- Notification Dropdown -->
-                        @{
-                            var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-                            var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
-                        }
-
                         @if (!(currentController == "Staff" && currentAction == "Notifications"))
                         {
                             <div class="dropdown">
@@ -167,6 +185,7 @@
         <script src="~/js/site.js" asp-append-version="true"></script>
         <script src="~/js/loading-animation.js"></script>
         <script src="~/js/theme-toggle.js"></script>
+        <script src="~/js/UserAccs.js"></script>
         <script src="~/js/logout.js"></script>
         @await RenderSectionAsync("Scripts", required: false)
     </body>

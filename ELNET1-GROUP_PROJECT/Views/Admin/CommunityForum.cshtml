@@ -189,16 +189,16 @@
                 <div class="card mb-3 post-item">
                     <div class="card-body">
                         <div class="d-flex align-items-start">
-                            <div class="user-avatar p-4 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold;">
+                            <div>
                                 @if (!string.IsNullOrEmpty(post.Profile))
                                 {
                                     <img src="@post.Profile" alt="@post.FullName's Profile Picture" class="img-fluid rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
                                 }
                                 else
                                 {
-                                    @post.Firstname[0]
-
-                                    @post.Lastname[0]
+                                    <div class="user-avatar p-4 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold;">
+                                        @($"{post.Firstname?[0]}{post.Lastname?[0]}")
+                                    </div>
                                 }
                             </div>
                             <div class="w-100 ps-3">
@@ -214,8 +214,10 @@
                                     </div>
                                 }
 
-                                <p class="text-muted">Posted by @post.FullName on @post.DatePosted.ToString("MMMM dd, yyyy")</p>
-                                <p class="card-text">@post.Content</p>
+                                <p class="text-muted">
+                                    Posted by @(post.Role == "Admin" ? $"Admin {post.Firstname}" : post.FullName) on @post.DatePosted.ToString("MMMM dd, yyyy")
+                                </p>
+                                <p class="card-text">@(post.Content.Length > 100 ? post.Content.Substring(0, 100) + "..." : post.Content)</p>
                                 <div class="d-flex justify-content-end gap-3">
                                     <!-- Like Button -->
                                     <button onclick="toggleLike(@post.PostId)" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1">
@@ -269,7 +271,9 @@
                             </div>
                             <div class="mb-3">
                                 <label for="content" class="form-label">Content</label>
-                                <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+                                <textarea class="form-control" id="content" name="content" rows="4" required maxlength="255" oninput="updateCharCount()"></textarea>
+                                <p id="charCount" class="text-right text-sm text-gray-500">0/255</p>
+                                <p id="errorMessage" class="text-red-500 text-sm hidden">You have reached the character limit!</p>
                             </div>
                         </div>
                         <div class="modal-footer">

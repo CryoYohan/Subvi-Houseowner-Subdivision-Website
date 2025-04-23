@@ -1,43 +1,8 @@
-@model List<ForumPost>
+﻿@model List<ForumPost>
 
 @{
-    Layout = "_HomeLayout";
-    ViewData["Title"] = "Subvi | Forums";
-
-    // Retrieve the user's role from cookies
-    string role = Context.Request.Cookies["UserRole"];
-
-    // Declare controller
-    string homeController = "";
-    string calendarController = "";
-    string facilitiesController = "";
-    string billController = "";
-    string servicesController = "";
-    string forumsController = "";
-    string feedbacksController = "";
-    string resourcesController = "";
-
-    // Default action values
-    string homeAction = "";
-    string calendarAction = "";
-    string facilitiesAction = "";
-    string billAction = "";
-    string servicesAction = "";
-    string forumsAction = "";
-    string feedbacksAction = "";
-    string resourcesAction = "";
-
-    if (role == "Homeowner")
-    {
-        homeController = "home"; homeAction = "dashboard";
-        calendarController = "home"; calendarAction = "calendar";
-        facilitiesController = "home"; facilitiesAction = "facilities";
-        billController = "home"; billAction = "bill";
-        servicesController = "home"; servicesAction = "services";
-        forumsController = "home"; forumsAction = "forums";
-        feedbacksController = "home"; feedbacksAction = "feedbacks";
-        resourcesController = "home"; resourcesAction = "resources";
-    }
+    Layout = "_StaffLayout";
+    ViewData["Title"] = "Staff | Community Forum";
 }
 
 @functions {
@@ -53,89 +18,74 @@
 }
 
 @section Scripts {
-    <script src="~/js/notification-home.js"></script>
-    <script src="~/js/forum.js"></script>
+    <script src="~/js/forum-staff.js"></script>
+    <script src="~/js/notification-staff.js"></script>
 }
 
-<div class="flex flex-row overflow-hidden pt-4 flex-shrink-0">
-    @* Sidebar *@
-    <div class="bg-white rounded-tr-2xl rounded-br-2xl shadow-md w-56 py-6">
-        <ul class="space-y-4">
-            <!-- Home -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@homeController" asp-action="@homeAction">
-                    <i class="fas fa-home text-xl"></i>
-                    <span class="font-semibold">Home</span>
-                </a>
-            </li>
+<div class="flex flex-row overflow-hidden pt-2 flex-shrink-0">
+    <!-- Sidebar -->
+    <div class="sidebar bg-white rounded-tr-2xl rounded-br-2xl shadow-xl w-64 h-screen flex flex-col">
+        <!-- Sidebar Header -->
+        <div class="px-3 py-2 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-blue-600 text-center">Staff Panel</h2>
+        </div>
 
-            <!-- Calendar -->
+        <!-- Navigation Links -->
+        <ul class="flex-1 px-4 py-6 space-y-2">
             <li class="nav-item">
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@calendarController" asp-action="@calendarAction">
-                    <i class="fas fa-calendar-alt text-xl"></i>
-                    <span class="font-semibold">Calendar</span>
+                <a href="/staff/dashboard" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Dashboard" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-home w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Dashboard</span>
                 </a>
             </li>
-
-            <!-- Facilities -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@facilitiesController" asp-action="@facilitiesAction">
-                    <i class="fas fa-building text-xl"></i>
-                    <span class="font-semibold">Facilities</span>
+            <li class="nav-item">
+                <a href="/staff/pass/visitors" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VisitorsPass" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tasks w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Visitors Pass</span>
                 </a>
             </li>
-
-            <!-- Bill Payment -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@billController" asp-action="@billAction">
-                    <i class="fas fa-file-invoice-dollar text-xl"></i>
-                    <span class="font-semibold">Bill Payment</span>
+            <li class="nav-item">
+                <a href="/staff/vehicle/registration" style="text-decoration: none;"
+                   class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"]?.ToString() == "VehicleRegistration" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Vehicle Registration</span>
                 </a>
             </li>
-
-            <!-- Services -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@servicesController" asp-action="@servicesAction">
-                    <i class="fas fa-tools text-xl"></i>
-                    <span class="font-semibold">Services</span>
+            <li class="nav-item">
+                <a href="/staff/requests/reservation" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ReservationRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-bell w-5 h-5 mr-3"></i>
+                    <span class="font-medium">Reservation Requests</span>
                 </a>
             </li>
-
-            <!-- Forums -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item active-item"
-                   asp-controller="@forumsController" asp-action="@forumsAction">
-                    <i class="fas fa-comments text-xl"></i>
-                    <span class="font-semibold">Forums Discussion</span>
+            <li class="nav-item">
+                <a href="/staff/requests/services" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "ServiceRequests" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-tools w-6"></i>
+                    <span class="font-medium">Service Requests</span>
                 </a>
             </li>
-
-            <!-- Feedbacks -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out"
-                   asp-controller="@feedbacksController" asp-action="@feedbacksAction">
-                    <i class="fas fa-bullhorn text-xl"></i>
-                    <span class="font-semibold">Feedbacks</span>
+            <li class="nav-item">
+                <a href="/staff/bills_and_payments" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "BillsAndPayments" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-file-invoice-dollar w-6"></i>
+                    <span class="font-medium">Bills & Payments</span>
                 </a>
             </li>
-
-            <!-- Resources -->
-            <li>
-                <a class="flex items-center space-x-4 p-3 rounded-l-full sidebar-item hover:bg-gray-100 transition ease-in-out" asp-controller="@resourcesController" asp-action="@resourcesAction">
-                    <i class="fas fa-folder text-xl"></i>
-                    <span class="font-semibold">Resources</span>
+            <li class="nav-item">
+                <a href="/staff/poll_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Poll" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-poll w-6"></i>
+                    <span class="font-medium">Poll Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/reports" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-chart-line w-5 h-5"></i>
+                    <span class="font-medium">Reports</span>
                 </a>
             </li>
         </ul>
     </div>
-
     <div id="forum-container" class="container mt-2">
-        <div id="header" class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
+        <div id="header" title=" Go to Community Forum Home" class="flex items-center mx-auto text-lg space-x-2 mb-4 w-full bg-white text-[#1E3A8A] p-3 rounded-xl shadow-md relative group">
             <i class="bi bi-chat-left-dots"></i>
             <h1 class="text-2xl font-bold">Community Forum</h1>
 
@@ -145,7 +95,7 @@
             </div>
 
             <!-- Redirect link on click -->
-            <a href="/home/forums" title="Go to Community Forum Home" class="absolute inset-0"></a>
+            <a href="/staff/communityforum" class="absolute inset-0"></a>
         </div>
 
         <!-- Search and Add Discussion Button -->
@@ -286,7 +236,7 @@
                                     </button>
 
                                     <!-- Comment Button -->
-                                    <a href="@Url.Action("Comments", "Home", new { id = post.PostId, title = GetTruncatedTitle(post.Title) })" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+                                    <a href="@Url.Action("Comments", "Staff", new { id = post.PostId, title = GetTruncatedTitle(post.Title) })" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
                                         <i class="bi bi-chat"></i>
                                         <span>@post.RepliesDisplay replies</span>
                                     </a>
@@ -306,7 +256,7 @@
                         <h3 class="modal-title font-semibold text-primary" id="addDiscussionModalLabel">New Discussion</h3>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <form method="post" asp-action="AddPost" asp-controller="Home">
+                    <form method="post" asp-action="AddPost" asp-controller="Staff">
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="title" class="form-label">Title</label>
