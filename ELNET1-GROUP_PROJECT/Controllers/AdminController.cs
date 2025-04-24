@@ -1344,6 +1344,12 @@ public class AdminController : Controller
         }
 
         // Create DTOs
+        var personalInfoDto = userInfo != null ? new PersonalInfoDto
+        {
+            Firstname = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(userInfo.Firstname.ToLower()),
+            Lastname = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(userInfo.Lastname.ToLower()),
+        } : null;
+        
         var lotDto = lot != null ? new LotDto
         {
             BlockNumber = lot.BlockNumber,
@@ -1356,7 +1362,8 @@ public class AdminController : Controller
 
         var appDto = application != null ? new ApplicationDto
         {
-            DateApplied = application.DateApplied,
+            
+            DateApplied = application.DateApplied.ToString("MM/dd/yyyy hh:mm tt"),
             Remarks = application.Remarks
         } : null;
 
@@ -1372,6 +1379,7 @@ public class AdminController : Controller
         // Return final DTO
         return Ok(new UserFullDetailsDto
         {
+            PersonalInfo = personalInfoDto,
             Lot = lotDto,
             Application = appDto,
             Documents = docs
@@ -1380,9 +1388,17 @@ public class AdminController : Controller
 
     public class UserFullDetailsDto
     {
+        public PersonalInfoDto PersonalInfo { get; set; }
         public LotDto Lot { get; set; }
         public ApplicationDto Application { get; set; }
         public List<DocumentDto> Documents { get; set; }
+    }
+
+    public class PersonalInfoDto
+    {
+        public string PersonId { get; set; }
+        public string Firstname { get; set; }
+        public string Lastname { get; set; }
     }
 
     public class LotDto
@@ -1397,7 +1413,7 @@ public class AdminController : Controller
 
     public class ApplicationDto
     {
-        public DateTime? DateApplied { get; set; }
+        public string? DateApplied { get; set; }
         public string Remarks { get; set; }
     }
 
