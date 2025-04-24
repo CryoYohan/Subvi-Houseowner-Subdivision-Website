@@ -14,9 +14,9 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("LOT_NUMBER")]
         public string LotNumber { get; set; }
         [Column("SIZE_SQM")]
-        public string SizeSqm { get; set; }
+        public decimal SizeSqm { get; set; }
         [Column("PRICE")]
-        public string Price { get; set; } = "ACTIVE";
+        public decimal Price { get; set; }
         [Column("STATUS")]
         public string Status { get; set; }
         [Column("DESCRIPTION")]

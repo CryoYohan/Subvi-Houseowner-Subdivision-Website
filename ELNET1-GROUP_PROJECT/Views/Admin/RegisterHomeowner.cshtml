@@ -392,7 +392,7 @@
 
     function validateStep2() {
         if (!selectedLotId) {
-            alert("Please select a lot before proceeding to the next step.");
+            showToast("Please select a lot before proceeding to the next step.","red");
             return false;
         }
         return true;
@@ -432,7 +432,7 @@
         const file = fileInput.files[0];
 
         if (!name || !file) {
-            alert("Please provide both document name and file.");
+            showToast("Please provide both document name and file.","red");
             return;
         }
 
@@ -541,7 +541,7 @@
                 const blobURL = URL.createObjectURL(doc.file);
                 window.open(blobURL, '_blank');
             } else {
-                alert('Document file not found.');
+                showToast('Document file not found.','red');
             }
         }
     }
@@ -662,4 +662,20 @@
         spinner.classList.add('hidden');
         submitBtn.disabled = false;
     }
+
+    function showToast(message, color = 'green') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transform translate-y-20 opacity-0 transition-all z-50`;
+            toast.style.backgroundColor = color;
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                    setTimeout(() => toast.remove(), 500);
+                }, 4000);
+            }, 50);
+        }
 </script>

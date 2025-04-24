@@ -98,77 +98,87 @@
             <!-- User Accounts Table -->
             <div class="flex-1">
                 <div class="w-full">
-                <button onclick="window.location.href='/admin/homeownerstaffaccounts/register'"
-                        class="bg-blue-600 text-white text-sm px-4 py-2 rounded-md hover:bg-blue-700 transition-all duration-300">
-                    <i class="fas fa-user-plus mr-2"></i> Register Homeowner
-                </button>
-
                     <div class="bg-white shadow-lg rounded-lg p-4 transition-all duration-300">
-                        <!-- User Info Section (Hidden by Default) -->
-                        <div id="userInfoBox" class="hidden bg-blue-50 p-3 rounded-lg shadow-md mb-4 transition-all duration-300 relative">
-                            <!-- Status Badge -->
-                            <span id="userStatusBadge" class="absolute top-2 right-0 px-3 py-1 text-sm font-semibold rounded-full bg-green-500 text-white">Active</span>
+                        <div class="flex gap-3 justify-end">
+                            <button onclick="window.location.href='/admin/homeownerstaffaccounts/register'"
+                                    class="bg-blue-600 text-white text-sm px-4 py-2 rounded-md hover:bg-blue-700 transition-all duration-300">
+                                <i class="fas fa-user-plus mr-2"></i> Register Homeowner
+                            </button>
 
-                            <h3 class="text-xl font-bold text-blue-600 mb-2">User Information</h3>
-                            <div class="space-y-2 text-gray-700">
-                                <div><i class="fas fa-id-badge text-blue-500"></i> <span id="userInfoId"></span></div>
-                                <div><i class="fas fa-user text-blue-500"></i> <span id="userInfoName"></span></div>
-                                <div><i class="fas fa-user-tag text-blue-500"></i> <span id="userInfoRole"></span></div>
-                                <div><i class="fas fa-map-marker-alt text-blue-500"></i> <span id="userInfoAddress"></span></div>
-                                <div><i class="fas fa-phone text-blue-500"></i> <span id="userInfoPhone"></span></div>
-                                <div><i class="fas fa-envelope text-blue-500"></i> <span id="userInfoEmail"></span></div>
-                            </div>
-                            <div class="mt-4 flex justify-end space-x-2">
-                                <button id="viewMoreDetailsBtn" onclick="openMoreDetailsModal()" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 hidden">
-                                    <i class="fas fa-eye mr-1"></i> View More Details
-                                </button>       
-                                <button onclick="closeUserInfoBox()" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Close</button>
-                                <button onclick="openEditModalFromBox()" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Edit</button>
-                                <button onclick="deleteUserFromBox()" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">Delete</button>
-                            </div>
+                            <button onclick="openAddStaffModal()"
+                                    class="bg-green-600 text-white text-sm px-4 py-2 rounded-md hover:bg-green-700 transition-all duration-300">
+                                <i class="fas fa-user-edit mr-2"></i> Add Staff
+                            </button>
                         </div>
 
-                    <div id="moreDetailsModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
-                        <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg p-6 overflow-y-auto max-h-[90vh] relative">
-                            <h2 class="text-2xl font-bold text-blue-600 mb-4">More User Details</h2>
+                            <!-- User Info Section (Hidden by Default) -->
+                            <div id="userInfoBox" class="hidden bg-blue-50 p-3 rounded-lg shadow-md mb-4 transition-all duration-300 relative">
+                                <!-- Status Badge -->
+                                <span id="userStatusBadge" class="absolute top-2 right-0 px-3 py-1 text-sm font-semibold rounded-full bg-green-500 text-white">Active</span>
 
-                            <!-- Section 1: Personal Information -->
-                            <div class="mb-4">
-                                <h3 class="text-lg font-semibold text-gray-700 mb-2">Personal Information</h3>
-                                <div id="personalInfoSection" class="text-sm text-gray-600 space-y-1">
-                                    <!-- dynamically filled -->
+                                <h3 class="text-xl font-bold text-blue-600 mb-2">User Information</h3>
+                                <div class="space-y-2 text-gray-700">
+                                    <div><i class="fas fa-id-badge text-blue-500"></i> <span id="userInfoId"></span></div>
+                                    <div><i class="fas fa-user text-blue-500"></i> <span id="userInfoName"></span></div>
+                                    <div><i class="fas fa-user-tag text-blue-500"></i> <span id="userInfoRole"></span></div>
+                                    <div><i class="fas fa-map-marker-alt text-blue-500"></i> <span id="userInfoAddress"></span></div>
+                                    <div><i class="fas fa-phone text-blue-500"></i> <span id="userInfoPhone"></span></div>
+                                    <div><i class="fas fa-envelope text-blue-500"></i> <span id="userInfoEmail"></span></div>
+                                </div>
+                                <div class="mt-4 flex justify-end space-x-2">
+                                    <button id="viewMoreDetailsBtn" onclick="openMoreDetailsModal()" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 hidden">
+                                        <i class="fas fa-eye mr-1"></i> View More Details
+                                    </button>
+                                    <button id="assignAsStaffBtn" onclick="confirmAssignAsStaff()" class="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 hidden">
+                                        <i class="fas fa-user-check mr-1"></i> Assign as Staff
+                                    </button>
+                                    <button onclick="openEditModalFromBox()" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Edit</button>
+                                    <button onclick="deleteUserFromBox()" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">Inactivate</button>
+                                    <button onclick="closeUserInfoBox()" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Close</button>
                                 </div>
                             </div>
 
-                            <!-- Section 2: Lot Info -->
-                            <div class="mb-4">
-                                <h3 class="text-lg font-semibold text-gray-700 mb-2">Block/Lot Information</h3>
-                                <div id="lotInfoSection" class="text-sm text-gray-600 space-y-1">
-                                    <!-- dynamically filled -->
-                                </div>
-                            </div>
+                        <div id="moreDetailsModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+                            <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg p-6 overflow-y-auto max-h-[90vh] relative">
+                                <h2 class="text-2xl font-bold text-blue-600 mb-4">More User Details</h2>
 
-                            <!-- Section 3: Application Details -->
-                            <div class="mb-4">
-                                <h3 class="text-lg font-semibold text-gray-700 mb-2">Application Details</h3>
-                                <div id="applicationDetailsSection" class="text-sm text-gray-600 space-y-1">
-                                    <!-- dynamically filled -->
+                                <!-- Section 1: Personal Information -->
+                                <div class="mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Personal Information</h3>
+                                    <div id="personalInfoSection" class="text-sm text-gray-600 space-y-1">
+                                        <!-- dynamically filled -->
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Section 4: Documents -->
-                            <div class="mb-4">
-                                <h3 class="text-lg font-semibold text-gray-700 mb-2">Documents</h3>
-                                <div id="documentsSection" class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    <!-- dynamically filled -->
+                                <!-- Section 2: Lot Info -->
+                                <div class="mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Block/Lot Information</h3>
+                                    <div id="lotInfoSection" class="text-sm text-gray-600 space-y-1">
+                                        <!-- dynamically filled -->
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="flex justify-end mt-6">
-                                <button onclick="closeMoreDetailsModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">Close</button>
+                                <!-- Section 3: Application Details -->
+                                <div class="mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Application Details</h3>
+                                    <div id="applicationDetailsSection" class="text-sm text-gray-600 space-y-1">
+                                        <!-- dynamically filled -->
+                                    </div>
+                                </div>
+
+                                <!-- Section 4: Documents -->
+                                <div class="mb-4">
+                                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Documents</h3>
+                                    <div id="documentsSection" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        <!-- dynamically filled -->
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end mt-6">
+                                    <button onclick="closeMoreDetailsModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">Close</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
                         <div class="flex items-center justify-between mb-1">
                             <div>
@@ -252,11 +262,43 @@
         </div>
     </div>
 
+<!-- Add Staff Modal -->
+<div id="addStaffModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white w-full max-w-xl rounded-xl shadow-lg p-6 relative">
+        <h2 class="text-xl font-semibold mb-4">Assign Homeowner as Staff</h2>
+        <p id="modalErrorMsg" class="text-red-600 text-sm mb-3 hidden">Select user to be assigned as Staff first</p>
+
+        <div>
+            <!-- Search -->
+            <input type="text" id="searchInput" placeholder="Search by name..."
+                   class="w-full border border-gray-300 rounded-md px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400" oninput="filterUsers(searchInput.value)">
+
+            <!-- List (scrollable) -->
+            <div id="userList" class="max-h-64 overflow-y-auto border border-gray-200 rounded-md p-3 space-y-2">
+                <!-- Example item format -->
+                <!-- JS will populate this -->
+            </div>
+        </div>
+
+        <!-- Footer Buttons -->
+        <div class="flex justify-end gap-2 mt-4">
+            <button onclick="closeAddStaffModal()"
+                    class="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400 text-sm">
+                Cancel
+            </button>
+            <button onclick="saveStaffAssignment()"
+                    class="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm">
+                Save
+            </button>
+        </div>
+    </div>
+</div>
+
     <!-- Modal for Editing User -->
     <div id="editUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 p-6">
             <h2 class="text-2xl font-bold text-blue-600 mb-4">Edit User</h2>
-            <form asp-action="EditUser" method="post">
+            <form asp-action="EditUser" method="post" id="editUserForm">
                 <input type="hidden" id="editUserId" name="Id" />
                 <input type="hidden" id="editPersonId" name="PersonId" />
                 <div class="space-y-4">
@@ -267,15 +309,6 @@
                     <div>
                         <label for="editLastName" class="block text-sm font-medium text-gray-700">Last Name</label>
                         <input type="text" style="text-transform: capitalize;" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Lastname" id="editLastName" placeholder="Enter Last Name">
-                    </div>
-                    <div>
-                        <label for="editRole" class="block text-sm font-medium text-gray-700">Role</label>
-                        <select name="Role" id="editRole" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="" disabled selected>Select Role</option>
-                            <option value="Admin">Admin</option>
-                            <option value="Staff">Staff</option>
-                            <option value="Homeowner">Homeowner</option>
-                        </select>
                     </div>
                     <div>
                         <label for="editAddress" class="block text-sm font-medium text-gray-700">Address</label>
@@ -294,10 +327,6 @@
                     <div>
                         <label for="editEmail" class="block text-sm font-medium text-gray-700">Email</label>
                         <input type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Email" id="editEmail" placeholder="Enter Email ex. name@example.com">
-                    </div>
-                    <div>
-                        <label for="editPassword" class="block text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" name="Password" id="editPassword" placeholder="Enter New Password (leave blank to keep current)">
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end space-x-4">

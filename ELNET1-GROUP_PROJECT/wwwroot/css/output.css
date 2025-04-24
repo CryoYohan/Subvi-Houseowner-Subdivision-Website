@@ -1082,6 +1082,10 @@ video {
   max-height: 10rem;
 }
 
+.max-h-64 {
+  max-height: 16rem;
+}
+
 .max-h-\[90vh\] {
   max-height: 90vh;
 }
@@ -1232,6 +1236,10 @@ video {
 
 .max-w-md {
   max-width: 28rem;
+}
+
+.max-w-xl {
+  max-width: 36rem;
 }
 
 .flex-1 {
@@ -1734,11 +1742,6 @@ video {
 .border-red-200 {
   --tw-border-opacity: 1;
   border-color: rgb(254 202 202 / var(--tw-border-opacity, 1));
-}
-
-.border-red-400 {
-  --tw-border-opacity: 1;
-  border-color: rgb(248 113 113 / var(--tw-border-opacity, 1));
 }
 
 .border-red-500 {

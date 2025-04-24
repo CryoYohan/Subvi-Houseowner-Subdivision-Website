@@ -4,6 +4,7 @@
     var isEventPage = currentController == "admin" && currentAction == "event";
     var isCommunityForumPage = currentController == "admin" && currentAction == "communityforum";
     var isFacilitiesPage = currentController == "admin" && currentAction == "facilities";
+    var isLotPage = currentController == "admin" && currentAction == "lot";
 }
 
 <!-- Views/Shared/_AdminLayout.cshtml -->
@@ -58,6 +59,13 @@
                            asp-controller="admin"
                            asp-action="facilities">
                             Facility
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(isLotPage ? "active bg-primary text-white rounded" : "")"
+                           asp-controller="admin"
+                           asp-action="lot">
+                            Lot
                         </a>
                     </li>
                     <li class="dropdown nav-item">

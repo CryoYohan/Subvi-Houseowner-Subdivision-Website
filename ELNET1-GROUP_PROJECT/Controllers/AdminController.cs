@@ -415,6 +415,163 @@ public class AdminController : Controller
         return RedirectToAction("Comments", new { id = postId, title = GetTruncatedTitle(title) });
     }
 
+    public IActionResult Lot()
+    {
+        RefreshJwtCookies();
+        var role = HttpContext.Request.Cookies["UserRole"];
+        if (string.IsNullOrEmpty(role) || role != "Admin")
+        {
+            return RedirectToAction("landing", "Home");
+        }
+        return View();
+    }
+
+    // Action to get the list of Lots (filtered by status)
+    [HttpGet]
+    public async Task<IActionResult> GetLots(string status = "Available")
+    {
+        var lots = await _context.Lot
+            .Where(l => l.Status == status)
+            .Select(l => new
+            {
+                l.LotId,
+                l.BlockNumber,
+                l.LotNumber,
+                l.SizeSqm,
+                l.Price,
+                l.Description,
+                l.Status,
+                HomeownerName = _context.Applications
+                .Where(a => a.LotId == l.LotId)
+                .Join(_context.User_Info,
+                      app => app.PersonId,
+                      user => user.PersonId,
+                      (app, user) => Capitalize(user.Firstname) + " " + Capitalize(user.Lastname)
+                ).FirstOrDefault()
+            })
+            .ToListAsync();
+
+        return Json(lots);
+    }
+
+    // Action to add a new Lot
+    [HttpPost]
+    public async Task<IActionResult> AddLot([FromBody] LotDto lotDto)
+    {
+        if (string.IsNullOrWhiteSpace(lotDto.BlockNumber) || string.IsNullOrWhiteSpace(lotDto.LotNumber))
+        {
+            return BadRequest("Block number and lot number are required.");
+        }
+
+        // Check if Lot with the same block number and lot number already exists
+        var existingLot = await _context.Lot
+            .FirstOrDefaultAsync(l => l.BlockNumber == lotDto.BlockNumber && l.LotNumber == lotDto.LotNumber);
+        if (existingLot != null)
+        {
+            return Conflict("A lot with the same block and lot number already exists.");
+        }
+
+        var newLot = new Lot
+        {
+            BlockNumber = lotDto.BlockNumber,
+            LotNumber = lotDto.LotNumber,
+            SizeSqm = lotDto.SizeSqm,
+            Price = lotDto.Price,
+            Description = lotDto.Description,
+            Status = "Available",
+            CreatedAt = DateTime.Now
+        };
+
+        _context.Lot.Add(newLot);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Lot added successfully." });
+    }
+
+    // Action to edit an existing Lot
+    [HttpPut]
+    public async Task<IActionResult> EditLot([FromBody] LotDto lotDto)
+    {
+        if (string.IsNullOrWhiteSpace(lotDto.BlockNumber) || string.IsNullOrWhiteSpace(lotDto.LotNumber))
+        {
+            return BadRequest("Block number and lot number are required.");
+        }
+
+        var lot = await _context.Lot.FirstOrDefaultAsync(l => l.LotId == lotDto.LotId);
+        if (lot == null)
+        {
+            return NotFound("Lot not found.");
+        }
+
+        // Check if another lot with the same Block and Lot number exists
+        var existingLot = await _context.Lot
+            .Where(l => l.LotId != lotDto.LotId) // Exclude current lot
+            .FirstOrDefaultAsync(l => l.BlockNumber == lotDto.BlockNumber && l.LotNumber == lotDto.LotNumber);
+        if (existingLot != null)
+        {
+            return Conflict("A lot with the same block and lot number already exists.");
+        }
+
+        lot.BlockNumber = lotDto.BlockNumber;
+        lot.LotNumber = lotDto.LotNumber;
+        lot.SizeSqm = lotDto.SizeSqm;
+        lot.Price = lotDto.Price;
+        lot.Description = lotDto.Description;
+
+        _context.Lot.Update(lot);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Lot updated successfully." });
+    }
+
+    // Action to delete a Lot
+    [HttpDelete]
+    public async Task<IActionResult> DeleteLot(int lotId)
+    {
+        var lot = await _context.Lot.FirstOrDefaultAsync(l => l.LotId == lotId);
+        if (lot == null)
+        {
+            return NotFound("Lot not found.");
+        }
+
+        // If the lot status is 'Sold', delete action is disabled
+        if (lot.Status == "Sold")
+        {
+            return BadRequest("Sold lots cannot be deleted.");
+        }
+
+        _context.Lot.Remove(lot);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Lot deleted successfully." });
+    }
+
+    // Action to get details of a specific Lot (if needed for editing)
+    [HttpGet]
+    public async Task<IActionResult> GetLotDetails(int lotId)
+    {
+        var lot = await _context.Lot
+            .Where(l => l.LotId == lotId)
+            .Select(l => new
+            {
+                l.LotId,
+                l.BlockNumber,
+                l.LotNumber,
+                l.SizeSqm,
+                l.Price,
+                l.Description,
+                l.Status
+            })
+            .FirstOrDefaultAsync();
+
+        if (lot == null)
+        {
+            return NotFound("Lot not found.");
+        }
+
+        return Json(lot);
+    }
+
     public IActionResult Facilities()
     {
         RefreshJwtCookies();
@@ -1354,7 +1511,7 @@ public class AdminController : Controller
         {
             BlockNumber = lot.BlockNumber,
             LotNumber = lot.LotNumber,
-            SizeSqm = Convert.ToDouble(lot.SizeSqm),
+            SizeSqm = Convert.ToDecimal(lot.SizeSqm),
             Price = Convert.ToDecimal(lot.Price),
             Status = lot.Status,
             Description = lot.Description
@@ -1403,11 +1560,12 @@ public class AdminController : Controller
 
     public class LotDto
     {
+        public int? LotId { get; set; }
         public string BlockNumber { get; set; }
         public string LotNumber { get; set; }
-        public double SizeSqm { get; set; }
+        public decimal SizeSqm { get; set; }
         public decimal Price { get; set; }
-        public string Status { get; set; }
+        public string? Status { get; set; }
         public string Description { get; set; }
     }
 
@@ -1423,167 +1581,276 @@ public class AdminController : Controller
         public string FilePath { get; set; }
     }
 
-/*
- [HttpPost]
-// POST: /Admin/AddUserAccount
-public async Task<IActionResult> AddUserAccount(UserDataRequest model)
-{
-    if (ModelState.IsValid)
+    /*
+     [HttpPost]
+    // POST: /Admin/AddUserAccount
+    public async Task<IActionResult> AddUserAccount(UserDataRequest model)
+    {
+        if (ModelState.IsValid)
+        {
+            RefreshJwtCookies();
+            try
+            {
+                // Check if the email already exists in USER_ACCOUNT
+                var existingEmail = _context.User_Accounts.FirstOrDefault(u => u.Email == model.Email);
+                if (existingEmail != null)
+                {
+                    TempData["ErrorMessage"] = "User already exists with this email.";
+                    return RedirectToAction("HomeownerStaffAccounts");
+                }
+
+                // Check if the contact number already exists in USER_INFO
+                var existingContact = _context.User_Info.FirstOrDefault(ui => ui.PhoneNumber == model.PhoneNumber);
+                if (existingContact != null)
+                {
+                    TempData["ErrorMessage"] = "User already exists with this contact number.";
+                    return RedirectToAction("HomeownerStaffAccounts");
+                }
+
+                // Check if first and last name combination already exists
+                var existingName = _context.User_Info.FirstOrDefault(ui =>
+                    ui.Firstname.ToLower() == model.Firstname.ToLower() &&
+                    ui.Lastname.ToLower() == model.Lastname.ToLower());
+
+                if (existingName != null)
+                {
+                    TempData["ErrorMessage"] = "User with the same name already exists.";
+                    return RedirectToAction("HomeownerStaffAccounts");
+                }
+
+                // Save original password for email and notification
+                string originalPassword = model.Password;
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(originalPassword);
+
+                // Create and save User Account (credentials)
+                var userAccount = new User_Account
+                {
+                    Email = model.Email,
+                    Password = hashedPassword,
+                    Role = model.Role,
+                    Status = "ACTIVE",
+                    DateRegistered = DateTime.Now
+                };
+
+                _context.User_Accounts.Add(userAccount);
+                _context.SaveChanges(); // Save first to get the USER_ID (auto-incremented)
+
+                // Create and save User Info (profile data)
+                var userInfo = new User_Info
+                {
+                    Firstname = model.Firstname,
+                    Lastname = model.Lastname,
+                    Address = model.Address,
+                    PhoneNumber = model.PhoneNumber,
+                    DateCreated = DateTime.Now,
+                    UserAccountId = userAccount.Id // foreign key reference
+                };
+
+                _context.User_Info.Add(userInfo);
+                _context.SaveChanges();
+
+                // Send email if Homeowner
+                string fullname = $"{model.Firstname} {model.Lastname}";
+                if (model.Role == "Homeowner")
+                {
+                    SendEmail(model.Email, fullname, model.Email, originalPassword);
+                }
+
+                // Notification Link
+                string link = model.Role switch
+                {
+                    "Homeowner" => "/home/settings",
+                    "Admin" => "/admin/settings",
+                    "Staff" => "/staff/profile/settings",
+                    _ => "/"
+                };
+
+                var notification = new Notification
+                {
+                    Title = "Account Created",
+                    Message = $"Your user account was successfully created. Email: {model.Email}, Password: {originalPassword}. Please change your password for security reasons.",
+                    IsRead = false,
+                    Type = "Account",
+                    TargetRole = model.Role,
+                    Link = link,
+                    UserId = model.Role == "Homeowner" ? userAccount.Id : null,
+                    DateCreated = DateTime.Now
+                };
+
+                _context.Notifications.Add(notification);
+                _context.SaveChanges();
+
+                // Send real-time notification via SignalR
+                if (model.Role == "Homeowner")
+                {
+                    await _hubContext.Clients.User(userAccount.Id.ToString()).SendAsync("ReceiveNotification", new
+                    {
+                        Title = notification.Title,
+                        Message = notification.Message,
+                        DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                    });
+                }
+                else if (model.Role == "Staff")
+                {
+                    await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", new
+                    {
+                        Title = notification.Title,
+                        Message = notification.Message,
+                        DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                    });
+                }
+                else if (model.Role == "Admin")
+                {
+                    await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", new
+                    {
+                        Title = notification.Title,
+                        Message = notification.Message,
+                        DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
+                    });
+                }
+
+                TempData["SuccessMessage"] = "User registered successfully!";
+                return RedirectToAction("HomeownerStaffAccounts");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Failed to register new account. Try again later.";
+                return RedirectToAction("HomeownerStaffAccounts");
+            }
+        }
+
+        return View(model);
+    }
+
+    // Function to delete all users
+    public IActionResult DeleteAllUsers()
     {
         RefreshJwtCookies();
+        var allUsers = _context.User_Accounts.ToList(); // Retrieve all users
+
+        _context.User_Accounts.RemoveRange(allUsers); // Remove all users
+        _context.SaveChanges(); // Save changes to the database
+
+        // Optionally, you can add a success message here or redirect
+        return RedirectToAction("HomeownerStaffAccounts"); // Or display a confirmation
+    }
+    */
+
+    public IActionResult GetHomeowners()
+    {
+        var homeowners = _context.User_Accounts
+            .Join(_context.User_Info,
+                ua => ua.Id,
+                ui => ui.UserAccountId,
+                (ua, ui) => new { ua.Id, ui.Firstname, ui.Lastname, ua.Role })
+            .Where(u => u.Role == "Homeowner")
+            .Select(u => new {
+                userId = u.Id,
+                firstname = u.Firstname,
+                lastname = u.Lastname
+            }).ToList();
+
+        return Ok(homeowners);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> PromoteToStaffUser([FromBody] int userId)
+    {
+        if (userId <= 0)
+            return BadRequest("Invalid user ID.");
+
+        var userAccount = await _context.User_Accounts.FirstOrDefaultAsync(u => u.Id == userId);
+        if (userAccount == null)
+            return NotFound("User not found.");
+
+        if (userAccount.Role != "Homeowner")
+            return BadRequest("Only Homeowners can be promoted to Staff.");
+
+        userAccount.Role = "Staff";
+
         try
         {
-            // Check if the email already exists in USER_ACCOUNT
-            var existingEmail = _context.User_Accounts.FirstOrDefault(u => u.Email == model.Email);
-            if (existingEmail != null)
-            {
-                TempData["ErrorMessage"] = "User already exists with this email.";
-                return RedirectToAction("HomeownerStaffAccounts");
-            }
-
-            // Check if the contact number already exists in USER_INFO
-            var existingContact = _context.User_Info.FirstOrDefault(ui => ui.PhoneNumber == model.PhoneNumber);
-            if (existingContact != null)
-            {
-                TempData["ErrorMessage"] = "User already exists with this contact number.";
-                return RedirectToAction("HomeownerStaffAccounts");
-            }
-
-            // Check if first and last name combination already exists
-            var existingName = _context.User_Info.FirstOrDefault(ui =>
-                ui.Firstname.ToLower() == model.Firstname.ToLower() &&
-                ui.Lastname.ToLower() == model.Lastname.ToLower());
-
-            if (existingName != null)
-            {
-                TempData["ErrorMessage"] = "User with the same name already exists.";
-                return RedirectToAction("HomeownerStaffAccounts");
-            }
-
-            // Save original password for email and notification
-            string originalPassword = model.Password;
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(originalPassword);
-
-            // Create and save User Account (credentials)
-            var userAccount = new User_Account
-            {
-                Email = model.Email,
-                Password = hashedPassword,
-                Role = model.Role,
-                Status = "ACTIVE",
-                DateRegistered = DateTime.Now
-            };
-
-            _context.User_Accounts.Add(userAccount);
-            _context.SaveChanges(); // Save first to get the USER_ID (auto-incremented)
-
-            // Create and save User Info (profile data)
-            var userInfo = new User_Info
-            {
-                Firstname = model.Firstname,
-                Lastname = model.Lastname,
-                Address = model.Address,
-                PhoneNumber = model.PhoneNumber,
-                DateCreated = DateTime.Now,
-                UserAccountId = userAccount.Id // foreign key reference
-            };
-
-            _context.User_Info.Add(userInfo);
-            _context.SaveChanges();
-
-            // Send email if Homeowner
-            string fullname = $"{model.Firstname} {model.Lastname}";
-            if (model.Role == "Homeowner")
-            {
-                SendEmail(model.Email, fullname, model.Email, originalPassword);
-            }
-
-            // Notification Link
-            string link = model.Role switch
-            {
-                "Homeowner" => "/home/settings",
-                "Admin" => "/admin/settings",
-                "Staff" => "/staff/profile/settings",
-                _ => "/"
-            };
+            await _context.SaveChangesAsync();
 
             var notification = new Notification
             {
-                Title = "Account Created",
-                Message = $"Your user account was successfully created. Email: {model.Email}, Password: {originalPassword}. Please change your password for security reasons.",
+                UserId = userId,
+                TargetRole = "Homeowner",
+                Type = "Promotion",
+                Title = "Promoted to Staff",
+                Message = $"Good Day! You have been promoted as a Staff member as of {DateTime.Now:MM/dd/yyyy}. Congratulations!",
                 IsRead = false,
-                Type = "Account",
-                TargetRole = model.Role,
-                Link = link,
-                UserId = model.Role == "Homeowner" ? userAccount.Id : null,
                 DateCreated = DateTime.Now
             };
 
             _context.Notifications.Add(notification);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            // Send real-time notification via SignalR
-            if (model.Role == "Homeowner")
-            {
-                await _hubContext.Clients.User(userAccount.Id.ToString()).SendAsync("ReceiveNotification", new
-                {
-                    Title = notification.Title,
-                    Message = notification.Message,
-                    DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
-                });
-            }
-            else if (model.Role == "Staff")
-            {
-                await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", new
-                {
-                    Title = notification.Title,
-                    Message = notification.Message,
-                    DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
-                });
-            }
-            else if (model.Role == "Admin")
-            {
-                await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", new
-                {
-                    Title = notification.Title,
-                    Message = notification.Message,
-                    DateCreated = DateTime.Now.ToString("MM/dd/yyyy")
-                });
-            }
+            // Send real-time notification
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
 
-            TempData["SuccessMessage"] = "User registered successfully!";
-            return RedirectToAction("HomeownerStaffAccounts");
+            return Ok(new { message = "User promoted to staff." });
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = "Failed to register new account. Try again later.";
-            return RedirectToAction("HomeownerStaffAccounts");
+            return StatusCode(500, "Failed to update user role.");
         }
     }
 
-    return View(model);
-}
+    public async Task<IActionResult> PromoteToStaff([FromBody] List<int> userIds)
+    {
+        var users = _context.User_Accounts.Where(u => userIds.Contains(u.Id)).ToList();
+        users.ForEach(u => u.Role = "Staff");
+        await _context.SaveChangesAsync();
 
-// Function to delete all users
-public IActionResult DeleteAllUsers()
-{
-    RefreshJwtCookies();
-    var allUsers = _context.User_Accounts.ToList(); // Retrieve all users
+        if (userIds.Count > 1)
+        {
+            foreach (var id in userIds)
+            {
+                var notification = new Notification
+                {
+                    UserId = id,
+                    TargetRole = "Homeowner",
+                    Type = "Account",
+                    Title = "Promoted to Staff",
+                    Message = $"Good Day! You have been successfully assigned as a Staff member as of {DateTime.Now:MM/dd/yyyy}.",
+                    IsRead = false,
+                    DateCreated = DateTime.Now
+                };
 
-    _context.User_Accounts.RemoveRange(allUsers); // Remove all users
-    _context.SaveChanges(); // Save changes to the database
+                _context.Notifications.Add(notification);
+                await _hubContext.Clients.User(id.ToString()).SendAsync("ReceiveNotification", notification);
+            }
 
-    // Optionally, you can add a success message here or redirect
-    return RedirectToAction("HomeownerStaffAccounts"); // Or display a confirmation
-}
-*/
+            await _context.SaveChangesAsync(); // Save all notifications at once
+        }
+        else if (userIds.Count == 1)
+        {
+            var id = userIds[0];
+            var notification = new Notification
+            {
+                UserId = id,
+                TargetRole = "Homeowner",
+                Type = "Account",
+                Title = "Promoted to Staff",
+                Message = $"Good Day! You have been successfully assigned as a Staff member as of {DateTime.Now:MM/dd/yyyy}.",
+                IsRead = false,
+                DateCreated = DateTime.Now
+            };
 
-[HttpPost]
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+            await _hubContext.Clients.User(id.ToString()).SendAsync("ReceiveNotification", notification);
+        }
+
+        return Ok();
+    }
+
+    [HttpPost]
     // POST: /Admin/EditUser
     public async Task<IActionResult> EditUser(UserDataRequest model)
     {
         RefreshJwtCookies();
-        ModelState.Remove("Password");
 
         if (!ModelState.IsValid)
         {
@@ -1624,15 +1891,6 @@ public IActionResult DeleteAllUsers()
             {
                 TempData["ErrorMessage"] = "A user with the same name already exists.";
                 return RedirectToAction("HomeownerStaffAccounts");
-            }
-
-            // Update USER_ACCOUNT
-            existingUser.Email = model.Email;
-            existingUser.Role = model.Role;
-
-            if (!string.IsNullOrEmpty(model.Password))
-            {
-                existingUser.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
             }
 
             // Update USER_INFO
