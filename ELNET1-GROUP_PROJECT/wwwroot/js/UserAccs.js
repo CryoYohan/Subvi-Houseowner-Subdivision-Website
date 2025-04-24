@@ -47,19 +47,25 @@ function openUserInfoBox(user) {
     document.getElementById("userInfoPhone").textContent = `Phone: ${user.phoneNumber}`;
     document.getElementById("userInfoEmail").textContent = `Email: ${user.email}`;
 
-    // Set status badge text and color based on user status
     const statusBadge = document.getElementById("userStatusBadge");
     if (user.status === "ACTIVE") {
         statusBadge.textContent = "Active";
         statusBadge.classList.remove("bg-red-500");
         statusBadge.classList.add("bg-green-500");
-    } else if (user.status === "INACTIVE") {
+    } else {
         statusBadge.textContent = "Inactive";
         statusBadge.classList.remove("bg-green-500");
         statusBadge.classList.add("bg-red-500");
     }
 
-    // Show info box and shrink table height
+    // Toggle 'View More Details' button visibility
+    const viewMoreBtn = document.getElementById("viewMoreDetailsBtn");
+    if (user.role === "Homeowner" || user.role === "Staff") {
+        viewMoreBtn.classList.remove("hidden");
+    } else {
+        viewMoreBtn.classList.add("hidden");
+    }
+
     document.getElementById("userInfoBox").classList.remove("hidden");
     document.getElementById("userTableContainer").style.maxHeight = "170px";
 }
@@ -68,6 +74,59 @@ function closeUserInfoBox() {
     // Hide info box and restore table height
     document.getElementById("userInfoBox").classList.add("hidden");
     document.getElementById("userTableContainer").style.maxHeight = "520px";
+}
+
+async function openMoreDetailsModal() {
+    const modal = document.getElementById("moreDetailsModal");
+    modal.classList.remove("hidden");
+
+    const personId = selectedUser.personId;
+
+    const res = await fetch(`/admin/getuserfulldetails?personId=${personId}`);
+    const data = await res.json();
+
+    // Section 1 - Lot Info
+    const lot = data.lot;
+    document.getElementById("lotInfoSection").innerHTML = `
+        <p><strong>Block:</strong> ${lot.blockNumber}</p>
+        <p><strong>Lot:</strong> ${lot.lotNumber}</p>
+        <p><strong>Size:</strong> ${lot.sizeSqm} sqm</p>
+        <p><strong>Price:</strong> ₱${lot.price}</p>
+        <p><strong>Status:</strong> ${lot.status}</p>
+        <p><strong>Description:</strong> ${lot.description || "N/A"}</p>
+    `;
+
+    // Section 2 - Application
+    const app = data.application;
+    document.getElementById("applicationDetailsSection").innerHTML = `
+        <p><strong>Date Applied:</strong> ${app.dateApplied}</p>
+        <p><strong>Remarks:</strong> ${app.remarks || "N/A"}</p>
+    `;
+
+    // Section 3 - Documents
+    const docsContainer = document.getElementById("documentsSection");
+    docsContainer.innerHTML = '';
+    data.documents.forEach(doc => {
+        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.filName);
+        const div = document.createElement('div');
+        div.className = "bg-gray-100 p-2 rounded shadow hover:shadow-md cursor-pointer text-center";
+
+        if (isImage) {
+            div.innerHTML = `<img src="${doc.filePath}" class="rounded object-cover h-24 w-full mb-2" alt="${doc.fileName}">
+                             <p class="text-sm">${doc.fileName}</p>`;
+            div.onclick = () => openImageModal(doc.filePath);
+        } else {
+            div.innerHTML = `<i class="fas fa-file-alt text-3xl text-blue-600 mb-1"></i>
+                             <p class="text-sm">${doc.fileName}</p>`;
+            div.onclick = () => window.open(doc.filePath, '_blank');
+        }
+
+        docsContainer.appendChild(div);
+    });
+}
+
+function closeMoreDetailsModal() {
+    document.getElementById("moreDetailsModal").classList.add("hidden");
 }
 
 function openEditModalFromBox() {

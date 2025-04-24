@@ -186,11 +186,48 @@
                                 <div><i class="fas fa-envelope text-blue-500"></i> <span id="userInfoEmail"></span></div>
                             </div>
                             <div class="mt-4 flex justify-end space-x-2">
+                                <button id="viewMoreDetailsBtn" onclick="openMoreDetailsModal()" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 hidden">
+                                    <i class="fas fa-eye mr-1"></i> View More Details
+                                </button>       
                                 <button onclick="closeUserInfoBox()" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Close</button>
                                 <button onclick="openEditModalFromBox()" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Edit</button>
                                 <button onclick="deleteUserFromBox()" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">Delete</button>
                             </div>
                         </div>
+
+                    <div id="moreDetailsModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+                        <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg p-6 overflow-y-auto max-h-[90vh] relative">
+                            <h2 class="text-2xl font-bold text-blue-600 mb-4">More User Details</h2>
+
+                            <!-- Section 1: Lot Info -->
+                            <div class="mb-4">
+                                <h3 class="text-lg font-semibold text-gray-700 mb-2">Block/Lot Information</h3>
+                                <div id="lotInfoSection" class="text-sm text-gray-600 space-y-1">
+                                    <!-- dynamically filled -->
+                                </div>
+                            </div>
+
+                            <!-- Section 2: Application Details -->
+                            <div class="mb-4">
+                                <h3 class="text-lg font-semibold text-gray-700 mb-2">Application Details</h3>
+                                <div id="applicationDetailsSection" class="text-sm text-gray-600 space-y-1">
+                                    <!-- dynamically filled -->
+                                </div>
+                            </div>
+
+                            <!-- Section 3: Documents -->
+                            <div class="mb-4">
+                                <h3 class="text-lg font-semibold text-gray-700 mb-2">Documents</h3>
+                                <div id="documentsSection" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    <!-- dynamically filled -->
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end mt-6">
+                                <button onclick="closeMoreDetailsModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">Close</button>
+                            </div>
+                        </div>
+                    </div>
 
                         <div class="flex items-center justify-between mb-1">
                             <div>
