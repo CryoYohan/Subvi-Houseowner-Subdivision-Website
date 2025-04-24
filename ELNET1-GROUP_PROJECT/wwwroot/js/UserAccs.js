@@ -86,6 +86,13 @@ async function openMoreDetailsModal() {
     const data = await res.json();
 
     // Section 1 - Lot Info
+    const personalInfo = data.personalInfo;
+    console.log(personalInfo)
+    document.getElementById("personalInfoSection").innerHTML = `
+        <p><strong>Person Name:</strong> ${personalInfo.firstname} ${personalInfo.lastname}</p>
+    `;
+
+    // Section 2 - Lot Info
     const lot = data.lot;
     document.getElementById("lotInfoSection").innerHTML = `
         <p><strong>Block:</strong> ${lot.blockNumber}</p>
@@ -96,14 +103,14 @@ async function openMoreDetailsModal() {
         <p><strong>Description:</strong> ${lot.description || "N/A"}</p>
     `;
 
-    // Section 2 - Application
+    // Section 3 - Application
     const app = data.application;
     document.getElementById("applicationDetailsSection").innerHTML = `
         <p><strong>Date Applied:</strong> ${app.dateApplied}</p>
         <p><strong>Remarks:</strong> ${app.remarks || "N/A"}</p>
     `;
 
-    // Section 3 - Documents
+    // Section 4 - Documents
     const docsContainer = document.getElementById("documentsSection");
     docsContainer.innerHTML = '';
     data.documents.forEach(doc => {
@@ -127,6 +134,10 @@ async function openMoreDetailsModal() {
 
 function closeMoreDetailsModal() {
     document.getElementById("moreDetailsModal").classList.add("hidden");
+    document.getElementById("personalInfoSection").innerHTML = '';
+    document.getElementById("lotInfoSection").innerHTML = '';
+    document.getElementById("applicationDetailsSection").innerHTML = '';
+    document.getElementById("documentsSection").innerHTML = '';
 }
 
 function openEditModalFromBox() {
