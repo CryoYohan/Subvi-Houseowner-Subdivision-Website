@@ -40,6 +40,7 @@ function searchUsers() {
 
 function openUserInfoBox(user) {
     selectedUser = user;
+
     document.getElementById("userInfoId").textContent = `ID: ${user.id}`;
     document.getElementById("userInfoName").textContent = `Name: ${user.firstname} ${user.lastname}`;
     document.getElementById("userInfoRole").textContent = `Role: ${user.role}`;
@@ -58,7 +59,7 @@ function openUserInfoBox(user) {
         statusBadge.classList.add("bg-red-500");
     }
 
-    // Toggle 'View More Details' button visibility
+    // Toggle View More Details button
     const viewMoreBtn = document.getElementById("viewMoreDetailsBtn");
     if (user.role === "Homeowner" || user.role === "Staff") {
         viewMoreBtn.classList.remove("hidden");
@@ -66,8 +67,65 @@ function openUserInfoBox(user) {
         viewMoreBtn.classList.add("hidden");
     }
 
+    // Toggle Assign as Staff button
+    const assignBtn = document.getElementById("assignAsStaffBtn");
+    if (user.role === "Homeowner") {
+        assignBtn.classList.remove("hidden");
+    } else {
+        assignBtn.classList.add("hidden");
+    }
+
     document.getElementById("userInfoBox").classList.remove("hidden");
     document.getElementById("userTableContainer").style.maxHeight = "170px";
+}
+
+async function confirmAssignAsStaff() {
+    const user = selectedUser;
+    const result = await Swal.fire({
+        title: 'Confirm Assignment',
+        html: `Do you really want to set Homeowner <b>ID ${user.id} - ${user.firstname} ${user.lastname}</b> to be employed as Staff?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Assign',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`/admin/promotetostaffuser`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(user.id)
+            });
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Promoted!',
+                    text: `${user.firstname} ${user.lastname} has been assigned as Staff.`,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => location.reload());
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed',
+                    text: 'An error occurred while assigning the user as Staff.'
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: 'Unable to connect to the server.'
+            });
+        }
+    }
 }
 
 function closeUserInfoBox() {
@@ -140,6 +198,154 @@ function closeMoreDetailsModal() {
     document.getElementById("documentsSection").innerHTML = '';
 }
 
+// For adding staff
+const modal = document.getElementById('addStaffModal');
+const searchStaffInput = document.getElementById('searchStaffInput');
+const userList = document.getElementById('userList');
+const errorMsg = document.getElementById('modalErrorMsg');
+let allUsers = [];
+let isSearchBound = false;
+
+// Open the modal and fetch users
+function openAddStaffModal() {
+    modal.classList.remove('hidden');
+    searchStaffInput.value = '';
+    errorMsg.classList.add('hidden');
+    userList.innerHTML = '';
+
+    loadUsers().then(() => {
+        renderUserList(allUsers);
+    });
+}
+
+// Fetch homeowners from the server
+async function loadUsers() {
+    try {
+        const response = await fetch('/admin/gethomeowners');
+        allUsers = await response.json();
+        filterUsers(document.getElementById('searchStaffInput').value);
+    } catch (err) {
+        console.error('Failed to load users:', err);
+    }
+}
+
+// Filter users by search input
+function filterUsers(query) {
+    const keyword = query.toLowerCase();
+    const filtered = allUsers.filter(u =>
+        `${u.firstname} ${u.lastname}`.toLowerCase().includes(keyword)
+    );
+    renderUserList(filtered);
+}
+
+// Render users to the list
+function renderUserList(users) {
+    const userList = document.getElementById('userList');
+    userList.innerHTML = '';
+
+    if (users.length === 0) {
+        const message = document.createElement('p');
+        message.className = 'text-center text-gray-500 text-sm';
+        message.textContent = 'No homeowner users data found.';
+        userList.appendChild(message);
+        return;
+    }
+
+    users.forEach(u => {
+        const name = `${capitalize(u.firstname)} ${capitalize(u.lastname)}`;
+        const item = document.createElement('div');
+        item.className = 'flex items-center gap-2';
+        item.innerHTML = `
+            <input type="checkbox" value="${u.userId}" class="user-checkbox">
+            <label class="text-sm">${u.userId} - ${name}</label>
+        `;
+        userList.appendChild(item);
+    });
+}
+
+// Capitalize the first letter of the name
+function capitalize(text) {
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+}
+
+// Close the modal and reset everything
+function closeAddStaffModal() {
+    modal.classList.add('hidden');
+    searchInput.value = '';
+    userList.innerHTML = '';
+    errorMsg.classList.add('hidden');
+}
+
+async function saveStaffAssignment() {
+    const selectedCheckboxes = Array.from(document.querySelectorAll('.user-checkbox:checked'));
+    const selected = selectedCheckboxes.map(cb => cb.value);
+
+    if (selected.length === 0) {
+        errorMsg.classList.remove('hidden');
+        return;
+    }
+
+    // Get user details for confirmation
+    const selectedUsers = allUsers.filter(u => selected.includes(u.userId.toString()));
+    const userListHtml = selectedUsers.map(u =>
+        `<li><strong>ID ${u.userId}</strong> - ${capitalize(u.firstname)} ${capitalize(u.lastname)}</li>`
+    ).join('');
+
+    const { isConfirmed } = await Swal.fire({
+        title: 'Confirm Staff Promotion',
+        html: `
+            <p class="mb-2">Do you want to add as Staff the following users?</p>
+            <ul class="text-left ml-4 list-disc">${userListHtml}</ul>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Add as Staff',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            confirmButton: 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700',
+            cancelButton: 'px-4 py-2 rounded border'
+        }
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+        const response = await fetch('/admin/promotetostaff', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(selected)
+        });
+
+        if (response.ok) {
+            closeAddStaffModal();
+            Swal.fire({
+                title: 'Success!',
+                text: 'Selected users were promoted to Staff.',
+                icon: 'success',
+                timer: 4000,
+                showConfirmButton: false
+            }).then(() => {
+                location.reload();
+            });
+        } else {
+            const errorText = await response.text();
+            Swal.fire({
+                title: 'Failed!',
+                text: 'Something went wrong while assigning staff. Please try again later.',
+                icon: 'error',
+                confirmButtonText: 'Okay'
+            });
+        }
+    } catch (err) {
+        Swal.fire({
+            title: 'Error!',
+            text: 'Unable to complete the request. Please try again later.',
+            icon: 'error',
+            confirmButtonText: 'Close'
+        });
+    }
+}
+
 function openEditModalFromBox() {
     openEditModal(selectedUser);
     closeUserInfoBox();
@@ -163,7 +369,6 @@ function openEditModal(user, event) {
     document.getElementById('editUserId').value = user.id;
     document.getElementById('editFirstName').value = user.firstname;
     document.getElementById('editLastName').value = user.lastname;
-    document.getElementById('editRole').value = user.role;
     document.getElementById('editAddress').value = user.address;
     document.getElementById('editPhoneNumber').value = user.phoneNumber;
     document.getElementById('editEmail').value = user.email;

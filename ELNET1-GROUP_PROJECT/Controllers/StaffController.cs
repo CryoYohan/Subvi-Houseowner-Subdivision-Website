@@ -2355,16 +2355,17 @@ public class StaffController : Controller
     public async Task<IActionResult> GetPolls([FromQuery] string status = "active")
     {
         bool isActive = status.ToLower() != "inactive";
-        var now = DateTime.Now;
+        var now = DateTime.Now.Date;
 
         var allPolls = await _context.Poll.ToListAsync();
         var pollsWithStatusChanged = new List<Poll>();
 
         foreach (var poll in allPolls)
         {
-            if (DateTime.TryParse(poll.EndDate, out DateTime endDate))
+            if (DateTime.TryParse(poll.StartDate, out DateTime startDate) &&
+                DateTime.TryParse(poll.EndDate, out DateTime endDate))
             {
-                if (endDate.Date > DateTime.Today && poll.Status == true)
+                if ((now < startDate.Date || now > endDate.Date) && poll.Status == true)
                 {
                     poll.Status = false;
                     pollsWithStatusChanged.Add(poll);
@@ -2378,7 +2379,6 @@ public class StaffController : Controller
             var formattedTitles = string.Join("\n", titlesList);
             string message = $"You can check and review it. The following poll(s) date is done:\n\n{formattedTitles}";
 
-            // Staff notification
             var staffNotification = new Notification
             {
                 Title = "Poll Ended",
@@ -2392,7 +2392,6 @@ public class StaffController : Controller
             };
             _context.Notifications.Add(staffNotification);
 
-            // Admin notification 
             var adminNotification = new Notification
             {
                 Title = "Poll Ended",
@@ -2405,7 +2404,6 @@ public class StaffController : Controller
             };
             _context.Notifications.Add(adminNotification);
 
-            // Homeowners 
             var homeowners = await _context.User_Accounts
                 .Where(u => u.Role == "Homeowner")
                 .ToListAsync();
@@ -2425,12 +2423,10 @@ public class StaffController : Controller
 
                 _context.Notifications.Add(homeownerNotification);
 
-                // Real-time to homeowner
                 await _hubContext.Clients.User(homeowner.Id.ToString())
                     .SendAsync("ReceiveNotification", homeownerNotification);
             }
 
-            // Real-time to staff/admin groups
             await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", staffNotification);
             await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", adminNotification);
         }
