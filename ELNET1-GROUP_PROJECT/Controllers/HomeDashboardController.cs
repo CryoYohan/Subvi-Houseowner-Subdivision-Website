@@ -55,11 +55,118 @@ public class HomeDashboardController : ControllerBase
 
         // Step 1: Load all active polls from DB (Status = true)
         var allPolls = await _context.Poll
-            .Where(p => p.Status)
+            .Where(p => p.Status) // Status true = active
             .OrderByDescending(p => p.PollId)
             .ToListAsync();
 
-        // Step 2: Filter by valid date range in memory
+        var pollsToUpdate = new List<Poll>();
+        var pollsToNotify = new List<Notification>();
+
+        foreach (var poll in allPolls)
+        {
+            if (DateTime.TryParseExact(poll.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var startDate) &&
+                DateTime.TryParseExact(poll.EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var endDate))
+            {
+                // Check if poll status needs to be updated
+                if (today < startDate && poll.Status == true)
+                {
+                    poll.Status = false; // Set to inactive
+                    pollsToUpdate.Add(poll);
+
+                    // Prepare notification for poll end
+                    var endedNotification = new Notification
+                    {
+                        Title = "Poll Ended",
+                        Message = $"The poll '{poll.Title}' has ended. You may no longer submit your vote.",
+                        Type = "Poll",
+                        IsRead = false,
+                        DateCreated = DateTime.Now,
+                        TargetRole = "Homeowner",
+                        UserId = null, // Homeowners will be notified
+                        Link = "/home/dashboard"
+                    };
+                    pollsToNotify.Add(endedNotification);
+                }
+                else if (today >= startDate && today <= endDate && poll.Status == false)
+                {
+                    poll.Status = true; // Set to active
+                    pollsToUpdate.Add(poll);
+
+                    // Prepare notification for poll activation
+                    var activatedNotification = new Notification
+                    {
+                        Title = "Poll Now Active",
+                        Message = $"The poll '{poll.Title}' is now active. You may submit your vote.",
+                        Type = "Poll",
+                        IsRead = false,
+                        DateCreated = DateTime.Now,
+                        TargetRole = "Homeowner",
+                        UserId = null, // Homeowners will be notified
+                        Link = "/home/dashboard"
+                    };
+                    pollsToNotify.Add(activatedNotification);
+                }
+            }
+        }
+
+        if (pollsToUpdate.Any())
+        {
+            // Update poll statuses in the database in bulk
+            _context.Poll.UpdateRange(pollsToUpdate);
+            await _context.SaveChangesAsync();
+
+            // Send notifications for status changes
+            _context.Notifications.AddRange(pollsToNotify);
+            await _context.SaveChangesAsync();
+
+            // Get list of homeowners for notification push
+            var homeowners = await _context.User_Accounts.Where(u => u.Role == "Homeowner").ToListAsync();
+
+            foreach (var homeowner in homeowners)
+            {
+                // Send notification to each homeowner for the status change
+                foreach (var notification in pollsToNotify)
+                {
+                    notification.UserId = homeowner.Id;
+                    await _hubContext.Clients.User(homeowner.Id.ToString()).SendAsync("ReceiveNotification", notification);
+                }
+            }
+
+            // Optionally, notify staff and admin groups (if needed)
+            var staffNotification = new Notification
+            {
+                Title = "Poll Status Update",
+                Message = $"Some polls have been activated or ended. Please review.",
+                Type = "Poll",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Staff",
+                UserId = null,
+                Link = "/staff/polls"
+            };
+
+            var adminNotification = new Notification
+            {
+                Title = "Poll Status Update",
+                Message = $"Some polls have been activated or ended. Please review.",
+                Type = "Poll",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Admin",
+                UserId = null,
+                Link = "/admin/poll"
+            };
+
+            _context.Notifications.Add(staffNotification);
+            _context.Notifications.Add(adminNotification);
+            await _context.SaveChangesAsync();
+
+            // Notify staff and admin via SignalR (if needed)
+            await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", staffNotification);
+            await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", adminNotification);
+        }
+
+        // Step 2: Filter by valid date range in memory for active polls only
         var polls = allPolls
             .Where(p =>
                 DateTime.TryParseExact(p.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var startDate) &&
@@ -263,19 +370,21 @@ public class HomeDashboardController : ControllerBase
             if (choices == null || choices.Count == 0)
                 return NotFound(new { message = "No choices found for this poll." });
 
-            // Total voters with active homeowner role
+            // Total voters with active 'Homeowner' or 'Staff' roles
             var totalVoters = await _context.User_Accounts
-                .Where(u => u.Role == "Homeowner" && u.Status == "ACTIVE")
+                .Where(u => (u.Role == "Homeowner" || u.Role == "Staff") && u.Status == "ACTIVE")
                 .CountAsync();
 
             // For each choice, count votes
             var result = new List<object>();
             foreach (var choice in choices)
             {
+                // Count the number of votes for this choice
                 var voteCount = await _context.Vote
                     .Where(v => v.ChoiceId == choice.ChoiceId)
                     .CountAsync();
 
+                // Calculate the percentage based on total voters
                 double percentage = totalVoters > 0 ? ((double)voteCount / totalVoters) * 100 : 0;
 
                 result.Add(new

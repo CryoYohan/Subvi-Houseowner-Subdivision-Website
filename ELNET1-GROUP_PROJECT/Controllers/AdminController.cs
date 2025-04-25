@@ -2825,12 +2825,116 @@ public class AdminController : Controller
     public async Task<IActionResult> GetPolls([FromQuery] string status = "active")
     {
         bool isActive = status.ToLower() != "inactive";
-        var polls = await _context.Poll
-            .Where(p => p.Status == isActive)
-            .OrderByDescending(p => p.StartDate)
-            .ToListAsync();
+        var today = DateOnly.FromDateTime(DateTime.Now);
 
-        return Ok(polls);
+        var allPolls = await _context.Poll.ToListAsync();
+        var pollsEnded = new List<Poll>();
+        var pollsActivated = new List<Poll>();
+
+        foreach (var poll in allPolls)
+        {
+            if (DateOnly.TryParse(poll.StartDate, out DateOnly startDate) &&
+                DateOnly.TryParse(poll.EndDate, out DateOnly endDate))
+            {
+                if ((today < startDate || today > endDate) && poll.Status == true)
+                {
+                    poll.Status = false;
+                    pollsEnded.Add(poll);
+                }
+
+                if ((today >= startDate && today <= endDate) && poll.Status == false)
+                {
+                    poll.Status = true;
+                    pollsActivated.Add(poll);
+                }
+            }
+        }
+
+        if (pollsEnded.Any())
+        {
+            var endedTitles = string.Join("\n", pollsEnded.Select(p => $"• {p.Title}"));
+            string endedMsg = $"You can check and review it. The following poll(s) have ended:\n\n{endedTitles}";
+
+            var staffNotif = new Notification
+            {
+                Title = "Poll Ended",
+                Message = endedMsg,
+                Type = "Poll",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Staff",
+                UserId = null,
+                Link = "/staff/polls"
+            };
+            var adminNotif = new Notification
+            {
+                Title = "Poll Ended",
+                Message = endedMsg,
+                Type = "Poll",
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                TargetRole = "Admin",
+                UserId = null,
+                Link = "/admin/poll_management"
+            };
+
+            _context.Notifications.AddRange(staffNotif, adminNotif);
+            await _hubContext.Clients.Group("staff").SendAsync("ReceiveNotification", staffNotif);
+            await _hubContext.Clients.Group("admin").SendAsync("ReceiveNotification", adminNotif);
+
+            var homeowners = await _context.User_Accounts.Where(u => u.Role == "Homeowner").ToListAsync();
+
+            foreach (var h in homeowners)
+            {
+                var notif = new Notification
+                {
+                    Title = "Poll Ended",
+                    Message = $"You may no longer submit your vote. The following poll(s) have ended:\n\n{endedTitles}",
+                    Type = "Poll",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Homeowner",
+                    UserId = h.Id,
+                    Link = "/home/dashboard"
+                };
+                _context.Notifications.Add(notif);
+                await _hubContext.Clients.User(h.Id.ToString()).SendAsync("ReceiveNotification", notif);
+            }
+        }
+
+        if (pollsActivated.Any())
+        {
+            var activeTitles = string.Join("\n", pollsActivated.Select(p => $"• {p.Title}"));
+            string activeMsg = $"You may now submit your vote. The following poll(s) are now active:\n\n{activeTitles}";
+
+            var homeowners = await _context.User_Accounts.Where(u => u.Role == "Homeowner").ToListAsync();
+
+            foreach (var h in homeowners)
+            {
+                var notif = new Notification
+                {
+                    Title = "Poll Now Active",
+                    Message = activeMsg,
+                    Type = "Poll",
+                    IsRead = false,
+                    DateCreated = DateTime.Now,
+                    TargetRole = "Homeowner",
+                    UserId = h.Id,
+                    Link = "/home/dashboard"
+                };
+                _context.Notifications.Add(notif);
+                await _hubContext.Clients.User(h.Id.ToString()).SendAsync("ReceiveNotification", notif);
+            }
+        }
+
+        await _context.SaveChangesAsync();
+
+        var filtered = allPolls
+            .Where(p => p.Status == isActive)
+            .OrderByDescending(p => DateTime.TryParse(p.StartDate, out var dt) ? dt : DateTime.MinValue)
+            .ToList();
+
+        return Ok(filtered);
     }
 
     public async Task<IActionResult> GetPoll(int pollId)
@@ -2854,13 +2958,18 @@ public class AdminController : Controller
         var choice = await _context.Poll_Choice.FindAsync(choiceId);
         if (choice == null) return NotFound();
 
-        int totalVotes = await _context.Vote
-            .CountAsync(v => v.PollId == choice.PollId);
+        // Get total users with role 'Homeowner' or 'Staff'
+        int totalUsers = await _context.User_Accounts
+            .Where(u => u.Role == "Homeowner" || u.Role == "Staff")
+            .CountAsync();
 
+        // Get total votes for the poll this choice belongs to
         int choiceVotes = await _context.Vote
-            .CountAsync(v => v.ChoiceId == choiceId);
+            .CountAsync(v => v.ChoiceId == choiceId && v.PollId == choice.PollId);
 
-        double percentage = totalVotes == 0 ? 0.0 : (double)choiceVotes / totalVotes * 100;
+        // Calculate the percentage
+        double percentage = totalUsers == 0 ? 0.0 : (double)choiceVotes / totalUsers * 100;
+
         return Ok(new { choiceId, percentage });
     }
 

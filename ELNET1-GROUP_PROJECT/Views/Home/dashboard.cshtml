@@ -385,25 +385,29 @@
 
                         const announcementElement = document.createElement('div');
                         announcementElement.classList.add('announcement-card', 'p-4', 'bg-white', 'rounded-xl', 'shadow-sm', 'border', 'border-gray-100', 'hover:shadow-md', 'transition-shadow');
-                        announcementElement.innerHTML = `
-                            <div class="flex items-start gap-4">
-                                <div class="flex-shrink-0">
-                                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                        <i class="fas fa-bullhorn text-blue-600"></i>
-                                    </div>
-                                </div>
-                                <div class="flex-1">
-                                    <h3 class="font-semibold text-gray-800">${announcement.title}</h3>
-                                    <p class="text-gray-600 text-sm mt-1">${announcement.description}</p>
-                                    <div class="flex items-center gap-2 mt-3 text-xs text-gray-400">
-                                        <i class="fas fa-user"></i>
-                                        <span>${announcement.postedBy}</span>
-                                        <i class="fas fa-clock ml-2"></i>
-                                        <span>${formattedDate.replace(',', ' at')}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
+                               announcementElement.innerHTML = `
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-bullhorn text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-semibold text-gray-800">${announcement.title}</h3>
+                    <p id="desc-${announcement.announcementId}" class="text-gray-600 text-sm mt-1" data-truncated="false">
+                        ${announcement.description.length > 100
+                            ? announcement.description.substring(0, 100) + '... <span class="text-blue-600 font-medium cursor-pointer" onclick="toggleDescription(' + announcement.announcementId + ', `' + announcement.description.replace(/`/g, "\\`") + '`)">See More</span>'
+                            : announcement.description}
+                    </p>
+                    <div class="flex items-center gap-2 mt-3 text-xs text-gray-400">
+                        <i class="fas fa-user"></i>
+                        <span>${announcement.postedBy}</span>
+                        <i class="fas fa-clock ml-2"></i>
+                        <span>${formattedDate.replace(',', ' at')}</span>
+                    </div>
+                </div>
+            </div>
+        `;
                         announcementsContainer.appendChild(announcementElement);
                     });
                 }
@@ -413,6 +417,23 @@
                 announcementsContainer.classList.remove('hidden');
             } catch (error) {
                 console.error('Error loading announcements:', error);
+            }
+        }
+
+        function toggleDescription(id, fullText) {
+            const paragraph = document.getElementById(`desc-${id}`);
+            const isExpanded = paragraph.dataset.truncated === "true";
+
+            if (isExpanded) {
+                // Collapse: show only first 100 chars + See More
+                paragraph.innerHTML = fullText.length > 100
+                    ? fullText.substring(0, 100) + '... <span class="text-blue-600 font-medium cursor-pointer" onclick="toggleDescription(' + id + ', `' + fullText.replace(/`/g, "\\`") + '`)">See More</span>'
+                    : fullText;
+                paragraph.dataset.truncated = "false";
+            } else {
+                // Expand: show full text + See Less
+                paragraph.innerHTML = fullText + ' <span class="text-blue-600 cursor-pointer font-medium" onclick="toggleDescription(' + id + ', `' + fullText.replace(/`/g, "\\`") + '`)">See Less</span>';
+                paragraph.dataset.truncated = "true";
             }
         }
 
