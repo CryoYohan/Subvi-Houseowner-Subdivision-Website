@@ -441,6 +441,9 @@ public class AdminController : Controller
                 l.Price,
                 l.Description,
                 l.Status,
+                CreatedAt = l.CreatedAt.HasValue
+                    ? l.CreatedAt.Value.ToString("MM/dd/yyyy hh:mm tt")
+                    : null,
                 HomeownerName = _context.Applications
                 .Where(a => a.LotId == l.LotId)
                 .Join(_context.User_Info,
@@ -454,74 +457,120 @@ public class AdminController : Controller
         return Json(lots);
     }
 
-    // Action to add a new Lot
-    [HttpPost]
-    public async Task<IActionResult> AddLot([FromBody] LotDto lotDto)
+    [HttpPost("admin/addlot")]
+    public async Task<IActionResult> AddLot([FromBody] Lot? lot)
     {
-        if (string.IsNullOrWhiteSpace(lotDto.BlockNumber) || string.IsNullOrWhiteSpace(lotDto.LotNumber))
+        if (lot == null)
         {
-            return BadRequest("Block number and lot number are required.");
+            return BadRequest(new
+            {
+                message = "No lot data received. Please fill out the form.",
+                devMessage = "Lot object was null. Possibly a bad JSON structure."
+            });
         }
 
-        // Check if Lot with the same block number and lot number already exists
-        var existingLot = await _context.Lot
-            .FirstOrDefaultAsync(l => l.BlockNumber == lotDto.BlockNumber && l.LotNumber == lotDto.LotNumber);
-        if (existingLot != null)
+        try
         {
-            return Conflict("A lot with the same block and lot number already exists.");
+            if (string.IsNullOrWhiteSpace(lot.BlockNumber) || string.IsNullOrWhiteSpace(lot.LotNumber))
+            {
+                return BadRequest(new
+                {
+                    message = "Please fill in both Block Number and Lot Number."
+                });
+            }
+
+            var existingLot = await _context.Lot
+                .FirstOrDefaultAsync(l => l.BlockNumber == lot.BlockNumber && l.LotNumber == lot.LotNumber);
+
+            if (existingLot != null)
+            {
+                return Conflict(new
+                {
+                    message = "A lot with the same block and lot number already exists. Please enter a different one."
+                });
+            }
+
+            lot.Status = "Available";
+            lot.CreatedAt = DateTime.Now;
+
+            _context.Lot.Add(lot);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Lot added successfully." });
         }
-
-        var newLot = new Lot
+        catch (Exception ex)
         {
-            BlockNumber = lotDto.BlockNumber,
-            LotNumber = lotDto.LotNumber,
-            SizeSqm = lotDto.SizeSqm,
-            Price = lotDto.Price,
-            Description = lotDto.Description,
-            Status = "Available",
-            CreatedAt = DateTime.Now
-        };
-
-        _context.Lot.Add(newLot);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Lot added successfully." });
+            return StatusCode(500, new
+            {
+                message = "An unexpected error occurred while adding the lot. Please try again.",
+                devMessage = ex.Message
+            });
+        }
     }
 
     // Action to edit an existing Lot
-    [HttpPut]
-    public async Task<IActionResult> EditLot([FromBody] LotDto lotDto)
+    [HttpPut("admin/editlot")]
+    public async Task<IActionResult> EditLot([FromBody] Lot? lot)
     {
-        if (string.IsNullOrWhiteSpace(lotDto.BlockNumber) || string.IsNullOrWhiteSpace(lotDto.LotNumber))
-        {
-            return BadRequest("Block number and lot number are required.");
-        }
-
-        var lot = await _context.Lot.FirstOrDefaultAsync(l => l.LotId == lotDto.LotId);
         if (lot == null)
         {
-            return NotFound("Lot not found.");
+            return BadRequest(new
+            {
+                message = "No lot data received. Please make sure all required fields are filled.",
+                devMessage = "Lot object was null. Check if the request body is correctly formatted."
+            });
         }
 
-        // Check if another lot with the same Block and Lot number exists
-        var existingLot = await _context.Lot
-            .Where(l => l.LotId != lotDto.LotId) // Exclude current lot
-            .FirstOrDefaultAsync(l => l.BlockNumber == lotDto.BlockNumber && l.LotNumber == lotDto.LotNumber);
-        if (existingLot != null)
+        try
         {
-            return Conflict("A lot with the same block and lot number already exists.");
+            if (string.IsNullOrWhiteSpace(lot.BlockNumber) || string.IsNullOrWhiteSpace(lot.LotNumber))
+            {
+                return BadRequest(new
+                {
+                    message = "Please fill in both Block Number and Lot Number."
+                });
+            }
+
+            var existing = await _context.Lot.FirstOrDefaultAsync(l => l.LotId == lot.LotId);
+            if (existing == null)
+            {
+                return NotFound(new
+                {
+                    message = "The lot you're trying to update could not be found. It may have been deleted."
+                });
+            }
+
+            var duplicateLot = await _context.Lot
+                .Where(l => l.LotId != lot.LotId)
+                .FirstOrDefaultAsync(l => l.BlockNumber == lot.BlockNumber && l.LotNumber == lot.LotNumber);
+
+            if (duplicateLot != null)
+            {
+                return Conflict(new
+                {
+                    message = "A lot with the same block and lot number already exists. Please use different values."
+                });
+            }
+
+            existing.BlockNumber = lot.BlockNumber;
+            existing.LotNumber = lot.LotNumber;
+            existing.SizeSqm = lot.SizeSqm;
+            existing.Price = lot.Price;
+            existing.Description = lot.Description;
+
+            _context.Lot.Update(existing);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Lot updated successfully." });
         }
-
-        lot.BlockNumber = lotDto.BlockNumber;
-        lot.LotNumber = lotDto.LotNumber;
-        lot.SizeSqm = lotDto.SizeSqm;
-        lot.Price = lotDto.Price;
-        lot.Description = lotDto.Description;
-
-        _context.Lot.Update(lot);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Lot updated successfully." });
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = "An unexpected error occurred while updating the lot. Please try again.",
+                devMessage = ex.Message
+            });
+        }
     }
 
     // Action to delete a Lot

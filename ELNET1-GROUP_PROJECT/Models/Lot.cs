@@ -18,7 +18,7 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("PRICE")]
         public decimal Price { get; set; }
         [Column("STATUS")]
-        public string Status { get; set; }
+        public string? Status { get; set; } = "Available";
         [Column("DESCRIPTION")]
         public string Description { get; set; }
 

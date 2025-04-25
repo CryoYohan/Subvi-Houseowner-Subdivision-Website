@@ -81,7 +81,7 @@
                        class="w-full px-3 py-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400" />
 
                 <!-- Lot Cards Container -->
-                <div id="lotContainer" class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"></div>
+                <div id="lotContainer" class="grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 overflow-y-auto p-2" style="max-height: 430px"></div>
             </div>
 
             <!-- Lot Modal -->
@@ -127,7 +127,13 @@
                     <!-- Description -->
                     <div class="mb-4">
                         <label class="font-medium">Description</label>
-                        <textarea id="description" rows="3" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400; resize-none"></textarea>
+                        <textarea id="description" rows="3" maxlength="150"
+                                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                                  oninput="updateDescriptionCount()"></textarea>
+                        <div class="flex justify-between text-sm mt-1">
+                            <p id="descriptionError" class="text-red-500 text-sm mt-1"></p>
+                            <p id="descriptionCount" class="text-sm text-gray-500 text-right">150 characters left</p>
+                        </div>
                     </div>
 
                     <!-- Buttons -->
@@ -172,25 +178,52 @@
 
     function selectTab(tab) {
         selectedTab = tab;
-        document.getElementById('tabAvailable').classList.toggle('bg-blue-500', tab === 'Available');
-        document.getElementById('tabSold').classList.toggle('bg-blue-500', tab === 'Sold');
+
+        const availableBtn = document.getElementById('tabAvailable');
+        const soldBtn = document.getElementById('tabSold');
+
+        if (tab === 'Available') {
+            availableBtn.classList.add('bg-blue-500', 'text-white');
+            availableBtn.classList.remove('bg-gray-200', 'text-gray-700');
+
+            soldBtn.classList.remove('bg-blue-500', 'text-white');
+            soldBtn.classList.add('bg-gray-200', 'text-gray-700');
+        } else {
+            soldBtn.classList.add('bg-blue-500', 'text-white');
+            soldBtn.classList.remove('bg-gray-200', 'text-gray-700');
+
+            availableBtn.classList.remove('bg-blue-500', 'text-white');
+            availableBtn.classList.add('bg-gray-200', 'text-gray-700');
+        }
+
         loadLots();
         filterLots();
     }
 
     function filterLots() {
         const search = document.getElementById("searchInput").value.toLowerCase();
-        const filtered = lots.filter(lot =>
-            lot.status === selectedTab &&
-            (`${lot.blockNumber} ${lot.lotNumber} ${lot.homeownerName || ''}`.toLowerCase().includes(search))
-        );
+        const filtered = lots.filter(lot => {
+            const lotText = `${lot.blockNumber} ${lot.lotNumber} ${lot.homeownerName || ''}`.toLowerCase();
+            const combinedText = `block ${lot.blockNumber} lot ${lot.lotNumber} ${lot.homeownerName || ''}`.toLowerCase();
+            return lot.status === selectedTab && (
+                lotText.includes(search) || combinedText.includes(search)
+            );
+        });
+
         renderLots(filtered);
     }
 
-    function renderLots(data) {
+     function renderLots(data) {
         const container = document.getElementById("lotContainer");
         container.innerHTML = "";
+
+        if (data.length === 0) {
+            container.innerHTML = `<p class="text-center text-gray-500 text-sm">No lots data found.</p>`;
+            return;
+        }
+
         data.forEach(lot => {
+            console.log(lot);
             container.innerHTML += `
             <div class="bg-white shadow rounded-lg p-4 relative">
                 <h4 class="font-bold text-blue-600 mb-1">Block ${lot.blockNumber}, Lot ${lot.lotNumber}</h4>
@@ -204,6 +237,7 @@
                     ${lot.status === "Available" ? `
                     <button class="bg-red-500 text-white px-3 py-1 rounded" onclick="confirmLotDelete(${lot.lotId})">Delete</button>` : ""}
                 </div>
+                <p><strong>Date Created:</strong> ${lot.createdAt || 'No Date'}</p>
             </div>`;
         });
     }
@@ -232,18 +266,44 @@
         document.getElementById("price").value = lot.price;
         document.getElementById("description").value = lot.description;
         document.getElementById("lotModal").classList.remove("hidden");
+        updateDescriptionCount();
     }
 
     function closeLotModal() {
         document.getElementById("lotModal").classList.add("hidden");
+
+        // Clear all inputs and errors
+        const fields = ['lotId', 'blockNumber', 'lotNumber', 'sizeSqm', 'price', 'description'];
+        fields.forEach(id => document.getElementById(id).value = "");
+
+        const errorFields = ['blockNumberError', 'lotNumberError', 'sizeSqmError', 'priceError', 'descriptionError'];
+        errorFields.forEach(id => document.getElementById(id).textContent = "");
+
+        document.getElementById("descriptionCount").textContent = "150 characters left";
     }
 
     function handleSaveClick() {
         const lotId = document.getElementById("lotId").value;
-        const isEdit = lotId !== ""; 
+        const isEdit = lotId !== "";
         saveLot(isEdit, lotId);
     }
 
+    function updateDescriptionCount() {
+        const description = document.getElementById("description");
+        const count = description.value.length;
+        const max = 150;
+
+        const counter = document.getElementById("descriptionCount");
+        counter.textContent = `${max - count} characters left`;
+
+        if (count > max) {
+            document.getElementById("descriptionError").textContent = "Description must be 150 characters or less.";
+        } else {
+            document.getElementById("descriptionError").textContent = "";
+        }
+    }
+
+    document.getElementById("description").addEventListener("input", updateDescriptionCount);
 
     async function saveLot(isEdit = false, lotId = null) {
         const fields = ['blockNumber', 'lotNumber', 'sizeSqm', 'price'];
@@ -258,6 +318,12 @@
                 document.getElementById(`${field}Error`).textContent = "";
             }
         });
+
+        const desc = document.getElementById("description").value;
+        if (desc.length > 150) {
+            document.getElementById("descriptionError").textContent = "Description must be 150 characters or less.";
+            hasError = true;
+        }
 
         if (hasError) return;
 
@@ -278,30 +344,42 @@
             document.getElementById("saveBtn").disabled = true;
             document.getElementById("loadingSpinner").classList.remove("hidden");
 
+            const isEdit = !!document.getElementById("lotId")?.value;
             const data = {
-                lotId: document.getElementById("lotId").value,
                 blockNumber: document.getElementById("blockNumber").value,
                 lotNumber: document.getElementById("lotNumber").value,
                 sizeSqm: parseFloat(document.getElementById("sizeSqm").value),
                 price: parseFloat(document.getElementById("price").value),
-                description: document.getElementById("description").value
+                description: desc
             };
 
+            if (isEdit) {
+                data.lotId = parseInt(document.getElementById("lotId").value);
+            }
+
             const url = isEdit ? `/admin/editlot` : "/admin/addlot";
-            const response = await fetch(url, {
-                method: isEdit ? "PUT" : "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            });
 
-            document.getElementById("saveBtn").disabled = false;
-            document.getElementById("loadingSpinner").classList.add("hidden");
+            try {
+                const response = await fetch(url, {
+                    method: isEdit ? "PUT" : "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
 
-            if (response.ok) {
-                Swal.fire("Success", `Lot ${isEdit ? "updated" : "added"} successfully!`, "success")
-                    .then(() => location.reload());
-            } else {
-                Swal.fire("Error", await response.text(), "error");
+                document.getElementById("saveBtn").disabled = false;
+                document.getElementById("loadingSpinner").classList.add("hidden");
+
+                if (response.ok) {
+                    Swal.fire("Success", `Lot ${isEdit ? "updated" : "added"} successfully!`, "success")
+                        .then(() => location.reload());
+                } else {
+                    const errorData = await response.json();
+                    Swal.fire("Error", errorData.message || "Something went wrong.", "error");
+                    console.error("Developer Error:", errorData.devMessage || errorData.message);
+                }
+            } catch (error) {
+                console.error("Unexpected error:", error);
+                Swal.fire("Error", "A network or unexpected error occurred.", "error");
             }
         }
     }

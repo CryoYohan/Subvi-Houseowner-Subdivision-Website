@@ -260,39 +260,38 @@
                 </div>
             </div>
         </div>
-    </div>
 
-<!-- Add Staff Modal -->
-<div id="addStaffModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white w-full max-w-xl rounded-xl shadow-lg p-6 relative">
-        <h2 class="text-xl font-semibold mb-4">Assign Homeowner as Staff</h2>
-        <p id="modalErrorMsg" class="text-red-600 text-sm mb-3 hidden">Select user to be assigned as Staff first</p>
+    <!-- Add Staff Modal -->
+    <div id="addStaffModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white w-full max-w-xl rounded-xl shadow-lg p-6 relative">
+            <h2 class="text-xl font-semibold mb-4">Assign Homeowner as Staff</h2>
+            <p id="modalErrorMsg" class="text-red-600 text-sm mb-3 hidden">Select user to be assigned as Staff first</p>
 
-        <div>
-            <!-- Search -->
-            <input type="text" id="searchInput" placeholder="Search by name..."
-                   class="w-full border border-gray-300 rounded-md px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400" oninput="filterUsers(searchInput.value)">
+            <div>
+                <!-- Search -->
+                <input type="text" id="searchStaffInput" placeholder="Search by name..."
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400" oninput="filterUsers(searchStaffInput.value)">
 
-            <!-- List (scrollable) -->
-            <div id="userList" class="max-h-64 overflow-y-auto border border-gray-200 rounded-md p-3 space-y-2">
-                <!-- Example item format -->
-                <!-- JS will populate this -->
+                <!-- List (scrollable) -->
+                <div id="userList" class="overflow-y-auto border border-gray-200 rounded-md p-3 space-y-2" style="max-height: 250px">
+                    <!-- Example item format -->
+                    <!-- JS will populate this -->
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="closeAddStaffModal()"
+                        class="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400 text-sm">
+                    Cancel
+                </button>
+                <button onclick="saveStaffAssignment()"
+                        class="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm">
+                    Save
+                </button>
             </div>
         </div>
-
-        <!-- Footer Buttons -->
-        <div class="flex justify-end gap-2 mt-4">
-            <button onclick="closeAddStaffModal()"
-                    class="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400 text-sm">
-                Cancel
-            </button>
-            <button onclick="saveStaffAssignment()"
-                    class="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm">
-                Save
-            </button>
-        </div>
     </div>
-</div>
 
     <!-- Modal for Editing User -->
     <div id="editUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">

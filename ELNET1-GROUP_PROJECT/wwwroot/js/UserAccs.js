@@ -200,44 +200,56 @@ function closeMoreDetailsModal() {
 
 // For adding staff
 const modal = document.getElementById('addStaffModal');
-const searchInput = document.getElementById('searchInput');
+const searchStaffInput = document.getElementById('searchStaffInput');
 const userList = document.getElementById('userList');
 const errorMsg = document.getElementById('modalErrorMsg');
 let allUsers = [];
 let isSearchBound = false;
 
+// Open the modal and fetch users
 function openAddStaffModal() {
     modal.classList.remove('hidden');
-    searchInput.value = '';
+    searchStaffInput.value = '';
     errorMsg.classList.add('hidden');
     userList.innerHTML = '';
 
     loadUsers().then(() => {
-        renderUserList(allUsers); // render on load
+        renderUserList(allUsers);
     });
 }
 
+// Fetch homeowners from the server
 async function loadUsers() {
-    const response = await fetch('/admin/gethomeowners');
-    allUsers = await response.json();
-    console.log(allUsers);  // Log to check if the data is loaded
+    try {
+        const response = await fetch('/admin/gethomeowners');
+        allUsers = await response.json();
+        filterUsers(document.getElementById('searchStaffInput').value);
+    } catch (err) {
+        console.error('Failed to load users:', err);
+    }
 }
 
-// Function to filter users based on the input value
+// Filter users by search input
 function filterUsers(query) {
-    const keyword = query.toLowerCase(); // Use the passed query
+    const keyword = query.toLowerCase();
     const filtered = allUsers.filter(u =>
         `${u.firstname} ${u.lastname}`.toLowerCase().includes(keyword)
     );
-
-    // Render filtered users
     renderUserList(filtered);
 }
 
-// Render the user list in the modal
+// Render users to the list
 function renderUserList(users) {
     const userList = document.getElementById('userList');
-    userList.innerHTML = '';  // Clear previous list
+    userList.innerHTML = '';
+
+    if (users.length === 0) {
+        const message = document.createElement('p');
+        message.className = 'text-center text-gray-500 text-sm';
+        message.textContent = 'No homeowner users data found.';
+        userList.appendChild(message);
+        return;
+    }
 
     users.forEach(u => {
         const name = `${capitalize(u.firstname)} ${capitalize(u.lastname)}`;
@@ -258,11 +270,6 @@ function capitalize(text) {
 
 // Close the modal and reset everything
 function closeAddStaffModal() {
-    const modal = document.getElementById('addStaffModal');
-    const searchInput = document.getElementById('searchInput');
-    const errorMsg = document.getElementById('modalErrorMsg');
-    const userList = document.getElementById('userList');
-
     modal.classList.add('hidden');
     searchInput.value = '';
     userList.innerHTML = '';
