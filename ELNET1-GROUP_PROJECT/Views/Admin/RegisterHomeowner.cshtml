@@ -89,31 +89,36 @@
                 <h3 class="text-2xl font-bold text-blue-600 mb-5">Step 1: User Information</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <input id="firstname" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Firstname" />
+                        <label for="firstname" class="block text-gray-700 text-sm font-medium mb-1">Firstname</label>
+                        <input id="firstname" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your firstname" />
                         <span class="text-red-500 text-sm hidden" id="firstnameError">Firstname is required.</span>
                     </div>
 
                     <div>
-                        <input id="lastname" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Lastname" />
+                        <label for="lastname" class="block text-gray-700 text-sm font-medium mb-1">Lastname</label>
+                        <input id="lastname" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your lastname" />
                         <span class="text-red-500 text-sm hidden" id="lastnameError">Lastname is required.</span>
                     </div>
 
                     <div class="col-span-2">
-                        <input id="address" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Address" />
+                        <label for="address" class="block text-gray-700 text-sm font-medium mb-1">Address</label>
+                        <input id="address" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your address" />
                         <span class="text-red-500 text-sm hidden" id="addressError">Address is required.</span>
                     </div>
 
                     <div>
+                        <label for="contact" class="block text-gray-700 text-sm font-medium mb-1">Contact Number</label>
                         <input id="contact"
                                class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                               placeholder="Contact Number"
+                               placeholder="09xxxxxxxxx"
                                oninput="this.value = this.value.replace(/[^0-9\-]/g, '')"
                                onkeypress="return /[0-9\-]/.test(event.key)" />
                         <span class="text-red-500 text-sm hidden" id="contactError">Contact or Phone number is required.</span>
                     </div>
 
                     <div>
-                        <input id="email" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Email" />
+                        <label for="email" class="block text-gray-700 text-sm font-medium mb-1">Email</label>
+                        <input id="email" class="input w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="example@email.com" />
                         <span class="text-red-500 text-sm hidden" id="emailError">Email is required.</span>
                     </div>
                 </div>
