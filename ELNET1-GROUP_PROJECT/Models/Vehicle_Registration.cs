@@ -39,6 +39,7 @@ namespace ELNET1_GROUP_PROJECT.Models
         public string VehicleBrand { get; set; }
 
         [ForeignKey("UserId")]
+        [InverseProperty("Vehicles")]
         public User_Account? UserAccount { get; set; }
     }
 

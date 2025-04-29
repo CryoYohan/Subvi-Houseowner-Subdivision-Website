@@ -24,6 +24,8 @@ namespace ELNET1_GROUP_PROJECT.Models
         [Column("STATUS")]
         [Required]
         public bool Status { get; set; }
+        [Column("IS_DELETED")]
+        public bool? IsDeleted { get; set; } = false;
         [Column("USER_ID")]
         [Required]
         public int UserId { get; set; } 

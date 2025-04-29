@@ -8,6 +8,7 @@
 
 @section Scripts {
     <script src="~/js/notification-staff.js"></script>
+    <script src="~/js/UserAccs.js"></script>
 }
 
 <script>
@@ -155,7 +156,6 @@
                                         <option value="All">All</option>
                                         <option value="Staff">Staff</option>
                                         <option value="Homeowner">Homeowner</option>
-                                        <option value="Inactive">Inactive User</option>
                                     </select>
                                 </div>
 
@@ -171,7 +171,7 @@
                     @if (!Model.Any())
                     {
                         <div class="bg-white shadow-md rounded-lg p-4 mb-4 text-center">
-                            <p class="text-gray-500">No Users. Add to create now.</p>
+                            <p class="text-gray-500">No User Account Found. Contact Admin if this should not be the case.</p>
                         </div>
                     }
                     else
@@ -222,7 +222,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Modal for Editing User -->
     <div id="editUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">

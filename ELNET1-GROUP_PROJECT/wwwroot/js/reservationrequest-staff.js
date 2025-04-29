@@ -120,18 +120,42 @@ document.addEventListener("DOMContentLoaded", () => {
     confirmBtn.addEventListener("click", async () => {
         if (selectedReservationId && selectedAction) {
             try {
-                await fetch(`/staff/reservations/${selectedReservationId}`, {
+                const response = await fetch(`/staff/reservations/${selectedReservationId}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ status: selectedAction === "Approve" ? "Approved" : "Declined" }),
+                    body: JSON.stringify({
+                        status: selectedAction === "Approve" ? "Approved" : "Declined"
+                    }),
                 });
+
+                if (!response.ok) throw new Error("Failed to update reservation");
+
                 reserveconfirmationModal.classList.add("hidden");
                 fetchReservations(statusFilter.value);
+
+                showToast(`The Reservation Request was ${selectedAction === "Approve" ? "Approved" : "Declined"} successfully.`);
             } catch (error) {
                 console.error("Error updating reservation:", error);
+                showToast("Failed to update reservation. Try again later.", 'red');
             }
         }
     });
+
+    function showToast(message, color = 'green') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transform translate-y-20 opacity-0 transition-all z-50`;
+        toast.style.backgroundColor = color;
+        toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }, 50);
+    }
 
     // Filter reservations
     statusFilter.addEventListener("change", () => fetchReservations(statusFilter.value));

@@ -1,4 +1,4 @@
-﻿let deleteId = '';
+﻿let deactivateId = '';
 let selectedStatus = '';
 let homeowners = [];
 let selectedHomeownerId = null;
@@ -91,7 +91,7 @@ function renderVehicleTable(data, status) {
     tableBody.innerHTML = "";
 
     if (data.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4" style="background-color: white">No ${status} Data Found.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-4" style="background-color: white">No ${status} Data Found.</td></tr>`;
     } else {
         data.forEach(vehicle => {
             function formatVehicleType(type) {
@@ -104,7 +104,7 @@ function renderVehicleTable(data, status) {
 
             if (vehicle.status === 'Active') {
                 actions += `
-                    <button onclick="confirmDelete(${vehicle.vehicleId})" class="text-red-500 text-base font-semibold">Delete</button>
+                    <button onclick="confirmDeactivate(${vehicle.vehicleId})" class="text-red-500 text-base font-semibold">Deactivate</button>
                 `;
             } else if (vehicle.status === 'Inactive') {
                 actions += `
@@ -118,6 +118,7 @@ function renderVehicleTable(data, status) {
                 <td class="p-2 text-center" style="background-color: white">${formatVehicleType(vehicle.type)}</td>
                 <td class="p-2 text-center" style="background-color: white">${vehicle.color}</td>
                 <td class="p-2 text-center" style="background-color: white">${vehicle.vehicleBrand}</td>
+                <td class="p-2 text-center" style="background-color: white">${vehicle.fullName}</td>
                 <td class="p-2 text-center" style="background-color: white">
                     <span class="status-badge ${vehicle.status === 'Active' ? 'bg-green-500' : vehicle.status === 'Inactive' ? 'bg-red-500' : 'bg-gray-500'} text-white">
                         ${vehicle.status}
@@ -307,17 +308,17 @@ function saveVehicle() {
     });
 }
 
-function confirmDelete(id) {
-    deleteId = id; // This will assign the value properly
-    $('#deleteConfirm').removeClass('hidden').addClass('flex');
+function confirmDeactivate(id) {
+    deactivateId = id; // This will assign the value properly
+    $('#deactivateConfirm').removeClass('hidden').addClass('flex');
 }
 
-function deleteVehicleConfirmed() {
-    if (!deleteId) return; // Ensure deleteId is valid
+function deactivateVehicleConfirmed() {
+    if (!deactivateId) return; // Ensure deactivateId is valid
 
     // Proceed with the deletion and show a success message after deletion
     $.ajax({
-        url: `/staff/vehicleregistration/${deleteId}/deactivate`,
+        url: `/staff/vehicleregistration/${deactivateId}/deactivate`,
         type: 'PUT',
         success: function () {
             Swal.fire({
@@ -350,8 +351,8 @@ function closeModal() {
     $('#vehicleModal').addClass('hidden');
 }
 
-function closeDeleteConfirm() {
-    $('#deleteConfirm').addClass('hidden');
+function closeDeactivateConfirm() {
+    $('#deactivateConfirm').addClass('hidden');
 }
 
 //Activate Vehicle Registration functionality
