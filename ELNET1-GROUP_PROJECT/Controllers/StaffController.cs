@@ -437,11 +437,11 @@ public class StaffController : Controller
             return RedirectToAction("landing", "Home");
         }
 
-        // Perform LEFT JOIN to combine USER_ACCOUNT with USER_INFO
+        // LEFT JOIN to combine USER_ACCOUNT with USER_INFO
         var users = (from ua in _context.User_Accounts
                      join ui in _context.User_Info on ua.Id equals ui.UserAccountId into joined
                      from ui in joined.DefaultIfEmpty()
-                     where ua.Role != "Admin"
+                     where ua.Role != "Admin" && ua.Status == "ACTIVE"
                      select new UserDataRequest
                      {
                          Id = ua.Id,
@@ -1042,13 +1042,26 @@ public class StaffController : Controller
             return RedirectToAction("landing", "Home");
         }
 
-        // Fetch vehicles by status from the database
         var vehicleList = _context.Vehicle_Registration
             .Where(v => v.Status.ToLower() == status.ToLower())
             .OrderByDescending(v => v.VehicleId)
+            .Select(v => new
+            {
+                v.VehicleId,
+                v.PlateNumber,
+                v.Type,
+                v.Status,
+                v.Color,
+                v.VehicleBrand,
+                v.UserId,
+                FullName =
+                    (v.UserAccount.User_Info.Firstname != null && v.UserAccount.User_Info.Lastname != null)
+                        ? $"{char.ToUpper(v.UserAccount.User_Info.Firstname[0]) + v.UserAccount.User_Info.Firstname.Substring(1).ToLower()} " +
+                          $"{char.ToUpper(v.UserAccount.User_Info.Lastname[0]) + v.UserAccount.User_Info.Lastname.Substring(1).ToLower()}"
+                        : ""
+            })
             .ToList();
 
-        // Return JSON data to be handled by the JavaScript
         return Json(vehicleList);
     }
 
@@ -1225,7 +1238,7 @@ public class StaffController : Controller
     public async Task<IActionResult> DeactivateVehicle(int id)
     {
         // Fetch the vehicle first to get the necessary details (e.g., UserId)
-        var vehicle = _context.Vehicle_Registration.FirstOrDefault(v => v.VehicleId == id);
+        var vehicle = await _context.Vehicle_Registration.FirstOrDefaultAsync(v => v.VehicleId == id);
         if (vehicle == null)
         {
             return NotFound(new { success = false, message = "Vehicle not found." });
@@ -1235,18 +1248,25 @@ public class StaffController : Controller
         int userId = vehicle.UserId;
         string plateNumber = vehicle.PlateNumber;
 
+        // Check if user exists before inserting notification
+        var userExists = await _context.User_Accounts.AnyAsync(u => u.Id == userId);
+        if (!userExists)
+        {
+            return BadRequest(new { success = false, message = "Associated user not found." });
+        }
+
         // Mask the plate number (show only the last 4 characters)
         string maskedPlateNumber = MaskPlateNumber(plateNumber);
 
-        // Set the vehicle status to Inactive instead of deleting
+        // Set the vehicle status to Inactive
         vehicle.Status = "Inactive";
         _context.Vehicle_Registration.Update(vehicle);
         await _context.SaveChangesAsync();
 
-        // Create a notification for the homeowner about the vehicle deactivation
+        // Create and save the notification
         var notification = new Notification
         {
-            UserId = userId,  // Send the notification to the vehicle owner
+            UserId = userId,
             TargetRole = "Homeowner",
             Type = "Vehicle",
             Title = "Vehicle Registration Deactivated",
@@ -1255,7 +1275,6 @@ public class StaffController : Controller
             DateCreated = DateTime.Now
         };
 
-        // Add the notification to the context
         _context.Notifications.Add(notification);
         await _context.SaveChangesAsync();
 
@@ -1355,6 +1374,7 @@ public class StaffController : Controller
         return Json(reservations);
     }
 
+    [HttpPut("reservations/{id}")]
     public async Task<IActionResult> UpdateReservationStatus(int id, [FromBody] ReservationUpdateStatusDTO request)
     {
         // Fetch the reservation by ID
@@ -2357,12 +2377,19 @@ public class StaffController : Controller
         bool isActive = status.ToLower() != "inactive";
         var today = DateOnly.FromDateTime(DateTime.Now);
 
-        var allPolls = await _context.Poll.ToListAsync();
+        var allPolls = await _context.Poll
+            .Where(p => p.IsDeleted == false)
+            .ToListAsync();
+
         var pollsWithStatusChanged = new List<Poll>();
         var pollsReactivated = new List<Poll>();
 
         foreach (var poll in allPolls)
         {
+            // Skip if deleted
+            if (poll.IsDeleted == true)
+                continue;
+
             if (DateOnly.TryParse(poll.StartDate, out DateOnly startDate) &&
                 DateOnly.TryParse(poll.EndDate, out DateOnly endDate))
             {
@@ -2782,15 +2809,16 @@ public class StaffController : Controller
         var poll = await _context.Poll.FindAsync(pollId);
         if (poll == null) return NotFound();
 
-        poll.Status = false;  // Mark as Inactive
+        // Mark as Deleted instead of changing Status
+        poll.IsDeleted = true;  // Mark as Deleted
         await _context.SaveChangesAsync();
 
-        string message = $"The poll titled {poll.Title} has been deactivated. You cannot vote anymore.";
+        string message = $"The poll titled {poll.Title} has been deleted. You cannot vote anymore.";
 
         // === Create and send Staff notification ===
         var staffNotification = new Notification
         {
-            Title = "Poll Deactivated",
+            Title = "Poll Deleted",
             Message = message,
             IsRead = false,
             DateCreated = DateTime.Now,
@@ -2804,7 +2832,7 @@ public class StaffController : Controller
         // === Create and send Admin notification ===
         var adminNotification = new Notification
         {
-            Title = "Poll Deactivated",
+            Title = "Poll Deleted",
             Message = message,
             Type = "Poll",
             IsRead = false,
@@ -2823,7 +2851,7 @@ public class StaffController : Controller
         {
             var homeownerNotification = new Notification
             {
-                Title = "Poll Deactivated",
+                Title = "Poll Deleted",
                 Message = message,
                 IsRead = false,
                 DateCreated = DateTime.Now,
@@ -2847,7 +2875,7 @@ public class StaffController : Controller
         await _hubContext.Clients.Group("admin")
             .SendAsync("ReceiveNotification", adminNotification);
 
-        return Ok(new { message = "Poll deactivated." });
+        return Ok(new { message = "Poll deleted." });
     }
 
     [HttpGet("polls/details/{pollId}")]

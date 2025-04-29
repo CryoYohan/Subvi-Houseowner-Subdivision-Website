@@ -2827,21 +2827,30 @@ public class AdminController : Controller
         bool isActive = status.ToLower() != "inactive";
         var today = DateOnly.FromDateTime(DateTime.Now);
 
-        var allPolls = await _context.Poll.ToListAsync();
+        var allPolls = await _context.Poll
+            .Where(p => p.IsDeleted == false)
+            .ToListAsync();
+
         var pollsEnded = new List<Poll>();
         var pollsActivated = new List<Poll>();
 
         foreach (var poll in allPolls)
         {
+            // Skip polls marked as deleted
+            if (poll.IsDeleted == true)
+                continue;
+
             if (DateOnly.TryParse(poll.StartDate, out DateOnly startDate) &&
                 DateOnly.TryParse(poll.EndDate, out DateOnly endDate))
             {
+                // Deactivate expired polls
                 if ((today < startDate || today > endDate) && poll.Status == true)
                 {
                     poll.Status = false;
                     pollsEnded.Add(poll);
                 }
 
+                // Activate valid polls
                 if ((today >= startDate && today <= endDate) && poll.Status == false)
                 {
                     poll.Status = true;

@@ -55,7 +55,7 @@ public class HomeDashboardController : ControllerBase
 
         // Step 1: Load all active polls from DB (Status = true)
         var allPolls = await _context.Poll
-            .Where(p => p.Status) // Status true = active
+            .Where(p => p.Status && (p.IsDeleted == false))
             .OrderByDescending(p => p.PollId)
             .ToListAsync();
 
@@ -64,6 +64,9 @@ public class HomeDashboardController : ControllerBase
 
         foreach (var poll in allPolls)
         {
+            if (poll.IsDeleted == true)
+                continue;
+
             if (DateTime.TryParseExact(poll.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var startDate) &&
                 DateTime.TryParseExact(poll.EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var endDate))
             {

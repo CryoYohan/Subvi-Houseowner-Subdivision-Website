@@ -25,5 +25,7 @@ namespace ELNET1_GROUP_PROJECT.Models
         public DateTime DateRegistered { get; set; }
         public User_Info User_Info { get; set; }
         public ICollection<Forum>? Forum { get; set; }
+        [InverseProperty("UserAccount")]
+        public ICollection<VehicleRegistration>? Vehicles { get; set; }
     }
 }
