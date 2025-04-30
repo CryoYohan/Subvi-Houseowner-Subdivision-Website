@@ -1,6 +1,6 @@
 ﻿@{
     Layout = "_AdminLayout";
-    ViewData["Title"] = "Staff | Profile Settings";
+    ViewData["Title"] = "Profile Settings";
 }
 
 @section Scripts {
@@ -323,7 +323,8 @@
                 body: JSON.stringify(formData)
             });
 
-            if (!res.ok) throw new Error('Profile update failed');
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.message || 'Profile update failed. Please try again later.');
 
             showToast('Profile updated successfully!', 'green');
 
@@ -501,40 +502,41 @@
 
     // Save the cropped image
     async function saveProfileImage() {
-        if (!cropper) return; // Ensure cropper exists before proceeding
+        if (!cropper) return;
 
         const canvas = cropper.getCroppedCanvas({
-            width: 200,    // Set width and height of the final image
+            width: 200,
             height: 200
         });
 
         const base64Image = canvas.toDataURL('image/jpeg');
-
-        // Send the image to the backend
         const formData = new FormData();
         formData.append('file', dataURItoBlob(base64Image), 'profile.jpg');
 
         try {
-            const response = await fetch('/admin/uploadprofileimage', {
+            const response = await fetch('/admin/UploadProfileImage', {
                 method: 'POST',
                 body: formData
             });
 
             const result = await response.json();
             if (response.ok) {
-                // Update profile image UI
-                document.getElementById('profileImageContainer').innerHTML = `<img src="${result.path}" class="w-full h-full object-contain" style="border-radius: 50%;">`;
-                showToast('Profile image updated successfully.', 'success');
+                // Optional: update UI before reload
+                showToast('Profile image updated successfully.', 'green');
+
+                // Cleanup and hide buttons
                 resetModal();
-                initializeProfile();
                 document.getElementById('confirmCrop').classList.add('hidden');
                 document.getElementById('cancelCrop').classList.add('hidden');
-                setTimeout(() => location.reload(), 800);
+                $('#profileModal').modal('hide');
+
+                // Slight delay to let the toast show before reloading
+                setTimeout(() => window.location.reload(), 1000);
             } else {
-                showToast('Failed to update profile image.', 'error');
+                showToast(result.message || 'Failed to update profile image.', 'red');
             }
         } catch (error) {
-            showToast('An error occurred while uploading the profile image.', 'error');
+            showToast('An error occurred while uploading the profile image.', 'red');
         }
     }
 

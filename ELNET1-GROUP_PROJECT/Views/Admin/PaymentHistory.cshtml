@@ -148,14 +148,14 @@
       }
     }
 
-         function renderBills(bills) {
+    function renderBills(bills) {
       const tableBody = document.getElementById('billTableBody');
       tableBody.innerHTML = "";
 
       if (bills.length === 0) {
         const row = document.createElement("tr");
         row.innerHTML = `
-          <td colspan="4" class="p-4 text-center text-gray-500">No bills found.</td>
+          <td colspan="5" class="p-4 text-center text-gray-500">No bills found.</td>
         `;
         tableBody.appendChild(row);
         return;

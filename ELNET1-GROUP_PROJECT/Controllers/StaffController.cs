@@ -369,8 +369,8 @@ public class StaffController : Controller
                                  Content = r.Content,
                                  Date = r.Date,
                                  UserId = r.UserId,
-                                 Profile = ui.Profile,
                                  Role = u.Role,
+                                 Profile = ui != null ? ui.Profile : "",
                                  FullName = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) + " " + char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1),
                                  Firstname = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1),
                                  Lastname = char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1)
@@ -3621,32 +3621,53 @@ public class StaffController : Controller
     [HttpPost("upload-profile")]
     public async Task<IActionResult> UploadProfileImage(IFormFile file)
     {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "No file uploaded." });
+
         var userIdStr = HttpContext.Request.Cookies["Id"];
         if (!int.TryParse(userIdStr, out int userId))
             return Unauthorized();
 
-        var user = await _context.User_Info
-            .FirstOrDefaultAsync(ui => ui.UserAccountId == userId);
+        var userInfo = await _context.User_Info
+            .FirstOrDefaultAsync(info => info.UserAccountId == userId);
 
-        if (user == null) return NotFound();
+        if (userInfo == null)
+            return NotFound(new { message = "User not found." });
 
-        if (user == null) return NotFound();
+        // Validate file type
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-        var ext = Path.GetExtension(file.FileName);
-        var name = $"{char.ToUpper(user.Firstname[0])}{user.Lastname}-{user.UserAccountId}{ext}";
+        if (!allowedExtensions.Contains(ext))
+            return BadRequest(new { message = "Invalid file type." });
 
-        var savePath = Path.Combine("wwwroot/assets/userprofile", name);
-        var relativePath = $"/assets/userprofile/{name}";
+        // Safe filename
+        var fileName = $"{char.ToUpper(userInfo.Firstname[0])}{userInfo.Lastname}-{userId}{ext}";
+        var directory = Path.Combine("wwwroot", "assets", "userprofile");
 
-        using (var stream = new FileStream(savePath, FileMode.Create))
+        if (!Directory.Exists(directory))
+            Directory.CreateDirectory(directory);
+
+        var savePath = Path.Combine(directory, fileName);
+        var relativePath = $"/assets/userprofile/{fileName}";
+
+        try
         {
-            await file.CopyToAsync(stream);
+            // Save the image
+            using (var stream = new FileStream(savePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            userInfo.Profile = relativePath;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Profile image updated successfully." });
         }
-
-        user.Profile = relativePath;
-        await _context.SaveChangesAsync();
-
-        return Ok(new { path = relativePath });
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to upload image.", error = ex.Message });
+        }
     }
 
     [HttpPut("update-info")]
