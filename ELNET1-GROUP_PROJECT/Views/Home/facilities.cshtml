@@ -227,11 +227,11 @@
     </style>
 
     @* MainContent *@  
-    <div class="container mt-4">
+    <div class="container mt-2">
         <div class="row">
             <!-- Left Side: Facilities List as Card Containers -->
-            <div class="col-md-7 p-lg-5" style="margin-top: -60px;">
-                <div class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="col-md-6 p-lg-5" style="margin-top: -60px;">
+                <div class="bg-white rounded-2xl shadow-lg p-4">
                     <h2 class="text-4xl font-extrabold text-center text-blue-900 mb-8">Community Facilities</h2>
                     <div class="overflow-y-auto px-2" style="max-height: 585px">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
@@ -263,7 +263,7 @@
             </div>
 
             <!-- Right Side: Requested Facilities & Reservation History -->
-            <div class="col-md-5">
+            <div class="col-md-6">
                 <div class="card p-3 mb-3 shadow-lg rounded">
                     <div id="PendingloadingSpinner" class="text-center my-3" style="display: none;">
                         <div class="spinner-border text-primary" role="status">
@@ -279,7 +279,7 @@
                                 <tr>
                                     <th class="text-center">ID</th>
                                     <th class="text-center">Facility</th>
-                                    <th class="text-center">Date Requested</th>
+                                    <th class="text-center">Date Sched Requested</th>
                                     <th class="text-center">Start Time</th>
                                     <th class="text-center">End Time</th>
                                     <th class="text-center">Status</th>
@@ -419,6 +419,7 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <span id="dateError" class="text-red-500 text-sm hidden">You cannot select a past date for reservation.</span>
 
                             <!-- Time Slot Dropdowns -->
                             <div class="time-slot-section bg-light rounded p-3 shadow-sm mt-4">

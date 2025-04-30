@@ -15,6 +15,7 @@ using System.Security.Claims;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.Net.Mail;
 using System.Net;
+using Azure.Core;
 
 [Route("staff")]
 public class StaffController : Controller
@@ -1350,8 +1351,55 @@ public class StaffController : Controller
     }
 
     [HttpGet("Reservations")]
-    public IActionResult Reservations(string status = "Pending")
+    public async Task<IActionResult> Reservations(string status = "Pending")
     {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        var expiredReservations = _context.Reservations
+            .Where(r => r.Status == "Pending" &&
+                        r.SchedDate.CompareTo(today) < 0)
+            .ToList();
+
+        var notifications = new List<Notification>();
+
+        foreach (var expired in expiredReservations)
+        {
+            expired.Status = "Declined";
+
+            // Build notification message
+            var facility = _context.Facility.FirstOrDefault(f => f.FacilityId == expired.FacilityId);
+            var userId = expired.UserId;
+
+            var message = $"Your reservation for '{facility?.FacilityName}' on {expired.SchedDate:MM/dd/yyyy} has been automatically declined because the scheduled date has passed.";
+
+            // Create and collect notification
+            notifications.Add(new Notification
+            {
+                UserId = userId,
+                TargetRole = "Homeowner",
+                Type = "Facility Reservation Schedule",
+                Title = "Facility Reservation Declined",
+                Message = message,
+                IsRead = false,
+                DateCreated = DateTime.Now,
+                Link = "/home/facilities"
+            });
+        }
+
+        if (expiredReservations.Any())
+        {
+            await _context.SaveChangesAsync();
+            _context.Notifications.AddRange(notifications);
+            await _context.SaveChangesAsync();
+
+            // Send real-time notifications
+            foreach (var notif in notifications)
+            {
+                await _hubContext.Clients.User(notif.UserId.ToString()).SendAsync("ReceiveNotification", notif);
+            }
+        }
+
+        // Fetch filtered reservations
         var reservations = (from r in _context.Reservations
                             join f in _context.Facility on r.FacilityId equals f.FacilityId
                             join u in _context.User_Accounts on r.UserId equals u.Id
@@ -1364,8 +1412,8 @@ public class StaffController : Controller
                                 FacilityName = char.ToUpper(f.FacilityName[0]) + f.FacilityName.Substring(1),
                                 RequestedBy = char.ToUpper(ui.Firstname[0]) + ui.Firstname.Substring(1) + " " + char.ToUpper(ui.Lastname[0]) + ui.Lastname.Substring(1),
                                 SchedDate = r.SchedDate.ToString("MM/dd/yyyy"),
-                                StartTime = r.StartTime, 
-                                EndTime = r.EndTime,     
+                                StartTime = r.StartTime,
+                                EndTime = r.EndTime,
                                 Status = r.Status
                             })
                             .OrderByDescending(r => r.Id)

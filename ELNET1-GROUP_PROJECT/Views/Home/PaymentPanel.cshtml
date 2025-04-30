@@ -417,16 +417,49 @@
         const radio = card.querySelector('input[type="radio"]');
         const input = card.querySelector('.payment-number-input');
 
-        radio.addEventListener('change', () => {
-            methodCards.forEach(c => {
-                c.classList.remove('border-blue-500', 'bg-blue-50');
-                c.querySelector('.payment-number-input')?.classList.add('hidden');
-            });
+        card.addEventListener('click', (e) => {
+            if (input && input.contains(e.target)) return; // allow typing inside input
 
-            // Highlight selected
-            card.classList.add('border-blue-500', 'bg-blue-50');
-            if (input) input.classList.remove('hidden');
+            if (!radio.checked) {
+                radio.checked = true;
+
+                // Reset styles and hide all inputs
+                methodCards.forEach(c => {
+                    c.classList.remove('border-blue-500', 'bg-blue-50');
+                    c.querySelector('.payment-number-input')?.classList.add('hidden');
+                });
+
+                // Apply selection styles and show input
+                card.classList.add('border-blue-500', 'bg-blue-50');
+                if (input) {
+                    input.classList.remove('hidden');
+                    input.value = '';
+                    input.focus();
+                }
+            }
         });
+
+        // Add real-time input restriction for GCash and Maya
+        if (input && (radio.value === 'GCash' || radio.value === 'Maya')) {
+            input.addEventListener('input', () => {
+                let raw = input.value.replace(/[^+\d]/g, '');
+
+                if (raw.startsWith('+639')) {
+                    raw = raw.slice(0, 13); // +639XXXXXXXXX
+                } else if (raw.startsWith('09')) {
+                    raw = raw.slice(0, 11); // 09XXXXXXXXX
+                } else {
+                    raw = raw.slice(0, 13); // fallback limit
+                }
+
+                input.value = raw;
+
+                // Remove error visuals
+                const error = input.nextElementSibling;
+                if (error) error.classList.add('hidden');
+                input.classList.remove('border-red-500', 'ring-2', 'ring-red-300');
+            });
+        }
     });
 
     function goToPaymentMethod() {
@@ -465,23 +498,19 @@
         const errorMessages = document.querySelectorAll('.error-message');
         errorMessages.forEach(msg => msg.classList.add('hidden'));
 
-        // Validation based on payment method
         let isValid = true;
         if (!number) {
             selectedCard.querySelector('.error-message').classList.remove('hidden');
             selectedCard.querySelector('.error-message').textContent = "Please enter your " + method + " number.";
             isValid = false;
         } else {
-            if (method === "GCash") {
-                if (!/^(\+63\d{9})$/.test(number)) {
+            const gcashMayaRegex = /^(?:\+639\d{9}|09\d{9})$/;
+
+            if (method === "GCash" || method === "Maya") {
+                if (!gcashMayaRegex.test(number)) {
                     selectedCard.querySelector('.error-message').classList.remove('hidden');
-                    selectedCard.querySelector('.error-message').textContent = "Invalid GCash number. It should start with +63 and be 11 digits long.";
-                    isValid = false;
-                }
-            } else if (method === "Maya") {
-                if (!/^(\+63\d{9})$/.test(number)) {
-                    selectedCard.querySelector('.error-message').classList.remove('hidden');
-                    selectedCard.querySelector('.error-message').textContent = "Invalid Maya number. It should start with +63 and be 11 digits long.";
+                    selectedCard.querySelector('.error-message').textContent =
+                        `Invalid ${method} number. It should start with +639 or 09 and be 11 to 13 digits long.`;
                     isValid = false;
                 }
             } else if (method === "GrabPay") {
@@ -491,7 +520,9 @@
                     isValid = false;
                 }
             } else if (method === "Card") {
-                if (!/^\d{16}$/.test(number)) {
+                const digitsOnly = number.replace(/\s+/g, '');
+
+                if (!/^\d{16}$/.test(digitsOnly)) {
                     selectedCard.querySelector('.error-message').classList.remove('hidden');
                     selectedCard.querySelector('.error-message').textContent = "Card number should be 16 digits long.";
                     isValid = false;
@@ -499,9 +530,7 @@
             }
         }
 
-        if (!isValid) {
-            return;
-        }
+        if (!isValid) return;
 
         const methodInput = document.getElementById("selectedMethod");
         const numberInput = document.getElementById("formPaymentNumber");
@@ -650,7 +679,7 @@
     }
 
     // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => {
         updateProgress();
 
         const methodCards = document.querySelectorAll('.payment-method-card');
@@ -692,21 +721,18 @@
                 if (config) {
                     const input = document.querySelector(`input[name="${config.name}"]`);
                     input.classList.remove('hidden');
-                    input.value = ''; // clear old input
                     input.focus();
                     input.setAttribute('type', config.type);
 
-                    // Restrict input typing
+                    // Don't reset value to allow re-clicking without loss
                     input.oninput = () => {
                         const raw = input.value;
-                        // Remove invalid characters on type
                         if (selected === 'GCash') {
                             input.value = raw.replace(/[^+\d]/g, '').replace(/(?!^\+63)\+/g, '');
                         } else {
                             input.value = raw.replace(/\D/g, '');
                         }
 
-                        // Hide error on typing
                         const error = input.nextElementSibling;
                         if (error) error.classList.add('hidden');
                         input.classList.remove('border-red-500', 'ring-2', 'ring-red-300');
@@ -715,12 +741,20 @@
             });
         });
 
-        // Auto-select radio on card click
+        // Auto-select radio and prevent unnecessary reset
         methodCards.forEach(card => {
-            card.addEventListener('click', () => {
+            card.addEventListener('click', (e) => {
                 const radio = card.querySelector('input[type="radio"]');
-                radio.checked = true;
-                radio.dispatchEvent(new Event('change'));
+                const alreadyChecked = radio.checked;
+
+                // Don't toggle everything again if already selected and clicked inside input
+                const input = card.querySelector('.payment-number-input');
+                if (alreadyChecked && input && input.contains(e.target)) return;
+
+                if (!alreadyChecked) {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change'));
+                }
             });
         });
     });
