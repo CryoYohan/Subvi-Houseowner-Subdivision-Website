@@ -253,33 +253,37 @@ document.addEventListener('DOMContentLoaded', function () {
         let startDay = (firstDay.getDay() + 6) % 7; // Adjust to make Monday first
         let date = 1;
 
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // normalize once
+
         for (let i = 0; i < 6; i++) {
             const row = document.createElement('tr');
 
-            // Create cells for each day of the week
             for (let j = 0; j < 7; j++) {
                 const cell = document.createElement('td');
 
                 if (i === 0 && j < startDay) {
-                    // Empty cells before the first day
                     cell.textContent = '';
                 } else if (date > lastDate) {
-                    // Empty cells after the last day
                     cell.textContent = '';
                 } else {
-                    // Add date number
                     cell.textContent = date;
-                    cell.style.cursor = 'pointer';
-                    cell.addEventListener('click', function () {
-                        // Remove previous selection
-                        const allCells = calendarTable.querySelectorAll('td');
-                        allCells.forEach(cell => cell.classList.remove('selected'));
 
-                        // Add selection to clicked cell
-                        if (this.textContent !== '') { // Prevent selecting empty cells
+                    const cellDate = new Date(currentYear, currentMonth, date);
+                    cellDate.setHours(0, 0, 0, 0);
+
+                    if (cellDate < today) {
+                        cell.classList.add('text-gray-400', 'cursor-not-allowed', 'opacity-50');
+                    } else {
+                        cell.style.cursor = 'pointer';
+                        cell.addEventListener('click', function () {
+                            const allCells = calendarTable.querySelectorAll('td');
+                            allCells.forEach(cell => cell.classList.remove('selected'));
+
                             this.classList.add('selected');
-                        }
-                    });
+                        });
+                    }
+
                     date++;
                 }
 
@@ -287,13 +291,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             calendarTable.appendChild(row);
-
-            // Stop creating rows if all dates are shown
             if (date > lastDate) break;
         }
 
         // Highlight today's date
-        const today = new Date();
         if (today.getMonth() === currentMonth && today.getFullYear() === currentYear) {
             const cells = calendarTable.getElementsByTagName('td');
             Array.from(cells).forEach(cell => {
@@ -353,7 +354,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const startTimeError = document.getElementById('startTimeError');
         const endTimeError = document.getElementById('endTimeError');
-
+        const dateError = document.getElementById('dateError');
+        
+        dateError.classList.add("hidden");
         startTimeError.classList.add("hidden");
         endTimeError.classList.add("hidden");
 
@@ -390,6 +393,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const selectedDay = selectedDateEl.textContent;
         const selectedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+        const selectedDateObj = new Date(selectedDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (selectedDateObj < today) {
+            dateError.classList.remove("hidden");
+            return;
+        }
+
         const facilityName = document.getElementById('reservationTitle').textContent;
 
         const checkResponse = await fetch(`/Home/CheckReservationConflict?facilityName=${facilityName}&selectedDate=${selectedDate}&startTime=${startTime}&endTime=${endTime}`);
@@ -409,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const result = await res.json();
         if (result.success) {
-            showToast("Reservation successfully added!");
+            showToast("Reservation successfully submitted!");
             fetchPendingFacilities();
             facilityBootstrapModal.hide();
             reservationModal.hide();

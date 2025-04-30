@@ -416,7 +416,7 @@ function deleteUser(userId, event) {
                         closeUserInfoBox();
                         Swal.fire({
                             title: 'Remove!',
-                            text: 'The user has been remove.',
+                            text: 'The user has been remove or deactivated.',
                             icon: 'success',
                             timer: 5000, // Close after 5 seconds
                             timerProgressBar: true,

@@ -1680,10 +1680,10 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                         temp.f.Content,
                         temp.f.DatePosted,
                         temp.f.UserId,
-                        temp.u.Role, // Include the Role from User_Account
+                        temp.u.Role, 
+                        Profile = info.Profile ?? "",
                         Firstname = char.ToUpper(info.Firstname[0]) + info.Firstname.Substring(1),
-                        Lastname = char.ToUpper(info.Lastname[0]) + info.Lastname.Substring(1),
-                        Profile = info.Profile ?? ""
+                        Lastname = char.ToUpper(info.Lastname[0]) + info.Lastname.Substring(1)
                     })
                 .FirstOrDefault();
 
@@ -1696,10 +1696,11 @@ namespace ELNET1_GROUP_PROJECT.Controllers
                     Content = temp.r.Content,
                     Date = temp.r.Date,
                     UserId = temp.r.UserId,
+                    Role = temp.u.Role,
+                    Profile = info.Profile ?? "",
                     FullName = char.ToUpper(info.Firstname[0]) + info.Firstname.Substring(1) + " " + char.ToUpper(info.Lastname[0]) + info.Lastname.Substring(1),
                     Firstname = char.ToUpper(info.Firstname[0]) + info.Firstname.Substring(1),
-                    Lastname = char.ToUpper(info.Lastname[0]) + info.Lastname.Substring(1),
-                    Role = temp.u.Role
+                    Lastname = char.ToUpper(info.Lastname[0]) + info.Lastname.Substring(1)
                 })
                 .OrderByDescending(r => r.Date)
                 .ToList();
@@ -2179,35 +2180,53 @@ namespace ELNET1_GROUP_PROJECT.Controllers
 
         public async Task<IActionResult> UploadProfileImage(IFormFile file)
         {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file uploaded." });
+
             var userIdStr = HttpContext.Request.Cookies["Id"];
             if (!int.TryParse(userIdStr, out int userId))
                 return Unauthorized();
 
-            var userWithInfo = await _context.User_Accounts
-                .Where(u => u.Id == userId)
-                .Join(_context.User_Info,
-                      u => u.Id,
-                      info => info.UserAccountId,
-                      (u, info) => new { User = u, Info = info })
-                .FirstOrDefaultAsync();
+            var userInfo = await _context.User_Info
+                .FirstOrDefaultAsync(info => info.UserAccountId == userId);
 
-            if (userWithInfo == null)
-                return NotFound();
+            if (userInfo == null)
+                return NotFound(new { message = "User not found." });
 
-            var ext = Path.GetExtension(file.FileName);
-            var name = $"{char.ToUpper(userWithInfo.Info.Firstname[0])}{userWithInfo.Info.Lastname}-{userId}{ext}";
-            var savePath = Path.Combine("wwwroot/assets/userprofile", name);
-            var relativePath = $"/assets/userprofile/{name}";
+            // Validate file type
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-            using (var stream = new FileStream(savePath, FileMode.Create))
+            if (!allowedExtensions.Contains(ext))
+                return BadRequest(new { message = "Invalid file type." });
+
+            // Safe filename
+            var fileName = $"{char.ToUpper(userInfo.Firstname[0])}{userInfo.Lastname}-{userId}{ext}";
+            var directory = Path.Combine("wwwroot", "assets", "userprofile");
+
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
+            var savePath = Path.Combine(directory, fileName);
+            var relativePath = $"/assets/userprofile/{fileName}";
+
+            try
             {
-                await file.CopyToAsync(stream);
+                // Save the image
+                using (var stream = new FileStream(savePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                userInfo.Profile = relativePath;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Profile image updated successfully." });
             }
-
-            userWithInfo.Info.Profile = relativePath;
-            await _context.SaveChangesAsync();
-
-            return Ok(new { path = relativePath });
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to upload image.", error = ex.Message });
+            }
         }
 
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)

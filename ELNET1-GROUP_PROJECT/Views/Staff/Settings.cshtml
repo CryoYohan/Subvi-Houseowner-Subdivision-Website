@@ -331,7 +331,8 @@
                 body: JSON.stringify(formData)
             });
 
-            if (!res.ok) throw new Error('Profile update failed');
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.message || 'Profile update failed. Please try again later.');
 
             showToast('Profile updated successfully!', 'green');
 
@@ -451,7 +452,7 @@
 
     // Toast Notification Function
     function showToast(message, color = 'green') {
-            const toast = document.createElement('div');
+        const toast = document.createElement('div');
             toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg transform translate-y-20 opacity-0 transition-all z-50`;
             toast.style.backgroundColor = color;
             toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
@@ -464,9 +465,9 @@
                     setTimeout(() => toast.remove(), 500);
                 }, 4000);
             }, 50);
-        }
+    }
 
-        let cropper = null; // Declare cropper globally
+    let cropper = null; // Declare cropper globally
 
     // Show profile image and setup crop functionality
     document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
@@ -509,42 +510,43 @@
 
     // Save the cropped image
     async function saveProfileImage() {
-        if (!cropper) return; // Ensure cropper exists before proceeding
+            if (!cropper) return;
 
-        const canvas = cropper.getCroppedCanvas({
-            width: 200,    // Set width and height of the final image
-            height: 200
-        });
-
-        const base64Image = canvas.toDataURL('image/jpeg');
-
-        // Send the image to the backend
-        const formData = new FormData();
-        formData.append('file', dataURItoBlob(base64Image), 'profile.jpg');
-
-        try {
-            const response = await fetch('/staff/upload-profile', {
-                method: 'POST',
-                body: formData
+            const canvas = cropper.getCroppedCanvas({
+                width: 200,
+                height: 200
             });
 
-            const result = await response.json();
-            if (response.ok) {
-                // Update profile image UI
-                document.getElementById('profileImageContainer').innerHTML = `<img src="${result.path}" class="w-full h-full object-contain" style="border-radius: 50%;">`;
-                showToast('Profile image updated successfully.', 'success');
-                resetModal();
-                initializeProfile();
-                document.getElementById('confirmCrop').classList.add('hidden');
-                document.getElementById('cancelCrop').classList.add('hidden');
-                setTimeout(() => location.reload(), 800);
-            } else {
-                showToast('Failed to update profile image.', 'error');
+            const base64Image = canvas.toDataURL('image/jpeg');
+            const formData = new FormData();
+            formData.append('file', dataURItoBlob(base64Image), 'profile.jpg');
+
+            try {
+                const response = await fetch('/staff/upload-profile', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    // Optional: update UI before reload
+                    showToast('Profile image updated successfully.', 'green');
+
+                    // Cleanup and hide buttons
+                    resetModal();
+                    document.getElementById('confirmCrop').classList.add('hidden');
+                    document.getElementById('cancelCrop').classList.add('hidden');
+                    $('#profileModal').modal('hide');
+
+                    // Slight delay to let the toast show before reloading
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast(result.message || 'Failed to update profile image.', 'red');
+                }
+            } catch (error) {
+                showToast('An error occurred while uploading the profile image.', 'red');
             }
-        } catch (error) {
-            showToast('An error occurred while uploading the profile image.', 'error');
         }
-    }
 
     // Cancel the crop and revert to original
     function cancelCrop() {
