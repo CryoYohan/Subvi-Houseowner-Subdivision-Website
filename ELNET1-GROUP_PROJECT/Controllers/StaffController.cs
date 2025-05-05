@@ -487,7 +487,7 @@ public class StaffController : Controller
         int maxDigits = _context.User_Accounts.Max(u => u.Id.ToString().Length);
         int paddedLength = Math.Max(6, maxDigits); // minimum 6 digits
 
-        // Generate password like Subvi-000021 (or longer if needed)
+        // Generate password like subvi-000021 (or longer if needed)
         string paddedId = id.ToString().PadLeft(paddedLength, '0');
         string plainPassword = $"subvi-{paddedId}";
 

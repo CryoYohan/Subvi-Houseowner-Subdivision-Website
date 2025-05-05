@@ -62,6 +62,18 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="/staff/event_management" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Event" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-calendar-check w-6"></i>
+                    <span class="font-medium">Event Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/staff/feedbacks" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Feedback" ? "bg-blue-50 text-blue-600" : "")">
+                    <i class="fas fa-comment-alt w-6"></i>
+                    <span class="font-medium">Feedbacks</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="/staff/reports" style="text-decoration: none;" class="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 @(ViewContext.RouteData.Values["Action"].ToString() == "Reports" ? "bg-blue-50 text-blue-600" : "")">
                     <i class="fas fa-chart-line w-5 h-5"></i>
                     <span class="font-medium">Reports</span>

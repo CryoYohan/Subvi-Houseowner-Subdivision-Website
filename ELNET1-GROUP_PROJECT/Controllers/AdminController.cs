@@ -1893,8 +1893,8 @@ public class AdminController : Controller
         return Ok();
     }
 
-    [HttpPost]
     // POST: /Admin/EditUser
+    [HttpPost]
     public async Task<IActionResult> EditUser(UserDataRequest model)
     {
         RefreshJwtCookies();
@@ -1917,7 +1917,6 @@ public class AdminController : Controller
                 return RedirectToAction("HomeownerStaffAccounts");
             }
 
-            // Check for duplicate email (excluding current user)
             if (existingUser.Email != model.Email &&
                 _context.User_Accounts.Any(u => u.Email == model.Email && u.Id != model.Id))
             {
@@ -1925,7 +1924,6 @@ public class AdminController : Controller
                 return RedirectToAction("HomeownerStaffAccounts");
             }
 
-            // Check for duplicate contact (in USER_INFO)
             if (!string.IsNullOrEmpty(model.PhoneNumber) &&
                 _context.User_Info.Any(u => u.PhoneNumber == model.PhoneNumber && u.UserAccountId != model.Id))
             {
@@ -1933,14 +1931,16 @@ public class AdminController : Controller
                 return RedirectToAction("HomeownerStaffAccounts");
             }
 
-            // Check for duplicate name (in USER_INFO)
             if (_context.User_Info.Any(u => u.Firstname == model.Firstname && u.Lastname == model.Lastname && u.UserAccountId != model.Id))
             {
                 TempData["ErrorMessage"] = "A user with the same name already exists.";
                 return RedirectToAction("HomeownerStaffAccounts");
             }
 
-            // Update USER_INFO
+            // ✅ Update User Account (email)
+            existingUser.Email = model.Email;
+
+            // ✅ Update User Info
             if (userInfo != null)
             {
                 userInfo.Firstname = model.Firstname;
@@ -1948,24 +1948,10 @@ public class AdminController : Controller
                 userInfo.Address = model.Address;
                 userInfo.PhoneNumber = model.PhoneNumber;
             }
-            else
-            {
-                // If no USER_INFO exists, create one
-                userInfo = new User_Info
-                {
-                    UserAccountId = model.Id,
-                    Firstname = model.Firstname,
-                    Lastname = model.Lastname,
-                    Address = model.Address,
-                    PhoneNumber = model.PhoneNumber,
-                    DateCreated = DateTime.Now
-                };
-                _context.User_Info.Add(userInfo);
-            }
 
             await _context.SaveChangesAsync();
 
-            // Role-based link assignment
+            // ✅ Notification
             string link = model.Role switch
             {
                 "Homeowner" => "/home/settings",
