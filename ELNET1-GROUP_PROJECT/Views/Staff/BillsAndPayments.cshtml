@@ -480,8 +480,8 @@
           fetch("/staff/homeowners")
             .then(res => res.json())
             .then(data => {
-              homeowners = data;
-              displayHomeownerList(data);
+              homeowners = data.result;
+              displayHomeownerList(data.result);
             });
         });
 
@@ -555,10 +555,10 @@
               form.dueDate.value = bill.dueDate;
               form.billAmount.value = bill.billAmount;
 
-              AllhomeownersEdit = homeowners;
+              AllhomeownersEdit = homeowners.result;
               selectedHomeownerId = bill.userId;
 
-              const matchedHomeowner = homeowners.find(h => h.userId === bill.userId);
+              const matchedHomeowner = homeowners.result.find(h => h.userId === bill.userId);
               if (matchedHomeowner) {
                 document.getElementById("editSelectedHomeowner").value = matchedHomeowner.fullName;
                 document.getElementById("editSelectedUserId").value = matchedHomeowner.userId;
@@ -567,7 +567,7 @@
                 document.getElementById("editSelectedUserId").value = "";
               }
 
-              displayEditHomeownerList(homeowners);
+              displayEditHomeownerList(homeowners.result);
 
               bootstrap.Modal.getOrCreateInstance(document.getElementById("editBillModal")).show();
             });
